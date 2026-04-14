@@ -40,10 +40,12 @@ export default function MenuPage() {
           <motion.button
             key={mod.path}
             onClick={() => navigate(mod.path)}
-            className="bg-warm-card hover:shadow-lg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md transition-shadow"
+            className="bg-warm-card flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.15 }}
+            whileHover={{ scale: 1.03, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
+            whileTap={{ scale: 0.97 }}
           >
             <span className="mb-3 text-5xl">{mod.emoji}</span>
             <h2 className="mb-2 text-xl font-bold">{mod.name}</h2>
@@ -51,6 +53,16 @@ export default function MenuPage() {
           </motion.button>
         ))}
       </div>
+
+      <motion.button
+        onClick={() => navigate("/")}
+        className="text-text-light hover:text-primary mt-10 cursor-pointer text-sm transition-colors"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+      >
+        ← 回到首頁
+      </motion.button>
     </div>
   );
 }
