@@ -64,7 +64,7 @@ const [phase, setPhase] = useState<"exploring" | "complete">("exploring");
 流程：
 1. 點擊部位 → `setActivePart(partId)` + 加入 `exploredParts` + 播放語音
 2. 若 `exploredParts.size === 6` → 延遲後切換至 `phase: "complete"`
-3. 完成畫面：鼓勵文字 + 播放 `body-complete.mp3` + 「繼續」按鈕 → `/ending`
+3. 完成畫面：鼓勵文字 + 播放 `body-complete.mp3` + 「繼續」按鈕 → `/menu`
 
 ### 3. 音效整合
 
