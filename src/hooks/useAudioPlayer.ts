@@ -9,6 +9,7 @@ export function useAudioPlayer() {
   const { isMuted, currentAudioRef } = useAudioContext();
   const localRef = useRef<HTMLAudioElement | null>(null);
   const onEndRef = useRef<(() => void) | undefined>(undefined);
+  const isMutedRef = useRef(isMuted);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string | null>(null);
 
@@ -40,32 +41,36 @@ export function useAudioPlayer() {
       cleanup();
 
       const audio = new Audio(src);
-      audio.muted = isMuted;
+      audio.muted = isMutedRef.current;
       localRef.current = audio;
       currentAudioRef.current = audio;
 
       audio.onended = () => {
+        if (localRef.current !== audio) return;
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
       };
 
       audio.onerror = () => {
+        if (localRef.current !== audio) return;
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
       };
 
       audio.play().then(() => {
+        if (localRef.current !== audio) return;
         setIsPlaying(true);
         setCurrentSrc(src);
       }).catch(() => {
+        if (localRef.current !== audio) return;
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
       });
     },
-    [isMuted, currentAudioRef, cleanup],
+    [currentAudioRef, cleanup],
   );
 
   const pause = useCallback(() => {
@@ -89,6 +94,7 @@ export function useAudioPlayer() {
   }, []);
 
   useEffect(() => {
+    isMutedRef.current = isMuted;
     if (localRef.current) {
       localRef.current.muted = isMuted;
     }
