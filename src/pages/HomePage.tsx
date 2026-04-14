@@ -15,12 +15,14 @@ export default function HomePage() {
     const audio = new Audio("/audio/home-welcome.mp3");
     audio.muted = isMuted;
     currentAudioRef.current = audio;
-    audio.onended = () => {
+    const clearRef = () => {
       if (currentAudioRef.current === audio) {
         currentAudioRef.current = null;
       }
     };
-    audio.play().catch(() => {});
+    audio.onended = clearRef;
+    audio.onerror = clearRef;
+    audio.play().catch(clearRef);
 
     navigate("/menu");
   }

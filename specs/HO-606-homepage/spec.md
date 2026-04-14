@@ -70,7 +70,7 @@
 - **FR-001**: 首頁 MUST 顯示網站標題「保護自己大冒險」
 - **FR-002**: 首頁 MUST 顯示角色圖片區域（目前為 placeholder，待 HO-601 產出後替換）
 - **FR-003**: 首頁 MUST 提供「開始探險」按鈕，點擊後導航至 `/menu`
-- **FR-004**: 首頁 MUST 在使用者點擊「開始探險」時播放 `home-welcome.mp3`（利用 HO-605 的 `useAudioPlayer` hook）
+- **FR-004**: 首頁 MUST 在使用者點擊「開始探險」時播放 `home-welcome.mp3`（直接用 `useAudioContext` 建立 Audio 實例，不用 `useAudioPlayer`，因為 hook 的 unmount cleanup 會在導航時停掉語音）
 - **FR-005**: 首頁 MUST 有 Framer Motion 頁面進入動畫（fadeIn + slideUp）
 - **FR-006**: 首頁 MUST 符合響應式設計規範（平板優先、手機適配、桌機置中）
 - **FR-007**: 首頁 MUST 使用專案設計系統（warm-bg 背景、primary 色按鈕、Noto Sans TC 字體）
@@ -78,7 +78,7 @@
 ### Key Entities
 
 - **HomePage**: 首頁元件，路由 `/`
-- **AudioTrack**: `home-welcome.mp3`，由 `useAudioPlayer` 管理播放
+- **AudioTrack**: `home-welcome.mp3`，由 `useAudioContext` 直接管理（跨頁面持續播放）
 
 ## Success Criteria *(mandatory)*
 
