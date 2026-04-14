@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-warm-bg: #fffbf0;
+  --color-warm-card: #fff5e1;
+  --color-primary: #ff9f43;
+  --color-primary-hover: #e88e2e;
+  --color-green-safe: #a8e6cf;
+  --color-green-safe-bg: #e8f8f0;
+  --color-red-danger: #ff8a80;
+  --color-red-danger-bg: #fce4e4;
+  --color-text-main: #3d3d3d;
+  --color-text-light: #666666;
+  --font-sans: "Noto Sans TC", "Segoe UI", sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  color: var(--color-text-main);
+  background-color: var(--color-warm-bg);
+}
+
+body {
+  min-height: 100dvh;
+}
