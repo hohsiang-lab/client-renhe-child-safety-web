@@ -1,0 +1,56 @@
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+
+const modules = [
+  {
+    name: "秘密遊戲",
+    description: "學習分辨好秘密和壞秘密",
+    path: "/secret-game",
+    emoji: "🔑",
+  },
+  {
+    name: "身體紅綠燈",
+    description: "認識身體的安全界線",
+    path: "/body-traffic-light",
+    emoji: "🚦",
+  },
+  {
+    name: "信任大人",
+    description: "找到可以信任的大人",
+    path: "/trusted-adult",
+    emoji: "💛",
+  },
+] as const;
+
+export default function MenuPage() {
+  const navigate = useNavigate();
+
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
+      <motion.h1
+        className="mb-10 text-3xl font-bold md:text-4xl"
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        選擇你想玩的遊戲
+      </motion.h1>
+
+      <div className="grid w-full max-w-2xl grid-cols-1 gap-6 md:grid-cols-3">
+        {modules.map((mod, i) => (
+          <motion.button
+            key={mod.path}
+            onClick={() => navigate(mod.path)}
+            className="bg-warm-card hover:shadow-lg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md transition-shadow"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.15 }}
+          >
+            <span className="mb-3 text-5xl">{mod.emoji}</span>
+            <h2 className="mb-2 text-xl font-bold">{mod.name}</h2>
+            <p className="text-text-light text-sm">{mod.description}</p>
+          </motion.button>
+        ))}
+      </div>
+    </div>
+  );
+}
