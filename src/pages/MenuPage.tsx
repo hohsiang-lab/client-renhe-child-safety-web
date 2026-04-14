@@ -56,7 +56,7 @@ export default function MenuPage() {
 
       <motion.button
         onClick={() => navigate("/")}
-        className="text-text-light hover:text-primary mt-10 cursor-pointer text-sm transition-colors"
+        className="text-text-light hover:text-primary mt-10 cursor-pointer px-6 py-3 text-sm transition-colors"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
