@@ -16,16 +16,23 @@ function partFill(
   exploredParts: Set<string>,
 ) {
   const signal = signalMap[partId];
-  if (activePart === partId) return signal === "red" ? "#ff8a80" : "#a8e6cf";
+  if (activePart === partId)
+    return signal === "red"
+      ? "var(--color-red-danger)"
+      : "var(--color-green-safe)";
   if (exploredParts.has(partId))
-    return signal === "red" ? "#fce4e4" : "#e8f8f0";
-  return "#e8e0d4";
+    return signal === "red"
+      ? "var(--color-red-danger-bg)"
+      : "var(--color-green-safe-bg)";
+  return "var(--color-warm-muted)";
 }
 
 function partStroke(partId: string, activePart: string | null) {
-  if (activePart !== partId) return "#c4b8a8";
+  if (activePart !== partId) return "var(--color-warm-border)";
   const signal = signalMap[partId];
-  return signal === "red" ? "#e53935" : "#43a047";
+  return signal === "red"
+    ? "var(--color-red-danger-dark)"
+    : "var(--color-green-safe-dark)";
 }
 
 interface PartGroupProps {
@@ -57,15 +64,18 @@ function PartGroup({
       onClick={() => onPartClick(partId)}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      style={{ cursor: "pointer", outline: "none" }}
+      className="body-part"
+      style={{ cursor: "pointer" }}
       whileTap={{ scale: 0.95 }}
       role="button"
       aria-label={name}
     >
       <g
-        fill={partFill(partId, activePart, exploredParts)}
-        stroke={partStroke(partId, activePart)}
-        strokeWidth={activePart === partId ? 3 : 1.5}
+        style={{
+          fill: partFill(partId, activePart, exploredParts),
+          stroke: partStroke(partId, activePart),
+          strokeWidth: activePart === partId ? 3 : 1.5,
+        }}
       >
         {children}
       </g>
@@ -144,8 +154,8 @@ export default function BodySvg({
         exploredParts={exploredParts}
         onPartClick={onPartClick}
       >
-        <rect x={55} y={320} width={38} height={28} rx={10} />
-        <rect x={107} y={320} width={38} height={28} rx={10} />
+        <rect x={55} y={315} width={38} height={28} rx={10} />
+        <rect x={107} y={315} width={38} height={28} rx={10} />
       </PartGroup>
     </svg>
   );

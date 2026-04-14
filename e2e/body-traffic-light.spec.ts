@@ -87,6 +87,22 @@ test.describe("身體紅綠燈 (HO-609)", () => {
     expect(box!.width).toBeGreaterThanOrEqual(48);
   });
 
+  test("鍵盤 Tab + Enter 可選取部位", async ({ page }) => {
+    const headGroup = page.locator('svg g[aria-label="頭 / 頭髮"]');
+    await headGroup.focus();
+    await page.keyboard.press("Enter");
+
+    await expect(page.getByText("頭 / 頭髮")).toBeVisible();
+    await expect(page.getByText(/已探索 1 \/ 6/)).toBeVisible();
+
+    const chestGroup = page.locator('svg g[aria-label="胸部"]');
+    await chestGroup.focus();
+    await page.keyboard.press(" ");
+
+    await expect(page.getByText("胸部")).toBeVisible();
+    await expect(page.getByText(/已探索 2 \/ 6/)).toBeVisible();
+  });
+
   test("從選單進入身體紅綠燈", async ({ page }) => {
     await page.goto("/menu");
     await page.getByRole("button", { name: /身體紅綠燈/ }).click();

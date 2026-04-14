@@ -115,9 +115,9 @@ export default function BodyTrafficLightPage() {
             style={{
               backgroundColor: exploredParts.has(part.id)
                 ? part.signal === "red"
-                  ? "#ff8a80"
-                  : "#a8e6cf"
-                : "#e0d6c8",
+                  ? "var(--color-red-danger)"
+                  : "var(--color-green-safe)"
+                : "var(--color-warm-muted)",
             }}
             animate={
               exploredParts.has(part.id) ? { scale: [1, 1.3, 1] } : undefined
