@@ -63,10 +63,12 @@ test.describe("身體紅綠燈 (HO-609)", () => {
       "腳",
     ];
 
-    for (const partName of parts) {
-      const group = page.locator(`svg g[aria-label="${partName}"]`);
+    for (let i = 0; i < parts.length; i++) {
+      const group = page.locator(`svg g[aria-label="${parts[i]}"]`);
       await group.locator("rect, circle").first().click();
-      await page.waitForTimeout(300);
+      await expect(
+        page.getByText(new RegExp(`已探索 ${i + 1} \\/ 6`)),
+      ).toBeVisible();
     }
 
     await expect(page.getByText("太棒了！")).toBeVisible({ timeout: 5000 });

@@ -30,14 +30,20 @@ export default function BodyTrafficLightPage() {
       setExploredParts((prev) => {
         const next = new Set(prev);
         next.add(partId);
-        if (next.size === bodyParts.length) {
-          timerRef.current = setTimeout(() => setPhase("complete"), 1500);
-        }
         return next;
       });
     },
     [phase, play],
   );
+
+  useEffect(() => {
+    if (phase === "exploring" && exploredParts.size === bodyParts.length) {
+      timerRef.current = setTimeout(() => setPhase("complete"), 1500);
+      return () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+    }
+  }, [exploredParts.size, phase]);
 
   useEffect(() => {
     if (phase === "complete") {

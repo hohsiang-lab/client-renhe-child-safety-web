@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import { motion } from "framer-motion";
 import { bodyParts } from "../data/bodyParts";
 
@@ -42,13 +43,24 @@ function PartGroup({
   onPartClick,
   children,
 }: PartGroupProps) {
+  const name = bodyParts.find((p) => p.id === partId)!.name;
+
+  function handleKeyDown(e: KeyboardEvent<SVGGElement>) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onPartClick(partId);
+    }
+  }
+
   return (
     <motion.g
       onClick={() => onPartClick(partId)}
-      style={{ cursor: "pointer" }}
+      onKeyDown={handleKeyDown}
+      tabIndex={0}
+      style={{ cursor: "pointer", outline: "none" }}
       whileTap={{ scale: 0.95 }}
       role="button"
-      aria-label={bodyParts.find((p) => p.id === partId)?.name}
+      aria-label={name}
     >
       <g
         fill={partFill(partId, activePart, exploredParts)}
@@ -67,7 +79,12 @@ export default function BodySvg({
   onPartClick,
 }: BodySvgProps) {
   return (
-    <svg viewBox="0 0 200 380" className="mx-auto h-auto w-full max-w-[280px]">
+    <svg
+      viewBox="0 0 200 380"
+      role="group"
+      aria-label="身體部位互動圖"
+      className="mx-auto h-auto w-full max-w-[280px]"
+    >
       {/* Head */}
       <PartGroup
         partId="head"
