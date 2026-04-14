@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { secretQuestions, type SecretQuestion } from "../data/secrets";
@@ -23,6 +23,7 @@ export default function SecretGamePage() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const current: SecretQuestion | undefined = questions[index];
 
@@ -32,7 +33,10 @@ export default function SecretGamePage() {
   }, [index, phase, current, play]);
 
   useEffect(() => {
-    return () => stop();
+    return () => {
+      stop();
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
   }, [stop]);
 
   const advance = useCallback(() => {
@@ -51,10 +55,8 @@ export default function SecretGamePage() {
     if (choice === current.answer) {
       setScore((s) => s + 1);
       setPhase("correct");
-      play(`/audio/secret-q${current.id}-correct.mp3`, {
-        onEnd: () => {},
-      });
-      setTimeout(advance, 2000);
+      play(`/audio/secret-q${current.id}-correct.mp3`);
+      timerRef.current = setTimeout(advance, 2000);
     } else {
       setPhase("wrong");
       play(`/audio/secret-q${current.id}-wrong.mp3`);
@@ -172,7 +174,7 @@ export default function SecretGamePage() {
                   >
                     ⭐
                   </motion.div>
-                  <p className="text-lg font-bold text-green-700">
+                  <p className="text-green-safe text-lg font-bold">
                     答對了！好棒！
                   </p>
                 </motion.div>
@@ -185,7 +187,7 @@ export default function SecretGamePage() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <div className="bg-red-danger-bg mb-4 rounded-xl p-4 text-center">
-                    <p className="mb-1 text-base font-bold text-red-700">
+                    <p className="text-red-danger mb-1 text-base font-bold">
                       不太對喔～
                     </p>
                     <p className="text-text-light text-sm">
