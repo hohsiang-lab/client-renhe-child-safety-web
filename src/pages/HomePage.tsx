@@ -1,13 +1,27 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useAudioContext } from "../hooks/useAudioContext";
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { play } = useAudioPlayer();
+  const { isMuted, currentAudioRef } = useAudioContext();
 
   function handleStart() {
-    play("/audio/home-welcome.mp3");
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+    }
+
+    const audio = new Audio("/audio/home-welcome.mp3");
+    audio.muted = isMuted;
+    currentAudioRef.current = audio;
+    audio.onended = () => {
+      if (currentAudioRef.current === audio) {
+        currentAudioRef.current = null;
+      }
+    };
+    audio.play().catch(() => {});
+
     navigate("/menu");
   }
 
