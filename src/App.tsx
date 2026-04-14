@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import MenuPage from "./pages/MenuPage";
 import SecretGamePage from "./pages/SecretGamePage";
@@ -16,6 +16,7 @@ export default function App() {
         <Route path="/body-traffic-light" element={<BodyTrafficLightPage />} />
         <Route path="/trusted-adult" element={<TrustedAdultPage />} />
         <Route path="/ending" element={<EndingPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
   );

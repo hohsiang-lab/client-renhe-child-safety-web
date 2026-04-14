@@ -20,7 +20,7 @@ const modules = [
     path: "/trusted-adult",
     emoji: "💛",
   },
-] as const;
+];
 
 export default function MenuPage() {
   const navigate = useNavigate();

@@ -1,4 +1,4 @@
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useEffect } from "react";
 
 let activeAudio: HTMLAudioElement | null = null;
 
@@ -13,9 +13,7 @@ export function useAudio() {
     const audio = new Audio(src);
     audioRef.current = audio;
     activeAudio = audio;
-    audio.play().catch(() => {
-      // browser autoplay policy — silently ignore
-    });
+    audio.play().catch(() => {});
   }, []);
 
   const stop = useCallback(() => {
@@ -25,6 +23,12 @@ export function useAudio() {
       if (activeAudio === audioRef.current) activeAudio = null;
     }
   }, []);
+
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
 
   return { play, stop };
 }
