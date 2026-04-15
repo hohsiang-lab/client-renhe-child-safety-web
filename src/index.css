@@ -7,8 +7,12 @@
   --color-primary-hover: #e88e2e;
   --color-green-safe: #a8e6cf;
   --color-green-safe-bg: #e8f8f0;
+  --color-green-safe-dark: #43a047;
   --color-red-danger: #ff8a80;
   --color-red-danger-bg: #fce4e4;
+  --color-red-danger-dark: #e53935;
+  --color-warm-muted: #e8e0d4;
+  --color-warm-border: #c4b8a8;
   --color-text-main: #3d3d3d;
   --color-text-light: #666666;
   --font-sans: "Noto Sans TC", "Segoe UI", sans-serif;
@@ -22,4 +26,9 @@ html {
 
 body {
   min-height: 100dvh;
+}
+
+.body-part:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
 }
