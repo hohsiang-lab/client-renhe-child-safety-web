@@ -33,7 +33,7 @@ export default function PickDollPage() {
         選一個你喜歡的人偶
       </motion.h1>
 
-      <div className="grid w-full max-w-md grid-cols-2 gap-6">
+      <div className="grid w-full max-w-lg grid-cols-2 gap-6">
         {DOLLS.map((doll) => {
           const isSelected = selected === doll.id;
           return (
@@ -55,7 +55,7 @@ export default function PickDollPage() {
               <img
                 src={doll.src}
                 alt={doll.alt}
-                className="mb-3 h-48 w-auto object-contain"
+                className="mb-3 h-72 w-full object-contain"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).style.display = "none";
                 }}
