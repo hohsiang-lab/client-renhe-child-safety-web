@@ -70,6 +70,7 @@ export default function BodyTrafficLightPage() {
           <AnimatePresence key={light.id}>
             {visibleCount > i && (
               <motion.div
+                key={light.id}
                 className="flex items-center gap-4 rounded-2xl bg-white px-5 py-4 shadow-md"
                 {...popIn}
               >
