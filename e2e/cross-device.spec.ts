@@ -182,11 +182,15 @@ test.describe("音效播放機制 (HO-613)", () => {
 
     // 攔截 addEventListener 呼叫
     await page.addInitScript(() => {
+      type DocWithListeners = typeof document & { __audioUnlockListeners: string[] };
       const orig = document.addEventListener.bind(document);
-      (document as any).__audioUnlockListeners = [];
-      document.addEventListener = function (type: string, ...args: any[]) {
+      (document as DocWithListeners).__audioUnlockListeners = [];
+      document.addEventListener = function (
+        type: string,
+        ...args: Parameters<typeof document.addEventListener>
+      ) {
         if (type === "touchend" || type === "click") {
-          (document as any).__audioUnlockListeners.push(type);
+          (document as DocWithListeners).__audioUnlockListeners.push(type);
         }
         return orig(type, ...args);
       };
@@ -194,9 +198,10 @@ test.describe("音效播放機制 (HO-613)", () => {
 
     await page.goto("/");
 
-    const listeners: string[] = await page.evaluate(
-      () => (document as any).__audioUnlockListeners ?? [],
-    );
+    const listeners: string[] = await page.evaluate(() => {
+      type DocWithListeners = typeof document & { __audioUnlockListeners: string[] };
+      return (document as DocWithListeners).__audioUnlockListeners ?? [];
+    });
     hasUnlockListener =
       listeners.includes("touchend") || listeners.includes("click");
 
