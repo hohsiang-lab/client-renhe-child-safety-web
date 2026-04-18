@@ -9,7 +9,7 @@
 
 - [ ] 定義 `BodyPartZone`、`BodyPartV2` interface
 - [ ] 建立 `bodyPartsV2` 陣列（10 個部位，含 sima-estimated 座標）
-- [ ] 確認座標已加上 `// sima-estimated` 標記供 Evan 識別
+- [ ] 確認檔案頂部加上 sima-estimated 注意事項（file-level comment，供 Evan 識別）
 
 **Acceptance**: `bodyPartsV2.length === 10`，雙邊部位（shoulder/hand/thigh）的 `zones.length === 2`
 
@@ -18,8 +18,8 @@
 ## T002 — 建立 `BodyMarkPage.tsx` 基礎架構
 
 - [ ] 建立 `src/pages/BodyMarkPage.tsx`
-- [ ] 從 URL search params 讀取 `?doll=female|male`，invalid 值 fallback `female`
-- [ ] 初始化 state：`marks`（Map）、`selectedPartId`（string | null）
+- [ ] 從 Zustand store (`useBodyTrafficLightStore.doll`) 讀取人偶選擇；URL param `?doll=` 仍支援，作為 E2E / 直連備援（寫入 store）
+- [ ] 初始化 state：`marks`（Zustand store `Record<string, LightColor>`）、`selectedPartId`（local `useState`）
 - [ ] 顯示標題文字（「幫身體各部位選燈色 🚦」）
 - [ ] 顯示 PNG 圖片（`/images/doll-female.png` 或 `doll-male.png`），`max-w-[360px]`，`mx-auto`
 
@@ -32,7 +32,7 @@
 - [ ] 圖片容器設為 `position: relative`
 - [ ] 依 `bodyPartsV2` 生成透明 `<button>` 疊加在圖片上
 - [ ] 雙邊部位（2 個 zone）各生成獨立 button，onClick 皆呼叫同一 partId
-- [ ] Hit area 視覺：未標記輪廓圓 / 選中白色半透明 / 已標記燈色半透明
+- [ ] Hit area 視覺：未標記輪廓（border，透明背景）/ 選中白色半透明 / 已標記燈色半透明（`rounded-xl` 矩形）
 - [ ] 每個 button 加上 `aria-label={part.name}`、`data-part-id={part.id}`
 - [ ] 確認 minWidth/minHeight ≥ 48px
 
@@ -51,14 +51,14 @@
 - [ ] 已選部位有燈色時，對應按鈕顯示 active 狀態（scale + shadow）
 
 **Acceptance**:
-- 選中部位 → 點🔴 → marks.get(partId) === 'red'
+- 選中部位 → 點🔴 → marks[partId] === 'red'
 - 無選中部位 → 點🟢 → marks 不變
 
 ---
 
 ## T005 — 實作「完成設定」按鈕與導航
 
-- [ ] `isComplete = marks.size === bodyPartsV2.length` 計算
+- [ ] `isComplete = Object.keys(marks).length === bodyPartsV2.length` 計算
 - [ ] 以 `AnimatePresence` + `motion.div` 讓「完成設定」按鈕在 isComplete 時從底部滑入
 - [ ] 「完成設定」出現後，顏色選擇器仍可使用（可繼續修改）
 - [ ] 點擊「完成設定」→ `navigate('/body-traffic-light')` (placeholder until Phase 4 spec)
