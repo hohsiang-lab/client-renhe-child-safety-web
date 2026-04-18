@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { bodyPartsV2 } from "../data/bodyPartsV2";
-
-type LightColor = "red" | "yellow" | "green";
+import {
+  useBodyTrafficLightStore,
+  type LightColor,
+} from "../stores/useBodyTrafficLightStore";
 
 const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
   { color: "green", label: "🟢 綠燈", bg: "bg-green-400" },
@@ -17,26 +19,35 @@ const COLOR_OVERLAY: Record<LightColor, string> = {
   red: "bg-red-400/60",
 };
 
+// Zones sorted largest → smallest so smaller (more specific) zones render on
+// top and win click events when bounding boxes overlap (Live2D priority rule).
+const sortedZones = bodyPartsV2
+  .flatMap((part) => part.zones.map((zone, i) => ({ part, zone, zoneIdx: i })))
+  .sort((a, b) => b.zone.w * b.zone.h - a.zone.w * a.zone.h);
+
 export default function BodyMarkPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const rawDoll = searchParams.get("doll");
-  const doll = rawDoll === "male" ? "male" : "female";
+  const { doll, setDoll, marks, setMark } = useBodyTrafficLightStore();
 
-  const [marks, setMarks] = useState<Map<string, LightColor>>(new Map());
+  // Support direct navigation / E2E via ?doll= URL param
+  useEffect(() => {
+    const param = searchParams.get("doll");
+    if (param === "male") setDoll("male");
+    else setDoll("female");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
 
-  const isComplete = marks.size === bodyPartsV2.length;
-  const selectedColor = selectedPartId ? marks.get(selectedPartId) : undefined;
+  const isComplete = Object.keys(marks).length === bodyPartsV2.length;
+  const selectedColor = selectedPartId
+    ? (marks[selectedPartId] as LightColor | undefined)
+    : undefined;
 
   function handleColorPick(color: LightColor) {
     if (!selectedPartId) return;
-    setMarks((prev) => {
-      const next = new Map(prev);
-      next.set(selectedPartId, color);
-      return next;
-    });
+    setMark(selectedPartId, color);
   }
 
   return (
@@ -46,61 +57,65 @@ export default function BodyMarkPage() {
           幫身體各部位選燈色 🚦
         </h1>
         <p className="mb-4 text-center text-sm text-gray-500">
-          已標記 {marks.size} / {bodyPartsV2.length} 個部位
+          已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
         </p>
 
-        {/* Doll image with hit area overlay */}
-        <div
-          className="relative mx-auto w-full"
-          style={{ userSelect: "none" }}
-        >
+        <div className="relative mx-auto w-full" style={{ userSelect: "none" }}>
           <img
             src={`/images/doll-${doll}.png`}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
             className="w-full"
             draggable={false}
             data-testid="doll-image"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
           />
 
-          {bodyPartsV2.map((part) =>
-            part.zones.map((zone, zoneIdx) => {
-              const color = marks.get(part.id);
-              const isSelected = selectedPartId === part.id;
+          {sortedZones.map(({ part, zone, zoneIdx }) => {
+            const color = marks[part.id] as LightColor | undefined;
+            const isSelected = selectedPartId === part.id;
+            const side =
+              part.zones.length > 1
+                ? zoneIdx === 0
+                  ? "（左）"
+                  : "（右）"
+                : "";
 
-              let overlayClass = "border-white/60 bg-transparent hover:bg-white/20";
-              if (isSelected && color) {
-                overlayClass = `border-white ${COLOR_OVERLAY[color]}`;
-              } else if (isSelected) {
-                overlayClass = "border-white bg-white/40";
-              } else if (color) {
-                overlayClass = `border-transparent ${COLOR_OVERLAY[color]}`;
-              }
+            let overlayClass =
+              "border-white/60 bg-transparent hover:bg-white/20";
+            if (isSelected && color) {
+              overlayClass = `border-white ${COLOR_OVERLAY[color]}`;
+            } else if (isSelected) {
+              overlayClass = "border-white bg-white/40";
+            } else if (color) {
+              overlayClass = `border-transparent ${COLOR_OVERLAY[color]}`;
+            }
 
-              return (
-                <button
-                  key={`${part.id}-${zoneIdx}`}
-                  aria-label={part.name}
-                  data-part-id={part.id}
-                  data-color={color ?? ""}
-                  onClick={() => setSelectedPartId(part.id)}
-                  className={`absolute rounded-full border-2 transition-all ${overlayClass}`}
-                  style={{
-                    left: `${zone.cx}%`,
-                    top: `${zone.cy}%`,
-                    width: `${zone.w}%`,
-                    transform: "translate(-50%, -50%)",
-                    aspectRatio: "1",
-                    minWidth: "48px",
-                    minHeight: "48px",
-                  }}
-                />
-              );
-            })
-          )}
+            return (
+              <button
+                key={`${part.id}-${zoneIdx}`}
+                aria-label={`${part.name}${side}`}
+                aria-pressed={isSelected}
+                data-part-id={part.id}
+                data-color={color ?? ""}
+                onClick={() => setSelectedPartId(part.id)}
+                className={`absolute rounded-xl border-2 transition-all ${overlayClass}`}
+                style={{
+                  left: `${zone.cx}%`,
+                  top: `${zone.cy}%`,
+                  width: `${zone.w}%`,
+                  height: `${zone.h}%`,
+                  transform: "translate(-50%, -50%)",
+                  minWidth: "48px",
+                  minHeight: "48px",
+                }}
+              />
+            );
+          })}
         </div>
       </div>
 
-      {/* Fixed bottom: complete button + color picker */}
       <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-2 bg-white/95 px-6 pb-6 pt-4 shadow-[0_-2px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm">
         <AnimatePresence>
           {isComplete && (
