@@ -8,7 +8,7 @@
 
 ## Context
 
-Phase 3 of BTL v2 flow. Previous page (Phase 2) is `PickDollPage` at `/body-traffic-light/pick-doll`, which navigates here via `navigate(\`/body-traffic-light/mark?doll=\${selected}\`)`.
+Phase 3 of BTL v2 flow. Previous page (Phase 2) is `PickDollPage` at `/body-traffic-light/pick-doll`, which calls `setDoll()` on the Zustand store and navigates to `/body-traffic-light/mark` (no URL param).
 
 Full flow: 規則說明 → 選人偶 → **身體標記** → 觸碰測試 → 結尾
 
@@ -17,17 +17,20 @@ v1 (`BodyTrafficLightPage`) 預先設定每個部位的紅/綠燈。v2 改為讓
 ## Functional Requirements
 
 ### FR-001: 顯示已選人偶 PNG
-- 從 URL query param `?doll=female|male` 讀取人偶選擇
+- 從 Zustand store（`useBodyTrafficLightStore.doll`）讀取人偶選擇（由 PickDollPage 寫入）
+- URL query param `?doll=female|male` 仍支援，作為直連 / E2E 備援（寫入 store）
 - 顯示對應 PNG：`/images/doll-female.png` 或 `/images/doll-male.png`
 - 圖片等比例顯示，最大寬度 360px，水平置中
-- 若 `doll` param 缺失或無效，fallback 至 `female`
+- 若 `doll` 值缺失或無效，fallback 至 `female`
 
-### FR-002: 身體部位點擊區（透明 hit area）
+### FR-002: 身體部位點擊區（hit area）
 - 在 PNG 圖片上用 `position: absolute` 透明 `<button>` 疊加各部位 hit area
+- Hit area 形狀為**圓角矩形**（`rounded-xl`），以 w/h % 定位（業界 bounding-box 標準）
 - Hit area 以 **佔 PNG 顯示尺寸的 %** 定位（非 px），確保不同螢幕尺寸一致
+- 重疊區域處理：zones 按面積從大到小渲染，較小 zone 在最上層優先接收 click（Live2D 優先級規則）
 - 每個 hit area 最小 48×48px（tablet 觸控標準）
 - 部位 ID 清單（共 10 個）：`head`、`face`、`ear`、`mouth`、`shoulder`、`chest`、`hand`、`belly`、`private`、`thigh`
-- 雙邊部位（`shoulder`、`hand`、`thigh`）有 2 個 zone（左/右），共用同一個 partId
+- 雙邊部位（`shoulder`、`hand`、`thigh`）有 2 個 zone（左/右），共用同一個 partId，aria-label 加後綴（左）/（右）
 
 ### FR-003: 部位選中狀態
 - 點擊 hit area → 該部位進入「選中」狀態（視覺高亮：半透明白色圓圈 + border）
@@ -43,9 +46,8 @@ v1 (`BodyTrafficLightPage`) 預先設定每個部位的紅/綠燈。v2 改為讓
 - 目前選中顏色的按鈕顯示 active 狀態（若該部位已有燈色）
 
 ### FR-005: 燈色標記顯示
-- 已標記的部位 hit area 顯示對應顏色的圓圈（🟢/🟡/🔴 色系 + 50% 透明度）
-- 圓圈疊加在 PNG 之上，大小固定（約 32px）
-- 未標記的部位 hit area 顯示小型無色圓圈（outline only）作為引導提示
+- 已標記的部位 hit area 以對應顏色的半透明圓角矩形疊加顯示（🟢/🟡/🔴 色系 + 60% 透明度）
+- 未標記的部位 hit area 顯示半透明白色 outline（引導提示）
 
 ### FR-006: 完成偵測與「完成設定」按鈕
 - 所有 10 個部位都標記後，「完成設定」按鈕從底部顏色選擇器上方出現（Framer Motion 向上滑入）
@@ -58,8 +60,8 @@ v1 (`BodyTrafficLightPage`) 預先設定每個部位的紅/綠燈。v2 改為讓
 ### PNG + 透明 hit area 疊加方式
 - 圖片容器：`position: relative; width: 100%; max-width: 360px`
 - Hit area button：`position: absolute; transform: translate(-50%, -50%); left: {cx}%; top: {cy}%`
-- Width/height 使用 `w-[{w}%]` 搭配 `aspect-square` 或明確 h，最小 48px
-- 透明 button 上方 overlay 一個 div 顯示燈色圓圈
+- Width: `zone.w%`，Height: `zone.h%`（圓角矩形，不用 aspect-square），最小 48px
+- 燈色以 button 本身的背景色 + 透明度呈現（無獨立 overlay div）
 
 ### 座標系統
 - 所有座標（`cx`、`cy`、`w`、`h`）以 **佔 PNG 顯示寬/高的 %** 表示（0–100）
@@ -85,14 +87,20 @@ v1 (`BodyTrafficLightPage`) 預先設定每個部位的紅/綠燈。v2 改為讓
 > 先以共用表開發，Evan 測試後決定是否拆分。
 
 ### 狀態管理
+Zustand store `useBodyTrafficLightStore`（`src/stores/useBodyTrafficLightStore.ts`）：
 ```typescript
-type LightColor = 'red' | 'yellow' | 'green';
-const [marks, setMarks] = useState<Map<string, LightColor>>(new Map());
-const [selectedPartId, setSelectedPartId] = useState<string | null>(null);
+interface BodyTrafficLightState {
+  doll: 'female' | 'male';
+  marks: Record<string, LightColor>; // partId → color
+  setDoll: (doll: DollType) => void;
+  setMark: (partId: string, color: LightColor) => void;
+  reset: () => void;
+}
 ```
-- `marks`：各部位燈色，key = partId
-- `selectedPartId`：目前選中的部位
-- 完成條件：`marks.size === bodyPartsV2.length`
+- `doll`：由 PickDollPage 寫入，Phase 3 / Phase 4 讀取
+- `marks`：Phase 3 寫入，Phase 4 讀取（觸碰測試的語音邏輯依賴此資料）
+- `selectedPartId`：仍為 local `useState`（UI-only，不需跨頁）
+- 完成條件：`Object.keys(marks).length === bodyPartsV2.length`
 
 ### 資料結構（`src/data/bodyPartsV2.ts`）
 ```typescript
@@ -169,7 +177,9 @@ export const bodyPartsV2: BodyPartV2[] = [...];
 
 ## File Changes
 
-- `src/data/bodyPartsV2.ts` — new，10 個部位資料 + 座標（Option B 估算值）
+- `src/stores/useBodyTrafficLightStore.ts` — new，Zustand store（doll + marks）
+- `src/data/bodyPartsV2.ts` — new，10 個部位資料 + 座標（sima 估算值，待 Evan 驗證）
 - `src/pages/BodyMarkPage.tsx` — new，主頁面元件
+- `src/pages/PickDollPage.tsx` — modified，加 `setDoll()` 寫入 store
 - `src/App.tsx` — 新增 route `/body-traffic-light/mark`
 - `e2e/body-mark.spec.ts` — new，E2E 測試
