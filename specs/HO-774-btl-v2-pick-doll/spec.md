@@ -26,8 +26,8 @@ Full flow: 規則說明 → **選人偶** → 身體標記 → 觸碰測試 → 
 
 ### FR-003: 「選好了」按鈕
 - 選擇後才啟用（未選擇時 disabled）
-- 點擊後導向 `/body-traffic-light/mark?doll=female` 或 `?doll=male`
-- URL query param 傳遞選擇給 Phase 3
+- 點擊後呼叫 `setDoll()` 將選擇寫入 Zustand store（`useBodyTrafficLightStore`），再導向 `/body-traffic-light/mark`（無 URL param）
+- Phase 3（身體標記頁）從 store 讀取人偶選擇
 
 ## Technical Decisions
 
@@ -49,7 +49,7 @@ Full flow: 規則說明 → **選人偶** → 身體標記 → 觸碰測試 → 
 **Acceptance Scenarios**:
 1. **Given** 進入 `/body-traffic-light/pick-doll`, **When** 頁面載入, **Then** 顯示「選一個你喜歡的人偶」標題 + 女生卡片 + 男生卡片 + disabled「選好了」按鈕
 2. **Given** 頁面載入完成, **When** 點擊女生卡片, **Then** 女生卡片顯示選中狀態，男生卡片無選中狀態
-3. **Given** 女生已選中, **When** 點擊「選好了」, **Then** 導向 `/body-traffic-light/mark?doll=female`
+3. **Given** 女生已選中, **When** 點擊「選好了」, **Then** `setDoll('female')` 寫入 store，導向 `/body-traffic-light/mark`
 4. **Given** 女生已選中, **When** 點擊男生卡片, **Then** 選擇切換至男生，女生卡片取消高亮
 
 ### User Story 2 - 選擇男生人偶並繼續 (Priority: P1)
@@ -57,7 +57,7 @@ Full flow: 規則說明 → **選人偶** → 身體標記 → 觸碰測試 → 
 與 US1 對稱，選擇男生 → `?doll=male`。
 
 **Acceptance Scenarios**:
-1. **Given** 點擊男生卡片, **When** 點「選好了」, **Then** 導向 `/body-traffic-light/mark?doll=male`
+1. **Given** 點擊男生卡片, **When** 點「選好了」, **Then** `setDoll('male')` 寫入 store，導向 `/body-traffic-light/mark`
 
 ### User Story 3 - 未選擇前按鈕不可點 (Priority: P1)
 

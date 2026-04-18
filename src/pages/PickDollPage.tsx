@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
-type DollType = "female" | "male";
+import { useBodyTrafficLightStore, type DollType } from "../stores/useBodyTrafficLightStore";
 
 const DOLLS: { id: DollType; label: string; src: string; alt: string }[] = [
   {
@@ -21,6 +20,7 @@ const DOLLS: { id: DollType; label: string; src: string; alt: string }[] = [
 
 export default function PickDollPage() {
   const navigate = useNavigate();
+  const setDoll = useBodyTrafficLightStore((s) => s.setDoll);
   const [selected, setSelected] = useState<DollType | null>(null);
 
   return (
@@ -79,7 +79,10 @@ export default function PickDollPage() {
         transition={{ delay: 0.3 }}
         disabled={!selected}
         onClick={() => {
-          if (selected) navigate(`/body-traffic-light/mark?doll=${selected}`);
+          if (selected) {
+            setDoll(selected);
+            navigate("/body-traffic-light/mark");
+          }
         }}
       >
         選好了
