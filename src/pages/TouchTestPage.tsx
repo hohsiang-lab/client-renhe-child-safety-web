@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { bodyPartsV2 } from "../data/bodyPartsV2";
+import { bodyPartsV2, type BodyPartZone } from "../data/bodyPartsV2";
 import {
   useBodyTrafficLightStore,
   type LightColor,
@@ -32,6 +32,7 @@ const sortedZones = bodyPartsV2
 
 interface PulseState {
   partId: string;
+  zone: BodyPartZone;
   color: LightColor;
   key: string;
 }
@@ -45,17 +46,24 @@ export default function TouchTestPage() {
   const pulseCounter = useRef(0);
 
   useEffect(() => {
-    if (Object.keys(marks).length === 0) {
+    if (Object.keys(marks).length < bodyPartsV2.length) {
       navigate("/body-traffic-light/mark", { replace: true });
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function handlePartClick(partId: string) {
+  useEffect(() => {
+    Object.values(AUDIO_MAP).forEach((src) => {
+      const a = new Audio(src);
+      a.load();
+    });
+  }, []);
+
+  function handlePartClick(partId: string, zone: BodyPartZone) {
     const color = marks[partId] as LightColor | undefined;
     if (!color) return;
     pulseCounter.current += 1;
     setPlayingPartId(partId);
-    setPulseState({ partId, color, key: `${partId}-${pulseCounter.current}` });
+    setPulseState({ partId, zone, color, key: `${partId}-${pulseCounter.current}` });
     play(AUDIO_MAP[color], {
       onEnd: () => setPlayingPartId((prev) => (prev === partId ? null : prev)),
     });
@@ -98,7 +106,7 @@ export default function TouchTestPage() {
                 key={`${part.id}-${zoneIdx}`}
                 aria-label={`${part.name}${side}`}
                 data-part-id={part.id}
-                onClick={() => handlePartClick(part.id)}
+                onClick={() => handlePartClick(part.id, zone)}
                 className={[
                   "absolute rounded-xl border-2 transition-all hover:brightness-110 active:scale-95",
                   color
@@ -127,20 +135,13 @@ export default function TouchTestPage() {
                 animate={{ scale: 1.5, opacity: 0 }}
                 transition={{ duration: 0.6 }}
                 onAnimationComplete={() => setPulseState(null)}
-                style={(() => {
-                  const pulsePart = bodyPartsV2.find(
-                    (p) => p.id === pulseState.partId,
-                  );
-                  const zone = pulsePart?.zones[0];
-                  if (!zone) return {};
-                  return {
-                    left: `${zone.cx}%`,
-                    top: `${zone.cy}%`,
-                    width: `${zone.w}%`,
-                    height: `${zone.h}%`,
-                    transform: "translate(-50%, -50%)",
-                  };
-                })()}
+                style={{
+                  left: `${pulseState.zone.cx}%`,
+                  top: `${pulseState.zone.cy}%`,
+                  width: `${pulseState.zone.w}%`,
+                  height: `${pulseState.zone.h}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
               />
             )}
           </AnimatePresence>

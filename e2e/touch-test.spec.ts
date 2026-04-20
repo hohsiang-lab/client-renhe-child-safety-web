@@ -19,6 +19,14 @@ async function setupTouchTest(page: Page) {
 }
 
 test.describe("觸碰測試頁 (HO-776)", () => {
+  test("直接瀏覽 /touch-test（store 為空）→ 重導向 /body-traffic-light/mark", async ({
+    page,
+  }) => {
+    await page.goto("/body-traffic-light/touch-test");
+    await expect(page).toHaveURL("/body-traffic-light/mark");
+  });
+
+
   test("US1: 點擊部位 → data-playing 屬性更新", async ({ page }) => {
     await setupTouchTest(page);
     await page.locator('[data-part-id="private"]').first().click();
