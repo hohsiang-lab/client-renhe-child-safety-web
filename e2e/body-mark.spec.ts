@@ -114,7 +114,7 @@ test.describe("身體標記頁 (HO-775)", () => {
     await expect(page.getByTestId("complete-btn")).not.toBeVisible();
   });
 
-  test("點「完成設定」→ URL 導向 /body-traffic-light", async ({ page }) => {
+  test("點「完成設定」→ URL 導向 /body-traffic-light/touch-test", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=female");
 
     for (const part of bodyPartsV2) {
@@ -123,6 +123,6 @@ test.describe("身體標記頁 (HO-775)", () => {
     }
 
     await page.getByTestId("complete-btn").click();
-    await expect(page).toHaveURL("/body-traffic-light");
+    await expect(page).toHaveURL("/body-traffic-light/touch-test");
   });
 });
