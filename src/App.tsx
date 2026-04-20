@@ -7,6 +7,7 @@ import SecretGamePage from "./pages/SecretGamePage";
 import BodyTrafficLightPage from "./pages/BodyTrafficLightPage";
 import PickDollPage from "./pages/PickDollPage";
 import BodyMarkPage from "./pages/BodyMarkPage";
+import TouchTestPage from "./pages/TouchTestPage";
 import TrustedAdultPage from "./pages/TrustedAdultPage";
 import EndingPage from "./pages/EndingPage";
 
@@ -21,6 +22,7 @@ export default function App() {
           <Route path="/body-traffic-light" element={<BodyTrafficLightPage />} />
           <Route path="/body-traffic-light/pick-doll" element={<PickDollPage />} />
           <Route path="/body-traffic-light/mark" element={<BodyMarkPage />} />
+          <Route path="/body-traffic-light/touch-test" element={<TouchTestPage />} />
           <Route path="/trusted-adult" element={<TrustedAdultPage />} />
           <Route path="/ending" element={<EndingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />

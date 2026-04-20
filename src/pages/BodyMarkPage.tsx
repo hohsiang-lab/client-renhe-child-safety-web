@@ -125,7 +125,7 @@ export default function BodyMarkPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              onClick={() => navigate("/body-traffic-light")}
+              onClick={() => navigate("/body-traffic-light/touch-test")}
               className="w-full max-w-xs rounded-full bg-green-500 py-3 text-lg font-bold text-white shadow-lg"
             >
               完成設定 ✅
