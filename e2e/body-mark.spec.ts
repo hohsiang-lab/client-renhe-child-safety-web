@@ -124,5 +124,6 @@ test.describe("身體標記頁 (HO-775)", () => {
 
     await page.getByTestId("complete-btn").click();
     await expect(page).toHaveURL("/body-traffic-light/touch-test");
+>>>>>>> origin/HO-775-btl-v2-body-mark
   });
 });
