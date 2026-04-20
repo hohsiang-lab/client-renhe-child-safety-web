@@ -7,6 +7,7 @@ import {
   type LightColor,
 } from "../stores/useBodyTrafficLightStore";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { preloadAudio } from "../utils/preloadAudio";
 
 const COLOR_OVERLAY: Record<LightColor, string> = {
   green: "bg-green-400/60",
@@ -52,10 +53,7 @@ export default function TouchTestPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    Object.values(AUDIO_MAP).forEach((src) => {
-      const a = new Audio(src);
-      a.load();
-    });
+    preloadAudio(Object.values(AUDIO_MAP));
   }, []);
 
   function handlePartClick(partId: string, zone: BodyPartZone) {

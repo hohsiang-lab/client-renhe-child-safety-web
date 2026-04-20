@@ -19,13 +19,16 @@ async function setupTouchTest(page: Page) {
 }
 
 test.describe("觸碰測試頁 (HO-776)", () => {
+  // Store is in-memory (no persist). page.goto() always reloads the page and
+  // resets the store to empty, so only the empty-store path is E2E-testable.
+  // The guard uses < bodyPartsV2.length (not === 0) for forward-compatibility
+  // if persist is added later.
   test("直接瀏覽 /touch-test（store 為空）→ 重導向 /body-traffic-light/mark", async ({
     page,
   }) => {
     await page.goto("/body-traffic-light/touch-test");
     await expect(page).toHaveURL("/body-traffic-light/mark");
   });
-
 
   test("US1: 點擊部位 → data-playing 屬性更新", async ({ page }) => {
     await setupTouchTest(page);
