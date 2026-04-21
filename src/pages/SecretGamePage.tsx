@@ -6,6 +6,17 @@ import { useAudioPlayer } from "../hooks/useAudioPlayer";
 
 type Phase = "playing" | "correct" | "wrong" | "complete";
 
+const trustedAdultCards = [
+  { name: "媽媽", src: "/images/trusted-adults/mom.png" },
+  { name: "爸爸", src: "/images/trusted-adults/dad.png" },
+  { name: "奶奶", src: "/images/trusted-adults/grandma.png" },
+  { name: "老師", src: "/images/trusted-adults/teacher.png" },
+  { name: "警察", src: "/images/trusted-adults/police.png" },
+  { name: "親戚", src: "/images/trusted-adults/relatives.png" },
+  { name: "隔壁叔叔阿姨", src: "/images/trusted-adults/neighbors.png" },
+  { name: "媽媽的男朋友", src: "/images/trusted-adults/moms-boyfriend.png" },
+];
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -23,6 +34,7 @@ export default function SecretGamePage() {
   const [index, setIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
+  const [showTrustedAdultsModal, setShowTrustedAdultsModal] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const current: SecretQuestion | undefined = questions[index];
@@ -56,7 +68,9 @@ export default function SecretGamePage() {
       setScore((s) => s + 1);
       setPhase("correct");
       play(`/audio/secret-q${current.id}-correct.mp3`);
-      timerRef.current = setTimeout(advance, 2000);
+      if (current.answer !== "bad") {
+        timerRef.current = setTimeout(advance, 2000);
+      }
     } else {
       setPhase("wrong");
       play(`/audio/secret-q${current.id}-wrong.mp3`);
@@ -174,9 +188,29 @@ export default function SecretGamePage() {
                   >
                     ⭐
                   </motion.div>
-                  <p className="text-green-safe text-lg font-bold">
+                  <p className="text-green-safe mb-2 text-lg font-bold">
                     答對了！好棒！
                   </p>
+                  {current.answer === "bad" && (
+                    <motion.div
+                      className="mt-4 flex flex-col gap-3"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                    >
+                      <p className="text-text-light text-sm leading-relaxed">
+                        {current.explanation}
+                      </p>
+                      <motion.button
+                        onClick={() => setShowTrustedAdultsModal(true)}
+                        className="bg-primary hover:bg-primary-hover w-full cursor-pointer rounded-full py-3 font-bold text-white"
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        那哪些是信任的大人呢？
+                      </motion.button>
+                    </motion.div>
+                  )}
                 </motion.div>
               )}
 
@@ -194,20 +228,69 @@ export default function SecretGamePage() {
                       {current.explanation}
                     </p>
                   </div>
-                  <motion.button
-                    onClick={advance}
-                    className="bg-primary hover:bg-primary-hover w-full cursor-pointer rounded-full py-3 font-bold text-white"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                  >
-                    我知道了
-                  </motion.button>
+                  {current.answer === "bad" ? (
+                    <motion.button
+                      onClick={() => setShowTrustedAdultsModal(true)}
+                      className="bg-primary hover:bg-primary-hover w-full cursor-pointer rounded-full py-3 font-bold text-white"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      那哪些是信任的大人呢？
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={advance}
+                      className="bg-primary hover:bg-primary-hover w-full cursor-pointer rounded-full py-3 font-bold text-white"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.97 }}
+                    >
+                      我知道了
+                    </motion.button>
+                  )}
                 </motion.div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      <AnimatePresence>
+        {showTrustedAdultsModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col bg-white"
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex items-center justify-between px-6 py-4 shadow-sm">
+              <h2 className="text-xl font-bold">信任的大人 💛</h2>
+              <motion.button
+                onClick={() => {
+                  setShowTrustedAdultsModal(false);
+                  advance();
+                }}
+                className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-6 py-2 font-bold text-white"
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+              >
+                我知道了
+              </motion.button>
+            </div>
+            <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-4 sm:grid-cols-3">
+              {trustedAdultCards.map((card) => (
+                <div key={card.name} className="flex flex-col items-center">
+                  <img
+                    src={card.src}
+                    alt={card.name}
+                    className="w-full rounded-2xl object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

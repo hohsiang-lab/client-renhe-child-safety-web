@@ -45,4 +45,16 @@ export const secretQuestions: SecretQuestion[] = [
     answer: "bad",
     explanation: "用威脅叫你保密的都是壞秘密，勇敢告訴信任的大人",
   },
+  {
+    id: 7,
+    scenario: "朋友跟我說一起準備給另一個朋友生日驚喜",
+    answer: "good",
+    explanation: "這是快樂、短暫的秘密，沒有讓你不舒服或害怕",
+  },
+  {
+    id: 8,
+    scenario: "網友說：「這是我們的秘密，不能讓你爸媽知道」",
+    answer: "bad",
+    explanation: "不隨便透漏個資給網路認識的朋友，有這種秘密要告訴爸媽",
+  },
 ];
