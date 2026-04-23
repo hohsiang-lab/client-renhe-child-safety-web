@@ -14,12 +14,6 @@ const modules = [
     path: "/body-traffic-light",
     emoji: "🚦",
   },
-  {
-    name: "信任大人",
-    description: "找到可以信任的大人",
-    path: "/trusted-adult",
-    emoji: "💛",
-  },
 ];
 
 export default function MenuPage() {
@@ -35,7 +29,7 @@ export default function MenuPage() {
         選擇你想玩的遊戲
       </motion.h1>
 
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="grid w-full max-w-2xl grid-cols-1 gap-6 md:grid-cols-2">
         {modules.map((mod, i) => (
           <motion.button
             key={mod.path}
