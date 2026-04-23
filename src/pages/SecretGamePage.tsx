@@ -23,6 +23,7 @@ export default function SecretGamePage() {
 
   const [phase, setPhase] = useState<Phase>("select-type");
   const [selectedCard, setSelectedCard] = useState<SecretQuestion | null>(null);
+  const [selectedType, setSelectedType] = useState<"good" | "bad" | null>(null);
 
   useEffect(() => {
     return () => stop();
@@ -62,7 +63,7 @@ export default function SecretGamePage() {
 
         <div className="grid w-full max-w-md grid-cols-2 gap-4">
           <motion.button
-            onClick={() => setPhase("card-grid")}
+            onClick={() => { setSelectedType("good"); setPhase("card-grid"); }}
             className="bg-green-safe-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -78,7 +79,7 @@ export default function SecretGamePage() {
           </motion.button>
 
           <motion.button
-            onClick={() => setPhase("card-grid")}
+            onClick={() => { setSelectedType("bad"); setPhase("card-grid"); }}
             className="bg-red-danger-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -116,7 +117,10 @@ export default function SecretGamePage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <h1 className="mb-1 text-2xl font-bold">秘密卡片 🔒</h1>
-          <p className="text-text-light text-sm">點擊卡片，看看它是什麼秘密</p>
+          <p className="text-text-light text-sm">
+            {selectedType === "good" ? "你選了好秘密！" : "你選了壞秘密！"}
+            來點開每張卡片看看 👇
+          </p>
         </motion.div>
 
         <div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
