@@ -120,7 +120,7 @@ export default function SecretGamePage() {
           </p>
         </motion.div>
 
-        <div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="mx-auto grid w-full max-w-[1240px] grid-cols-5 gap-4">
           {secretQuestions.map((q, i) => (
             <motion.div
               key={q.id}
