@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { secretQuestions, type SecretQuestion } from "../data/secrets";
+import { secretQuestions } from "../data/secrets";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { SecretCard } from "../components/SecretCard";
 
-type Phase = "select-type" | "card-grid" | "card-detail" | "trusted-adults";
+type Phase = "intro" | "grid" | "trusted-adults";
 
 const trustedAdultCards = [
   { name: "媽媽", src: "/images/trusted-adults/mom.png" },
@@ -19,30 +20,27 @@ const trustedAdultCards = [
 
 export default function SecretGamePage() {
   const navigate = useNavigate();
-  const { play, stop } = useAudioPlayer();
+  const { stop } = useAudioPlayer();
 
-  const [phase, setPhase] = useState<Phase>("select-type");
-  const [selectedCard, setSelectedCard] = useState<SecretQuestion | null>(null);
-  const [selectedType, setSelectedType] = useState<"good" | "bad" | null>(null);
+  const [phase, setPhase] = useState<Phase>("intro");
+  const [viewedIds, setViewedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     return () => stop();
   }, [stop]);
 
-  function openCard(q: SecretQuestion) {
-    stop();
-    setSelectedCard(q);
-    setPhase("card-detail");
-    play(`/audio/secret-q${q.id}-scenario.mp3`);
+  function handleFlipped(id: number) {
+    setViewedIds((prev) => new Set(prev).add(id));
   }
 
-  function closeCardToGrid() {
+  function openTrustedAdults() {
     stop();
-    setSelectedCard(null);
-    setPhase("card-grid");
+    setPhase("trusted-adults");
   }
 
-  if (phase === "select-type") {
+  const allViewed = viewedIds.size === secretQuestions.length;
+
+  if (phase === "intro") {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
         <motion.h1
@@ -63,7 +61,7 @@ export default function SecretGamePage() {
 
         <div className="grid w-full max-w-md grid-cols-2 gap-4">
           <motion.button
-            onClick={() => { setSelectedType("good"); setPhase("card-grid"); }}
+            onClick={() => setPhase("grid")}
             className="bg-green-safe-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -79,7 +77,7 @@ export default function SecretGamePage() {
           </motion.button>
 
           <motion.button
-            onClick={() => { setSelectedType("bad"); setPhase("card-grid"); }}
+            onClick={() => setPhase("grid")}
             className="bg-red-danger-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -108,7 +106,7 @@ export default function SecretGamePage() {
     );
   }
 
-  if (phase === "card-grid") {
+  if (phase === "grid") {
     return (
       <div className="flex min-h-dvh flex-col px-4 py-8">
         <motion.div
@@ -118,43 +116,44 @@ export default function SecretGamePage() {
         >
           <h1 className="mb-1 text-2xl font-bold">秘密卡片 🔒</h1>
           <p className="text-text-light text-sm">
-            {selectedType === "good" ? "你選了好秘密！" : "你選了壞秘密！"}
-            來點開每張卡片看看 👇
+            點擊每張卡片翻面看看 👇
           </p>
         </motion.div>
 
         <div className="mx-auto grid w-full max-w-2xl grid-cols-2 gap-4 sm:grid-cols-4">
           {secretQuestions.map((q, i) => (
-            <motion.button
+            <motion.div
               key={q.id}
-              onClick={() => openCard(q)}
-              className="bg-warm-card flex aspect-square cursor-pointer flex-col items-center justify-center rounded-2xl p-4 shadow-md"
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: i * 0.07 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
             >
-              <span className="mb-2 text-4xl">🤫</span>
-              <span className="text-text-light text-xs font-medium">秘密 #{q.id}</span>
-            </motion.button>
+              <SecretCard
+                question={q}
+                viewed={viewedIds.has(q.id)}
+                onFlipped={handleFlipped}
+                onTrustedAdults={openTrustedAdults}
+              />
+            </motion.div>
           ))}
         </div>
 
         <div className="mt-8 flex flex-col items-center gap-3">
+          {allViewed && (
+            <motion.button
+              onClick={() => navigate("/ending")}
+              className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-3 font-bold text-white shadow-md"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              data-testid="complete-button"
+            >
+              完成遊戲 🎉
+            </motion.button>
+          )}
           <motion.button
-            onClick={() => navigate("/ending")}
-            className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-3 font-bold text-white shadow-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            完成遊戲 🎉
-          </motion.button>
-          <motion.button
-            onClick={() => setPhase("select-type")}
+            onClick={() => setPhase("intro")}
             className="text-text-light hover:text-primary cursor-pointer px-6 py-2 text-sm transition-colors"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -164,89 +163,6 @@ export default function SecretGamePage() {
           </motion.button>
         </div>
       </div>
-    );
-  }
-
-  if (phase === "card-detail" && selectedCard) {
-    const isBad = selectedCard.answer === "bad";
-    return (
-      <motion.div
-        className="flex min-h-dvh flex-col"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex items-center justify-between px-6 py-4 shadow-sm">
-          <h2 className="text-xl font-bold">秘密 #{selectedCard.id}</h2>
-          <motion.button
-            onClick={closeCardToGrid}
-            className="text-text-light hover:text-primary cursor-pointer rounded-full p-2 text-xl transition-colors"
-            whileTap={{ scale: 0.95 }}
-          >
-            ✕
-          </motion.button>
-        </div>
-
-        <div className="flex flex-1 flex-col items-center justify-center px-8 py-6 text-center">
-          <motion.div
-            className="mb-6 text-6xl"
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: "spring", delay: 0.1 }}
-          >
-            🤫
-          </motion.div>
-
-          <motion.p
-            className="mb-8 text-lg leading-relaxed"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            {selectedCard.scenario}
-          </motion.p>
-
-          <motion.div
-            className={`mb-4 w-full max-w-sm rounded-2xl p-4 ${isBad ? "bg-red-danger-bg" : "bg-green-safe-bg"}`}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <p className={`mb-1 text-lg font-bold ${isBad ? "text-red-danger" : "text-green-safe"}`}>
-              {isBad ? "❌ 壞秘密" : "⭕ 好秘密"}
-            </p>
-            <p className="text-text-light text-sm leading-relaxed">
-              {selectedCard.explanation}
-            </p>
-          </motion.div>
-
-          {isBad ? (
-            <motion.button
-              onClick={() => setPhase("trusted-adults")}
-              className="bg-primary hover:bg-primary-hover mt-4 w-full max-w-sm cursor-pointer rounded-full py-4 font-bold text-white shadow-md"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              那哪些是信任的大人呢？
-            </motion.button>
-          ) : (
-            <motion.button
-              onClick={closeCardToGrid}
-              className="bg-primary hover:bg-primary-hover mt-4 w-full max-w-sm cursor-pointer rounded-full py-4 font-bold text-white shadow-md"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              我知道了！
-            </motion.button>
-          )}
-        </div>
-      </motion.div>
     );
   }
 
@@ -261,7 +177,7 @@ export default function SecretGamePage() {
         <div className="flex items-center justify-between px-6 py-4 shadow-sm">
           <h2 className="text-xl font-bold">信任的大人 💛</h2>
           <motion.button
-            onClick={closeCardToGrid}
+            onClick={() => setPhase("grid")}
             className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-6 py-2 font-bold text-white"
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
