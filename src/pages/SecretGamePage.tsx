@@ -241,23 +241,17 @@ export default function SecretGamePage() {
   if (phase === "trusted-adults") {
     return (
       <motion.div
-        className="flex min-h-dvh flex-col"
+        className="flex min-h-dvh flex-col items-center px-6 py-10"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
       >
-        <div className="flex items-center justify-between px-6 py-4 shadow-sm">
-          <h2 className="text-xl font-bold">信任的大人 💛</h2>
-          <motion.button
-            onClick={() => setPhase("grid")}
-            className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-6 py-2 font-bold text-white"
-            whileHover={{ scale: 1.04 }}
-            whileTap={{ scale: 0.96 }}
-          >
-            我知道了
-          </motion.button>
+        <div className="mb-8 text-center">
+          <h2 className="mb-2 text-3xl font-bold">信任的大人 💛</h2>
+          <p className="text-text-light text-base">遇到問題時，可以找這些人求助</p>
         </div>
-        <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-4 sm:grid-cols-3">
+
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-4 gap-6">
           {trustedAdultCards.map((card) => (
             <div
               key={card.name}
@@ -269,10 +263,19 @@ export default function SecretGamePage() {
                 alt={card.name}
                 className="w-full rounded-2xl object-contain"
               />
-              <p className="mt-2 text-sm font-medium">{card.name}</p>
+              <p className="mt-3 text-base font-semibold">{card.name}</p>
             </div>
           ))}
         </div>
+
+        <motion.button
+          onClick={() => setPhase("grid")}
+          className="bg-primary hover:bg-primary-hover mt-10 cursor-pointer rounded-full px-12 py-3 text-lg font-bold text-white shadow-md"
+          whileHover={{ scale: 1.04 }}
+          whileTap={{ scale: 0.96 }}
+        >
+          我知道了
+        </motion.button>
       </motion.div>
     );
   }
