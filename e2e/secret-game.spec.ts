@@ -11,6 +11,11 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
     await expect(page.getByRole("button", { name: /壞秘密/ })).toBeVisible();
   });
 
+  test("intro 頁可從「← 回到選單」回到 /menu", async ({ page }) => {
+    await page.getByRole("button", { name: /回到選單/ }).click();
+    await expect(page).toHaveURL("/menu");
+  });
+
   test("點擊好秘密按鈕 → 進入 7 張卡片 grid", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
     await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
@@ -21,7 +26,6 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
   test("點擊壞秘密按鈕 → 進入 7 張卡片 grid", async ({ page }) => {
     await page.getByRole("button", { name: /壞秘密/ }).click();
     await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
-    // 7 張卡片的正面圖片都存在
     for (let i = 1; i <= 7; i++) {
       await expect(page.getByTestId(`card-front-${i}`)).toBeAttached();
     }
@@ -29,39 +33,72 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
 
   test("翻面後壞秘密卡片顯示「誰是信任的大人？」CTA", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
-    // 卡片 2 是壞秘密：點擊正面觸發翻面
     await page.getByTestId("card-front-2").click();
-    await page.waitForTimeout(400); // 等翻面動畫
     await expect(page.getByTestId("trusted-adults-cta-2")).toBeVisible();
   });
 
   test("好秘密卡片翻面後不顯示 CTA", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
-    // 卡片 1 是好秘密
     await page.getByTestId("card-front-1").click();
-    await page.waitForTimeout(400);
     await expect(page.getByTestId("trusted-adults-cta-1")).not.toBeAttached();
+  });
+
+  test("背面點擊 → 翻回正面（FR-3 re-flip）", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    const wrapper = page
+      .getByTestId("card-front-1")
+      .locator("xpath=..");
+
+    // initial: not flipped
+    await expect(wrapper).toHaveAttribute("style", /rotateY\(0deg\)/);
+
+    await page.getByTestId("card-front-1").click();
+    await expect(wrapper).toHaveAttribute("style", /rotateY\(180deg\)/);
+
+    await page.getByTestId("card-back-1").click();
+    await expect(wrapper).toHaveAttribute("style", /rotateY\(0deg\)/);
+  });
+
+  test("已翻閱卡片顯示 ✅ overlay（FR-1 acceptance criteria）", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+
+    await expect(page.getByTestId("card-viewed-overlay-1")).not.toBeAttached();
+
+    await page.getByTestId("card-front-1").click();
+    await expect(page.getByTestId("card-viewed-overlay-1")).toBeAttached();
   });
 
   test("壞秘密 CTA → 進入信任的大人頁面，「我知道了」返回 grid", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
     await page.getByTestId("card-front-2").click();
-    await page.waitForTimeout(400);
     await page.getByTestId("trusted-adults-cta-2").click();
     await expect(page.getByRole("heading", { name: /信任的大人/ })).toBeVisible();
     await page.getByRole("button", { name: "我知道了" }).click();
     await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
   });
 
-  test("翻閱所有 7 張後顯示「完成遊戲」按鈕", async ({ page }) => {
+  test("信任的大人頁面顯示 8 張人物卡 + 名字", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
-    await expect(page.getByTestId("complete-button")).not.toBeVisible();
-
-    for (let i = 1; i <= 7; i++) {
-      await page.getByTestId(`card-front-${i}`).click();
-      await page.waitForTimeout(50);
+    await page.getByTestId("card-front-2").click();
+    await page.getByTestId("trusted-adults-cta-2").click();
+    const names = ["媽媽", "爸爸", "奶奶", "老師", "警察", "親戚", "隔壁叔叔阿姨", "媽媽的男朋友"];
+    for (const name of names) {
+      await expect(page.getByTestId(`trusted-adult-${name}`)).toBeVisible();
     }
+  });
 
+  test("翻閱所有 7 張後才顯示「完成遊戲」按鈕（邊界）", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await expect(page.getByTestId("complete-button")).not.toBeAttached();
+
+    // 翻 6 張：仍不應顯示
+    for (let i = 1; i <= 6; i++) {
+      await page.getByTestId(`card-front-${i}`).click();
+    }
+    await expect(page.getByTestId("complete-button")).not.toBeAttached();
+
+    // 翻第 7 張：顯示
+    await page.getByTestId("card-front-7").click();
     await expect(page.getByTestId("complete-button")).toBeVisible();
   });
 
@@ -70,7 +107,6 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
 
     for (let i = 1; i <= 7; i++) {
       await page.getByTestId(`card-front-${i}`).click();
-      await page.waitForTimeout(50);
     }
 
     await page.getByTestId("complete-button").click();

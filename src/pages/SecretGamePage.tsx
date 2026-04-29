@@ -187,12 +187,17 @@ export default function SecretGamePage() {
         </div>
         <div className="grid flex-1 grid-cols-2 gap-4 overflow-y-auto p-4 sm:grid-cols-3">
           {trustedAdultCards.map((card) => (
-            <div key={card.name} className="flex flex-col items-center">
+            <div
+              key={card.name}
+              className="flex flex-col items-center"
+              data-testid={`trusted-adult-${card.name}`}
+            >
               <img
                 src={card.src}
                 alt={card.name}
                 className="w-full rounded-2xl object-contain"
               />
+              <p className="mt-2 text-sm font-medium">{card.name}</p>
             </div>
           ))}
         </div>
@@ -200,5 +205,15 @@ export default function SecretGamePage() {
     );
   }
 
-  return null;
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+      <p className="mb-4 text-base">頁面狀態異常，請回到選單。</p>
+      <button
+        onClick={() => navigate("/menu")}
+        className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-6 py-3 font-bold text-white"
+      >
+        ← 回到選單
+      </button>
+    </div>
+  );
 }

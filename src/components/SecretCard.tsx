@@ -10,6 +10,9 @@ interface Props {
 
 export function SecretCard({ question, viewed, onFlipped, onTrustedAdults }: Props) {
   const [flipped, setFlipped] = useState(false);
+  const [frontError, setFrontError] = useState(false);
+  const [backError, setBackError] = useState(false);
+  const isBad = question.answer === "bad";
 
   function handleFrontClick() {
     setFlipped(true);
@@ -29,19 +32,32 @@ export function SecretCard({ question, viewed, onFlipped, onTrustedAdults }: Pro
       >
         {/* Front */}
         <div
-          className="absolute inset-0 cursor-pointer overflow-hidden rounded-xl"
+          className={`absolute inset-0 cursor-pointer overflow-hidden rounded-xl ${
+            frontError ? (isBad ? "bg-red-danger-bg" : "bg-green-safe-bg") : ""
+          }`}
           style={{ backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" }}
           onClick={handleFrontClick}
           data-testid={`card-front-${question.id}`}
         >
-          <img
-            src={question.frontImage}
-            alt={question.scenario}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
+          {frontError ? (
+            <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
+              <span className="mb-3 text-5xl">{isBad ? "❌" : "⭕"}</span>
+              <p className="text-sm leading-relaxed">{question.scenario}</p>
+            </div>
+          ) : (
+            <img
+              src={question.frontImage}
+              alt={question.scenario}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              onError={() => setFrontError(true)}
+            />
+          )}
           {viewed && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
+            <div
+              className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40"
+              data-testid={`card-viewed-overlay-${question.id}`}
+            >
               <span className="text-4xl">✅</span>
             </div>
           )}
@@ -49,7 +65,9 @@ export function SecretCard({ question, viewed, onFlipped, onTrustedAdults }: Pro
 
         {/* Back */}
         <div
-          className="absolute inset-0 overflow-hidden rounded-xl"
+          className={`absolute inset-0 overflow-hidden rounded-xl ${
+            backError ? (isBad ? "bg-red-danger-bg" : "bg-green-safe-bg") : ""
+          }`}
           style={{
             backfaceVisibility: "hidden",
             WebkitBackfaceVisibility: "hidden",
@@ -58,13 +76,23 @@ export function SecretCard({ question, viewed, onFlipped, onTrustedAdults }: Pro
           onClick={() => setFlipped(false)}
           data-testid={`card-back-${question.id}`}
         >
-          <img
-            src={question.backImage}
-            alt={question.explanation}
-            className="h-full w-full object-cover"
-            loading="lazy"
-          />
-          {question.answer === "bad" && (
+          {backError ? (
+            <div className="flex h-full w-full flex-col items-center justify-center p-4 text-center">
+              <p className={`mb-2 text-base font-bold ${isBad ? "text-red-danger" : "text-green-safe"}`}>
+                {isBad ? "❌ 壞秘密" : "⭕ 好秘密"}
+              </p>
+              <p className="text-sm leading-relaxed">{question.explanation}</p>
+            </div>
+          ) : (
+            <img
+              src={question.backImage}
+              alt={question.explanation}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              onError={() => setBackError(true)}
+            />
+          )}
+          {isBad && (
             <div className="absolute bottom-3 left-0 right-0 flex justify-center px-3">
               <button
                 className="bg-primary hover:bg-primary-hover w-full cursor-pointer rounded-full py-2 text-xs font-bold text-white shadow-md"
