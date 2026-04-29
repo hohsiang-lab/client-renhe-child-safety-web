@@ -3,58 +3,65 @@ export interface SecretQuestion {
   scenario: string;
   answer: "good" | "bad";
   explanation: string;
+  frontImage: string;
+  backImage: string;
 }
 
 export const secretQuestions: SecretQuestion[] = [
   {
     id: 1,
-    scenario:
-      "媽媽生日快到了，爸爸帶你去買蛋糕，說要給媽媽一個驚喜，先不要告訴媽媽喔！",
+    scenario: "媽媽生日快到了，我們偷偷做卡片給她",
     answer: "good",
-    explanation: "這是讓人開心的驚喜，時間到了就會知道",
+    explanation: "是開心的秘密，對別人不會有傷害",
+    frontImage: "/images/secrets/q1-front.png",
+    backImage: "/images/secrets/q1-back.png",
   },
   {
     id: 2,
-    scenario: "聖誕節你和同學一起準備卡片要送給老師，大家說先保密！",
-    answer: "good",
-    explanation: "這個秘密是為了給別人快樂，不會讓人不舒服",
+    scenario: "有人說摸他一下給我禮物，但不能說這個秘密",
+    answer: "bad",
+    explanation: "這是危險行為，請馬上告訴信任的大人",
+    frontImage: "/images/secrets/q2-front.png",
+    backImage: "/images/secrets/q2-back.png",
   },
   {
     id: 3,
-    scenario: "你做了一個手工禮物要在母親節給媽媽，你偷偷藏在書包裡",
-    answer: "good",
-    explanation: "這是充滿愛的秘密，會讓媽媽很感動",
+    scenario: "有人傳奇怪的照片給我，說這是我們的秘密",
+    answer: "bad",
+    explanation: "當有人讓你不舒服，請立即告訴信任的大人",
+    frontImage: "/images/secrets/q3-front.png",
+    backImage: "/images/secrets/q3-back.png",
   },
   {
     id: 4,
-    scenario:
-      "有個大人摸了你的身體，叫你不可以告訴任何人，不然會被罵",
-    answer: "bad",
-    explanation: "讓你害怕的秘密就是壞秘密，一定要告訴信任的大人",
+    scenario: "一起偷偷準備禮物給朋友，因為要給他驚喜",
+    answer: "good",
+    explanation: "正常的友誼互動，沒壓力也不會感到害怕",
+    frontImage: "/images/secrets/q4-front.png",
+    backImage: "/images/secrets/q4-back.png",
   },
   {
     id: 5,
-    scenario: "有人給你糖果，說這是你們之間的秘密，不能跟爸媽說",
+    scenario: "有人找我玩醫生遊戲，說不能跟爸爸媽媽說",
     answer: "bad",
-    explanation: "要你對爸媽保密的事情，通常不是好事，要趕快告訴大人",
+    explanation: "有壓力的秘密 + 害怕，要立刻告訴信任的大人",
+    frontImage: "/images/secrets/q5-front.png",
+    backImage: "/images/secrets/q5-back.png",
   },
   {
     id: 6,
-    scenario:
-      "有個人對你做了讓你不舒服的事，他說如果你說出去，就不跟你玩了",
-    answer: "bad",
-    explanation: "用威脅叫你保密的都是壞秘密，勇敢告訴信任的大人",
+    scenario: "朋友跟我說一起準備，給另一個朋友生日驚喜",
+    answer: "good",
+    explanation: "這是快樂、短暫的秘密，沒有讓你不舒服或害怕",
+    frontImage: "/images/secrets/q6-front.png",
+    backImage: "/images/secrets/q6-back.png",
   },
   {
     id: 7,
-    scenario: "朋友跟我說一起準備給另一個朋友生日驚喜",
-    answer: "good",
-    explanation: "這是快樂、短暫的秘密，沒有讓你不舒服或害怕",
-  },
-  {
-    id: 8,
-    scenario: "網友說：「這是我們的秘密，不能讓你爸媽知道」",
+    scenario: "網友說這是我們的秘密，不能讓你爸媽知道",
     answer: "bad",
-    explanation: "不隨便透漏個資給網路認識的朋友，有這種秘密要告訴爸媽",
+    explanation: "不隨便透漏個資給網路認識的朋友",
+    frontImage: "/images/secrets/q7-front.png",
+    backImage: "/images/secrets/q7-back.png",
   },
 ];

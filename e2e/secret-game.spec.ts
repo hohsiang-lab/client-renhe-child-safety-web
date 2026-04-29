@@ -1,151 +1,119 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("秘密遊戲 (HO-608)", () => {
+test.describe("秘密遊戲 (HO-997) — 圖片卡片 modal 彈出", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/secret-game");
   });
 
-  test("顯示第 1 題情境、進度、兩個答案按鈕", async ({ page }) => {
+  test("顯示 intro 頁：好秘密 / 壞秘密 選擇按鈕", async ({ page }) => {
     await expect(page.getByRole("heading", { name: /秘密遊戲/ })).toBeVisible();
-    await expect(page.getByText(/第 1 \/ 6 題/)).toBeVisible();
     await expect(page.getByRole("button", { name: /好秘密/ })).toBeVisible();
     await expect(page.getByRole("button", { name: /壞秘密/ })).toBeVisible();
   });
 
-  test("答對顯示星星動畫，2 秒後自動進下一題", async ({ page }) => {
-    const scenario = await page.locator("p.text-lg.leading-relaxed").textContent();
-
-    const goodBtn = page.getByRole("button", { name: /好秘密/ });
-    const badBtn = page.getByRole("button", { name: /壞秘密/ });
-
-    const goodSecrets = [
-      "媽媽生日快到了",
-      "聖誕節你和同學一起準備卡片",
-      "你做了一個手工禮物",
-    ];
-    const isGood = goodSecrets.some((s) => scenario?.includes(s));
-
-    if (isGood) {
-      await goodBtn.click();
-    } else {
-      await badBtn.click();
-    }
-
-    await expect(page.getByText("答對了！好棒！")).toBeVisible();
-    await expect(page.getByText("⭐")).toBeVisible();
-
-    await expect(page.getByText(/第 2 \/ 6 題/)).toBeVisible({ timeout: 5000 });
+  test("intro 頁可從「← 回到選單」回到 /menu", async ({ page }) => {
+    await page.getByRole("button", { name: /回到選單/ }).click();
+    await expect(page).toHaveURL("/menu");
   });
 
-  test("答錯顯示解說 + 我知道了按鈕", async ({ page }) => {
-    const scenario = await page.locator("p.text-lg.leading-relaxed").textContent();
+  test("點擊好秘密按鈕 → 進入 7 張卡片 grid", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
+    await expect(page.getByTestId("card-front-1")).toBeVisible();
+    await expect(page.getByTestId("card-front-7")).toBeVisible();
+  });
 
-    const goodBtn = page.getByRole("button", { name: /好秘密/ });
-    const badBtn = page.getByRole("button", { name: /壞秘密/ });
-
-    const goodSecrets = [
-      "媽媽生日快到了",
-      "聖誕節你和同學一起準備卡片",
-      "你做了一個手工禮物",
-    ];
-    const isGood = goodSecrets.some((s) => scenario?.includes(s));
-
-    if (isGood) {
-      await badBtn.click();
-    } else {
-      await goodBtn.click();
+  test("點擊壞秘密按鈕 → 進入 7 張卡片 grid", async ({ page }) => {
+    await page.getByRole("button", { name: /壞秘密/ }).click();
+    await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
+    for (let i = 1; i <= 7; i++) {
+      await expect(page.getByTestId(`card-front-${i}`)).toBeAttached();
     }
+  });
 
-    await expect(page.getByText("不太對喔～")).toBeVisible();
-    await expect(page.getByRole("button", { name: "我知道了" })).toBeVisible();
+  test("點擊卡片 → modal 彈出顯示背面，✕ 關閉後 modal 消失", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
 
+    await expect(page.getByTestId("card-back-1")).not.toBeAttached();
+
+    await page.getByTestId("card-front-1").click();
+    await expect(page.getByTestId("card-back-1")).toBeVisible();
+
+    await page.getByTestId("card-modal-close").click();
+    await expect(page.getByTestId("card-back-1")).not.toBeAttached();
+  });
+
+  test("翻面後壞秘密卡片顯示「誰是信任的大人？」CTA", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await page.getByTestId("card-front-2").click();
+    await expect(page.getByTestId("trusted-adults-cta-2")).toBeVisible();
+  });
+
+  test("好秘密卡片翻面後不顯示 CTA", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await page.getByTestId("card-front-1").click();
+    await expect(page.getByTestId("trusted-adults-cta-1")).not.toBeAttached();
+  });
+
+  test("已翻閱卡片顯示 ✅ overlay（FR-1 acceptance criteria）", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+
+    await expect(page.getByTestId("card-viewed-overlay-1")).not.toBeAttached();
+
+    await page.getByTestId("card-front-1").click();
+    await expect(page.getByTestId("card-viewed-overlay-1")).toBeAttached();
+  });
+
+  test("壞秘密 CTA → 進入信任的大人頁面，「我知道了」返回 grid", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await page.getByTestId("card-front-2").click();
+    await page.getByTestId("trusted-adults-cta-2").click();
+    await expect(page.getByRole("heading", { name: /信任的大人/ })).toBeVisible();
     await page.getByRole("button", { name: "我知道了" }).click();
-    await expect(page.getByText(/第 2 \/ 6 題/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /秘密卡片/ })).toBeVisible();
   });
 
-  test("完成 6 題後顯示分數並可導向結尾頁", async ({ page }) => {
-    const goodSecrets = [
-      "媽媽生日快到了",
-      "聖誕節你和同學一起準備卡片",
-      "你做了一個手工禮物",
-    ];
+  test("信任的大人頁面顯示 8 張人物卡 + 名字", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await page.getByTestId("card-front-2").click();
+    await page.getByTestId("trusted-adults-cta-2").click();
+    const names = ["媽媽", "爸爸", "奶奶", "老師", "警察", "親戚", "隔壁叔叔阿姨", "媽媽的男朋友"];
+    for (const name of names) {
+      await expect(page.getByTestId(`trusted-adult-${name}`)).toBeVisible();
+    }
+  });
 
-    for (let i = 0; i < 6; i++) {
-      const scenario = await page.locator("p.text-lg.leading-relaxed").textContent();
-      const isGood = goodSecrets.some((s) => scenario?.includes(s));
+  test("翻閱所有 7 張後才顯示「完成遊戲」按鈕（邊界）", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+    await expect(page.getByTestId("complete-button")).not.toBeAttached();
 
-      if (isGood) {
-        await page.getByRole("button", { name: /好秘密/ }).click();
-      } else {
-        await page.getByRole("button", { name: /壞秘密/ }).click();
-      }
+    for (let i = 1; i <= 6; i++) {
+      await page.getByTestId(`card-front-${i}`).click();
+      await page.getByTestId("card-modal-close").click();
+    }
+    await expect(page.getByTestId("complete-button")).not.toBeAttached();
 
-      const correct = await page.getByText("答對了！好棒！").isVisible().catch(() => false);
-      if (correct) {
-        await page.waitForTimeout(2500);
-      } else {
-        await page.getByRole("button", { name: "我知道了" }).click();
-      }
+    await page.getByTestId("card-front-7").click();
+    await page.getByTestId("card-modal-close").click();
+    await expect(page.getByTestId("complete-button")).toBeVisible();
+  });
+
+  test("完成遊戲按鈕 → 導向 /ending", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+
+    for (let i = 1; i <= 7; i++) {
+      await page.getByTestId(`card-front-${i}`).click();
+      await page.getByTestId("card-modal-close").click();
     }
 
-    await expect(page.getByText("遊戲完成！")).toBeVisible();
-    await expect(page.getByText(/你答對了/)).toBeVisible();
-    await expect(page.getByText(/\/ 6 題/)).toBeVisible();
-
-    await page.getByRole("button", { name: "完成" }).click();
+    await page.getByTestId("complete-button").click();
     await expect(page).toHaveURL("/ending");
   });
 
-  test("全部答對顯示 6/6", async ({ page }) => {
-    const goodSecrets = [
-      "媽媽生日快到了",
-      "聖誕節你和同學一起準備卡片",
-      "你做了一個手工禮物",
-    ];
-
-    for (let i = 0; i < 6; i++) {
-      await expect(page.getByRole("button", { name: /好秘密/ })).toBeVisible({ timeout: 5000 });
-      const scenario = await page.locator("p.text-lg.leading-relaxed").textContent();
-      const isGood = goodSecrets.some((s) => scenario?.includes(s));
-
-      if (isGood) {
-        await page.getByRole("button", { name: /好秘密/ }).click();
-      } else {
-        await page.getByRole("button", { name: /壞秘密/ }).click();
-      }
-
-      await expect(page.getByText("答對了！好棒！")).toBeVisible({ timeout: 5000 });
-
-      if (i < 5) {
-        await expect(page.getByText(new RegExp(`第 ${i + 2} \\/ 6 題`))).toBeVisible({ timeout: 5000 });
-      }
-    }
-
-    await expect(page.getByText("遊戲完成！")).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText("太厲害了，全部答對！")).toBeVisible();
-  });
-
-  test("答案按鈕觸控目標 ≥ 48px", async ({ page }) => {
-    const goodBtn = page.getByRole("button", { name: /好秘密/ });
-    const badBtn = page.getByRole("button", { name: /壞秘密/ });
-
-    const goodBox = await goodBtn.boundingBox();
-    const badBox = await badBtn.boundingBox();
-
-    expect(goodBox).not.toBeNull();
-    expect(goodBox!.height).toBeGreaterThanOrEqual(48);
-    expect(goodBox!.width).toBeGreaterThanOrEqual(48);
-
-    expect(badBox).not.toBeNull();
-    expect(badBox!.height).toBeGreaterThanOrEqual(48);
-    expect(badBox!.width).toBeGreaterThanOrEqual(48);
-  });
-
-  test("從選單完整流程：選單 → 秘密遊戲", async ({ page }) => {
+  test("從選單可進入秘密遊戲", async ({ page }) => {
     await page.goto("/menu");
     await page.getByRole("button", { name: /秘密遊戲/ }).click();
     await expect(page).toHaveURL("/secret-game");
     await expect(page.getByRole("heading", { name: /秘密遊戲/ })).toBeVisible();
-    await expect(page.getByRole("button", { name: /好秘密/ })).toBeVisible();
   });
 });
