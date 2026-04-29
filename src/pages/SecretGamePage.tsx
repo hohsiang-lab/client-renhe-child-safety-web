@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { secretQuestions } from "../data/secrets";
+import type { SecretQuestion } from "../data/secrets";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { SecretCard } from "../components/SecretCard";
 
@@ -24,17 +25,26 @@ export default function SecretGamePage() {
 
   const [phase, setPhase] = useState<Phase>("intro");
   const [viewedIds, setViewedIds] = useState<Set<number>>(new Set());
+  const [selectedCard, setSelectedCard] = useState<SecretQuestion | null>(null);
+  const [modalBackError, setModalBackError] = useState(false);
 
   useEffect(() => {
     return () => stop();
   }, [stop]);
 
-  function handleFlipped(id: number) {
-    setViewedIds((prev) => new Set(prev).add(id));
+  function handleCardSelect(q: SecretQuestion) {
+    setModalBackError(false);
+    setSelectedCard(q);
+    setViewedIds((prev) => new Set(prev).add(q.id));
+  }
+
+  function closeModal() {
+    setSelectedCard(null);
   }
 
   function openTrustedAdults() {
     stop();
+    setSelectedCard(null);
     setPhase("trusted-adults");
   }
 
@@ -131,8 +141,7 @@ export default function SecretGamePage() {
               <SecretCard
                 question={q}
                 viewed={viewedIds.has(q.id)}
-                onFlipped={handleFlipped}
-                onTrustedAdults={openTrustedAdults}
+                onSelect={handleCardSelect}
               />
             </motion.div>
           ))}
@@ -162,6 +171,69 @@ export default function SecretGamePage() {
             ← 返回
           </motion.button>
         </div>
+
+        {/* Card Modal */}
+        {selectedCard && (
+          <motion.div
+            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 px-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            onClick={closeModal}
+          >
+            <motion.div
+              className="relative flex flex-col items-center"
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                className="absolute -right-3 -top-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white text-gray-600 shadow-lg hover:bg-gray-100"
+                onClick={closeModal}
+                data-testid="card-modal-close"
+              >
+                ✕
+              </button>
+
+              <div
+                className="overflow-hidden rounded-2xl shadow-2xl"
+                style={{ width: "min(360px, calc(100vw - 3rem))", aspectRatio: "1414 / 2000" }}
+                data-testid={`card-back-${selectedCard.id}`}
+              >
+                {modalBackError ? (
+                  <div
+                    className={`flex h-full w-full flex-col items-center justify-center p-6 text-center ${
+                      selectedCard.answer === "bad" ? "bg-red-danger-bg" : "bg-green-safe-bg"
+                    }`}
+                  >
+                    <p className={`mb-2 text-base font-bold ${selectedCard.answer === "bad" ? "text-red-danger" : "text-green-safe"}`}>
+                      {selectedCard.answer === "bad" ? "❌ 壞秘密" : "⭕ 好秘密"}
+                    </p>
+                    <p className="text-sm leading-relaxed">{selectedCard.explanation}</p>
+                  </div>
+                ) : (
+                  <img
+                    src={selectedCard.backImage}
+                    alt={selectedCard.explanation}
+                    className="h-full w-full object-cover"
+                    onError={() => setModalBackError(true)}
+                  />
+                )}
+              </div>
+
+              {selectedCard.answer === "bad" && (
+                <button
+                  className="bg-primary hover:bg-primary-hover mt-4 cursor-pointer rounded-full py-3 font-bold text-white shadow-md"
+                  style={{ width: "min(360px, calc(100vw - 3rem))" }}
+                  onClick={openTrustedAdults}
+                  data-testid={`trusted-adults-cta-${selectedCard.id}`}
+                >
+                  誰是信任的大人？
+                </button>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     );
   }

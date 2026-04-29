@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
+test.describe("秘密遊戲 (HO-997) — 圖片卡片 modal 彈出", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/secret-game");
   });
@@ -31,6 +31,18 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
     }
   });
 
+  test("點擊卡片 → modal 彈出顯示背面，✕ 關閉後 modal 消失", async ({ page }) => {
+    await page.getByRole("button", { name: /好秘密/ }).click();
+
+    await expect(page.getByTestId("card-back-1")).not.toBeAttached();
+
+    await page.getByTestId("card-front-1").click();
+    await expect(page.getByTestId("card-back-1")).toBeVisible();
+
+    await page.getByTestId("card-modal-close").click();
+    await expect(page.getByTestId("card-back-1")).not.toBeAttached();
+  });
+
   test("翻面後壞秘密卡片顯示「誰是信任的大人？」CTA", async ({ page }) => {
     await page.getByRole("button", { name: /好秘密/ }).click();
     await page.getByTestId("card-front-2").click();
@@ -41,22 +53,6 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
     await page.getByRole("button", { name: /好秘密/ }).click();
     await page.getByTestId("card-front-1").click();
     await expect(page.getByTestId("trusted-adults-cta-1")).not.toBeAttached();
-  });
-
-  test("背面點擊 → 翻回正面（FR-3 re-flip）", async ({ page }) => {
-    await page.getByRole("button", { name: /好秘密/ }).click();
-    const wrapper = page
-      .getByTestId("card-front-1")
-      .locator("xpath=..");
-
-    // initial: not flipped
-    await expect(wrapper).toHaveAttribute("style", /rotateY\(0deg\)/);
-
-    await page.getByTestId("card-front-1").click();
-    await expect(wrapper).toHaveAttribute("style", /rotateY\(180deg\)/);
-
-    await page.getByTestId("card-back-1").click();
-    await expect(wrapper).toHaveAttribute("style", /rotateY\(0deg\)/);
   });
 
   test("已翻閱卡片顯示 ✅ overlay（FR-1 acceptance criteria）", async ({ page }) => {
@@ -91,14 +87,14 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
     await page.getByRole("button", { name: /好秘密/ }).click();
     await expect(page.getByTestId("complete-button")).not.toBeAttached();
 
-    // 翻 6 張：仍不應顯示
     for (let i = 1; i <= 6; i++) {
       await page.getByTestId(`card-front-${i}`).click();
+      await page.getByTestId("card-modal-close").click();
     }
     await expect(page.getByTestId("complete-button")).not.toBeAttached();
 
-    // 翻第 7 張：顯示
     await page.getByTestId("card-front-7").click();
+    await page.getByTestId("card-modal-close").click();
     await expect(page.getByTestId("complete-button")).toBeVisible();
   });
 
@@ -107,6 +103,7 @@ test.describe("秘密遊戲 (HO-997) — 圖片卡片翻面", () => {
 
     for (let i = 1; i <= 7; i++) {
       await page.getByTestId(`card-front-${i}`).click();
+      await page.getByTestId("card-modal-close").click();
     }
 
     await page.getByTestId("complete-button").click();
