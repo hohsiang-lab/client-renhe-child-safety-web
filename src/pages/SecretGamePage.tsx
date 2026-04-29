@@ -263,7 +263,6 @@ export default function SecretGamePage() {
                 alt={card.name}
                 className="w-full rounded-2xl object-contain"
               />
-              <p className="mt-3 text-base font-semibold">{card.name}</p>
             </div>
           ))}
         </div>
