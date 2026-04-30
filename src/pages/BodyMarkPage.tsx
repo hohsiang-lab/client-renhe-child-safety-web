@@ -13,10 +13,10 @@ const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
   { color: "red", label: "🔴 紅燈", bg: "bg-red-400" },
 ];
 
-const COLOR_ARROW: Record<LightColor, string> = {
-  green: "text-green-500",
-  yellow: "text-yellow-500",
-  red: "text-red-500",
+const COLOR_ARROW_BG: Record<LightColor, string> = {
+  green: "bg-green-500",
+  yellow: "bg-yellow-400",
+  red: "bg-red-500",
 };
 
 // Zones sorted largest → smallest so smaller (more specific) zones render on
@@ -85,11 +85,11 @@ export default function BodyMarkPage() {
                   : "（右）"
                 : "";
             const isLeftZone = zone.cx < 50;
-            const arrowColorClass = color
-              ? COLOR_ARROW[color]
+            const arrowBgClass = color
+              ? COLOR_ARROW_BG[color]
               : isSelected
-              ? "text-gray-500"
-              : "text-gray-300";
+              ? "bg-gray-500"
+              : "bg-gray-300";
 
             return (
               <button
@@ -116,7 +116,7 @@ export default function BodyMarkPage() {
                 }}
               >
                 <span
-                  className={`text-lg font-bold leading-none transition-colors duration-200 drop-shadow ${arrowColorClass}`}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-md ring-2 ring-white/80 transition-all duration-200 ${arrowBgClass}`}
                   aria-hidden="true"
                 >
                   {isLeftZone ? "→" : "←"}
