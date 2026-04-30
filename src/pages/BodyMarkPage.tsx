@@ -51,16 +51,19 @@ export default function BodyMarkPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center bg-pink-50 pb-44">
-      <div className="w-full max-w-[360px] px-4 pt-8">
-        <h1 className="mb-2 text-center text-xl font-bold text-gray-800">
-          幫身體各部位選燈色 🚦
-        </h1>
-        <p className="mb-4 text-center text-sm text-gray-500">
+    <div className="flex min-h-dvh flex-col bg-pink-50">
+      {/* Header */}
+      <div className="px-4 pt-6 text-center">
+        <h1 className="text-xl font-bold text-gray-800">幫身體各部位選燈色 🚦</h1>
+        <p className="mt-1 text-sm text-gray-500">
           已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
         </p>
+      </div>
 
-        <div className="relative mx-auto w-full" style={{ userSelect: "none" }}>
+      {/* Two-column layout */}
+      <div className="flex flex-1 items-start gap-2 px-3 pt-4">
+        {/* Left: doll image with hit zones */}
+        <div className="relative flex-[3]" style={{ userSelect: "none" }}>
           <img
             src={`/images/doll-${doll}.png`}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
@@ -107,62 +110,71 @@ export default function BodyMarkPage() {
                   width: `${zone.w}%`,
                   height: `${zone.h}%`,
                   transform: "translate(-50%, -50%)",
-                  minWidth: "48px",
-                  minHeight: "48px",
+                  minWidth: "44px",
+                  minHeight: "44px",
                 }}
               />
             );
           })}
         </div>
-      </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-col items-center gap-2 bg-white/95 px-6 pb-6 pt-4 shadow-[0_-2px_16px_rgba(0,0,0,0.08)] backdrop-blur-sm">
-        <AnimatePresence>
-          {isComplete && (
-            <motion.button
-              data-testid="complete-btn"
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              onClick={() => navigate("/body-traffic-light/touch-test")}
-              className="w-full max-w-xs rounded-full bg-green-500 py-3 text-lg font-bold text-white shadow-lg"
-            >
-              完成設定 ✅
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* Right: traffic light color picker */}
+        <div className="flex flex-[2] flex-col items-center gap-4 pt-6">
+          {/* Selected part name */}
+          <div className="min-h-[40px] text-center">
+            {selectedPartId ? (
+              <p className="text-sm font-medium text-gray-600">
+                已選：
+                <br />
+                <span className="font-bold text-gray-900">
+                  {bodyPartsV2.find((p) => p.id === selectedPartId)?.name}
+                </span>
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400">點擊左側部位</p>
+            )}
+          </div>
 
-        {selectedPartId && (
-          <p className="text-sm font-medium text-gray-600">
-            已選：
-            <span className="font-bold text-gray-900">
-              {bodyPartsV2.find((p) => p.id === selectedPartId)?.name}
-            </span>
-          </p>
-        )}
+          {/* Color buttons */}
+          <div className="flex w-full flex-col gap-3">
+            {COLOR_OPTIONS.map(({ color, label, bg }) => {
+              const isActive = selectedColor === color;
+              return (
+                <button
+                  key={color}
+                  onClick={() => handleColorPick(color)}
+                  disabled={!selectedPartId}
+                  className={[
+                    "w-full rounded-full py-3 text-sm font-bold text-white transition-all",
+                    bg,
+                    isActive ? "scale-105 shadow-lg" : "opacity-80",
+                    !selectedPartId
+                      ? "cursor-not-allowed opacity-40"
+                      : "cursor-pointer hover:brightness-105",
+                  ].join(" ")}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
 
-        <div className="flex gap-3">
-          {COLOR_OPTIONS.map(({ color, label, bg }) => {
-            const isActive = selectedColor === color;
-            return (
-              <button
-                key={color}
-                onClick={() => handleColorPick(color)}
-                disabled={!selectedPartId}
-                className={[
-                  "rounded-full px-4 py-3 text-sm font-bold text-white transition-all",
-                  bg,
-                  isActive ? "scale-110 shadow-lg" : "opacity-80",
-                  !selectedPartId
-                    ? "cursor-not-allowed opacity-40"
-                    : "cursor-pointer",
-                ].join(" ")}
+          {/* Complete button appears here when all parts marked */}
+          <AnimatePresence>
+            {isComplete && (
+              <motion.button
+                data-testid="complete-btn"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                onClick={() => navigate("/body-traffic-light/touch-test")}
+                className="w-full rounded-full bg-green-500 py-3 text-base font-bold text-white shadow-lg"
               >
-                {label}
-              </button>
-            );
-          })}
+                完成設定 ✅
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>
