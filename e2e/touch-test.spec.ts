@@ -65,4 +65,17 @@ test.describe("觸碰測試頁 (HO-776)", () => {
     await page.locator('[data-part-id="private"]').first().click();
     await expect(pageEl).toHaveAttribute("data-playing", "private");
   });
+
+  test("US5: 點擊綠燈標記部位 → 也會觸發語音回應", async ({ page }) => {
+    // setupTouchTest marks all parts green except private (red).
+    // Asserting a non-red part triggers data-playing catches a class of
+    // regression where AUDIO_MAP[color] lookup early-returns for any
+    // non-red color (or hardcodes red).
+    await setupTouchTest(page);
+    await page.locator('[data-part-id="head"]').first().click();
+    await expect(page.getByTestId("touch-test-page")).toHaveAttribute(
+      "data-playing",
+      "head",
+    );
+  });
 });
