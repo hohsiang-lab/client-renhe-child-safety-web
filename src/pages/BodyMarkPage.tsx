@@ -13,10 +13,10 @@ const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
   { color: "red", label: "🔴 紅燈", bg: "bg-red-400" },
 ];
 
-const COLOR_OVERLAY: Record<LightColor, string> = {
-  green: "bg-green-400/60",
-  yellow: "bg-yellow-400/60",
-  red: "bg-red-400/60",
+const COLOR_ARROW: Record<LightColor, string> = {
+  green: "text-green-500",
+  yellow: "text-yellow-500",
+  red: "text-red-500",
 };
 
 // Zones sorted largest → smallest so smaller (more specific) zones render on
@@ -84,16 +84,12 @@ export default function BodyMarkPage() {
                   ? "（左）"
                   : "（右）"
                 : "";
-
-            let overlayClass =
-              "border-white/60 bg-transparent hover:bg-white/20";
-            if (isSelected && color) {
-              overlayClass = `border-white ${COLOR_OVERLAY[color]}`;
-            } else if (isSelected) {
-              overlayClass = "border-white bg-white/40";
-            } else if (color) {
-              overlayClass = `border-transparent ${COLOR_OVERLAY[color]}`;
-            }
+            const isLeftZone = zone.cx < 50;
+            const arrowColorClass = color
+              ? COLOR_ARROW[color]
+              : isSelected
+              ? "text-gray-500"
+              : "text-gray-300";
 
             return (
               <button
@@ -103,7 +99,12 @@ export default function BodyMarkPage() {
                 data-part-id={part.id}
                 data-color={color ?? ""}
                 onClick={() => setSelectedPartId(part.id)}
-                className={`absolute rounded-xl border-2 transition-all ${overlayClass}`}
+                className={[
+                  "absolute flex items-center rounded-xl border-2 transition-all",
+                  isLeftZone ? "justify-start" : "justify-end",
+                  isSelected ? "border-white/80" : "border-transparent",
+                  "bg-transparent hover:bg-white/10",
+                ].join(" ")}
                 style={{
                   left: `${zone.cx}%`,
                   top: `${zone.cy}%`,
@@ -113,7 +114,14 @@ export default function BodyMarkPage() {
                   minWidth: "44px",
                   minHeight: "44px",
                 }}
-              />
+              >
+                <span
+                  className={`text-lg font-bold leading-none transition-colors duration-200 drop-shadow ${arrowColorClass}`}
+                  aria-hidden="true"
+                >
+                  {isLeftZone ? "→" : "←"}
+                </span>
+              </button>
             );
           })}
         </div>
