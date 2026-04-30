@@ -1,6 +1,6 @@
-// cx/cy/w/h are percentages of the displayed PNG container dimensions.
+// cx/cy/w/h are percentages of the displayed image container dimensions.
 // hit zones render as rounded rectangles (industry standard bounding-box approach).
-// NOTE: All coordinates estimated by sima; pending Evan's visual verification (HO-775).
+// Coordinates calibrated for doll-female.svg (viewBox 0 0 100 130).
 export interface BodyPartZone {
   cx: number; // center x %
   cy: number; // center y %
@@ -18,60 +18,60 @@ export const bodyPartsV2: BodyPartV2[] = [
   {
     id: "head",
     name: "頭 / 頭髮",
-    zones: [{ cx: 50, cy: 22, w: 22, h: 10 }],
+    zones: [{ cx: 50, cy: 13, w: 28, h: 18 }],
   },
   {
     id: "face",
     name: "臉",
-    zones: [{ cx: 50, cy: 26, w: 15, h: 9 }],
+    zones: [{ cx: 50, cy: 15, w: 17, h: 10 }],
   },
   {
     id: "ear",
     name: "耳朵",
-    zones: [{ cx: 37, cy: 25, w: 9, h: 7 }],
+    zones: [{ cx: 38, cy: 14, w: 8, h: 7 }],
   },
   {
     id: "mouth",
     name: "嘴巴",
-    zones: [{ cx: 50, cy: 29, w: 11, h: 5 }],
+    zones: [{ cx: 50, cy: 19, w: 12, h: 5 }],
   },
   {
     id: "shoulder",
     name: "肩膀",
     zones: [
-      { cx: 28, cy: 35, w: 12, h: 8 },
-      { cx: 72, cy: 35, w: 12, h: 8 },
+      { cx: 29, cy: 27, w: 13, h: 8 },
+      { cx: 71, cy: 27, w: 13, h: 8 },
     ],
   },
   {
     id: "chest",
     name: "胸部",
-    zones: [{ cx: 50, cy: 40, w: 22, h: 9 }],
+    zones: [{ cx: 50, cy: 35, w: 24, h: 9 }],
   },
   {
     id: "hand",
     name: "手",
     zones: [
-      { cx: 19, cy: 46, w: 12, h: 13 },
-      { cx: 81, cy: 46, w: 12, h: 13 },
+      { cx: 15, cy: 50, w: 13, h: 9 },
+      { cx: 85, cy: 50, w: 13, h: 9 },
     ],
   },
   {
     id: "belly",
     name: "肚子",
-    zones: [{ cx: 50, cy: 51, w: 22, h: 8 }],
+    zones: [{ cx: 50, cy: 43, w: 24, h: 8 }],
   },
   {
     id: "private",
     name: "私密處",
-    zones: [{ cx: 50, cy: 58, w: 20, h: 8 }],
+    zones: [{ cx: 50, cy: 53, w: 22, h: 7 }],
   },
   {
     id: "thigh",
     name: "大腿",
     zones: [
-      { cx: 40, cy: 64, w: 13, h: 10 },
-      { cx: 60, cy: 64, w: 13, h: 10 },
+      { cx: 40, cy: 76, w: 14, h: 12 },
+      { cx: 60, cy: 76, w: 14, h: 12 },
     ],
   },
 ];
