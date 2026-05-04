@@ -3,8 +3,59 @@ import { bodyPartsV2 } from "../src/data/bodyPartsV2";
 
 // HO-776: 身體紅綠燈 v2 — 觸碰測試互動（語音回應）
 
-async function setupTouchTest(page: Page) {
-  await page.goto("/body-traffic-light/mark?doll=female");
+
+async function installAudioSpy(page: Page) {
+  await page.addInitScript(() => {
+    type MockAudio = {
+      src: string;
+      muted: boolean;
+      currentTime: number;
+      onended: (() => void) | null;
+      onerror: (() => void) | null;
+      play: () => Promise<void>;
+      pause: () => void;
+      removeAttribute: (name: string) => void;
+      load: () => void;
+    };
+
+    const state = window as typeof window & { __audioSrcs: string[] };
+    state.__audioSrcs = [];
+    window.Audio = function AudioMock(src?: string): MockAudio {
+      if (src) state.__audioSrcs.push(src);
+      return {
+        src: src ?? "",
+        muted: false,
+        currentTime: 0,
+        onended: null,
+        onerror: null,
+        play: () => Promise.resolve(),
+        pause: () => {},
+        removeAttribute: () => {},
+        load: () => {},
+      };
+    } as unknown as typeof Audio;
+  });
+}
+
+async function resetAudioSpy(page: Page) {
+  await page.evaluate(() => {
+    (window as typeof window & { __audioSrcs: string[] }).__audioSrcs = [];
+  });
+}
+
+async function expectLastAudioSrc(page: Page, expected: string) {
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const srcs = (window as typeof window & { __audioSrcs: string[] }).__audioSrcs;
+        return srcs.at(-1) ?? "";
+      }),
+    )
+    .toBe(expected);
+}
+
+async function setupTouchTest(page: Page, doll: "female" | "male" = "female") {
+  await page.goto(`/body-traffic-light/mark?doll=${doll}`);
   for (const part of bodyPartsV2) {
     // dispatchEvent bypasses browser hit-testing; required for parts whose click
     // zones overlap a higher-z-order zone (e.g. head ↔ face).
@@ -77,5 +128,21 @@ test.describe("觸碰測試頁 (HO-776)", () => {
       "data-playing",
       "head",
     );
+  });
+
+  test("US6: 女生人偶使用小女生語音、男生人偶使用小男生語音", async ({
+    page,
+  }) => {
+    await installAudioSpy(page);
+
+    await setupTouchTest(page, "female");
+    await resetAudioSpy(page);
+    await page.locator('[data-part-id="private"]').first().click();
+    await expectLastAudioSrc(page, "/audio/female-red-response.mp3");
+
+    await setupTouchTest(page, "male");
+    await resetAudioSpy(page);
+    await page.locator('[data-part-id="private"]').first().click();
+    await expectLastAudioSrc(page, "/audio/male-red-response.mp3");
   });
 });

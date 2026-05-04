@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { bodyPartsV2, type BodyPartZone } from "../data/bodyPartsV2";
 import {
   useBodyTrafficLightStore,
+  type DollType,
   type LightColor,
 } from "../stores/useBodyTrafficLightStore";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
@@ -21,11 +22,22 @@ const COLOR_PULSE: Record<LightColor, string> = {
   red: "bg-red-400",
 };
 
-const AUDIO_MAP: Record<LightColor, string> = {
-  red: "/audio/red-response.mp3",
-  yellow: "/audio/yellow-response.mp3",
-  green: "/audio/green-response.mp3",
+const AUDIO_MAP: Record<DollType, Record<LightColor, string>> = {
+  female: {
+    red: "/audio/female-red-response.mp3",
+    yellow: "/audio/female-yellow-response.mp3",
+    green: "/audio/female-green-response.mp3",
+  },
+  male: {
+    red: "/audio/male-red-response.mp3",
+    yellow: "/audio/male-yellow-response.mp3",
+    green: "/audio/male-green-response.mp3",
+  },
 };
+
+const ALL_AUDIO_SOURCES = Object.values(AUDIO_MAP).flatMap((audioByColor) =>
+  Object.values(audioByColor),
+);
 
 const sortedZones = bodyPartsV2
   .flatMap((part) => part.zones.map((zone, i) => ({ part, zone, zoneIdx: i })))
@@ -53,7 +65,7 @@ export default function TouchTestPage() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    preloadAudio(Object.values(AUDIO_MAP));
+    preloadAudio(ALL_AUDIO_SOURCES);
   }, []);
 
   function handlePartClick(partId: string, zone: BodyPartZone) {
@@ -62,7 +74,7 @@ export default function TouchTestPage() {
     pulseCounter.current += 1;
     setPlayingPartId(partId);
     setPulseState({ partId, zone, color, key: `${partId}-${pulseCounter.current}` });
-    play(AUDIO_MAP[color], {
+    play(AUDIO_MAP[doll][color], {
       onEnd: () => setPlayingPartId((prev) => (prev === partId ? null : prev)),
     });
   }
