@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
@@ -24,8 +24,6 @@ const LIGHTS = [
   },
 ] as const;
 
-const STAGGER_MS = 1500;
-
 const popIn = {
   initial: { scale: 0.5, opacity: 0 },
   animate: { scale: 1, opacity: 1 },
@@ -36,20 +34,24 @@ export default function BodyTrafficLightPage() {
   const navigate = useNavigate();
   const { play, stop } = useAudioPlayer();
   const [visibleCount, setVisibleCount] = useState(0);
-  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    const timers = timersRef.current;
-    LIGHTS.forEach((light, i) => {
-      timers.push(
-        setTimeout(() => {
-          setVisibleCount(i + 1);
-          play(light.audio);
-        }, i * STAGGER_MS),
-      );
-    });
+    let cancelled = false;
+
+    function playNext(index: number) {
+      if (cancelled || index >= LIGHTS.length) return;
+      setVisibleCount(index + 1);
+      play(LIGHTS[index].audio, {
+        onEnd: () => {
+          if (!cancelled) playNext(index + 1);
+        },
+      });
+    }
+
+    playNext(0);
+
     return () => {
-      timers.forEach(clearTimeout);
+      cancelled = true;
       stop();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
