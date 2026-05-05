@@ -4,18 +4,22 @@ import { motion } from "framer-motion";
 
 type DollType = "female" | "male";
 
-const DOLLS: { id: DollType; label: string; src: string; alt: string }[] = [
+const DOLLS: { id: DollType; label: string; src: string; alt: string; bg: string; ring: string }[] = [
   {
     id: "female",
-    label: "女生",
-    src: "/images/doll-female.png",
+    label: "女生 👧",
+    src: "/images/doll-female.svg",
     alt: "女生人偶",
+    bg: "bg-pink-50",
+    ring: "ring-pink-400",
   },
   {
     id: "male",
-    label: "男生",
-    src: "/images/doll-male.png",
+    label: "男生 👦",
+    src: "/images/doll-male.svg",
     alt: "男生人偶",
+    bg: "bg-blue-50",
+    ring: "ring-blue-400",
   },
 ];
 
@@ -42,9 +46,10 @@ export default function PickDollPage() {
               data-testid={`doll-card-${doll.id}`}
               aria-pressed={isSelected}
               className={[
-                "flex cursor-pointer flex-col items-center rounded-2xl bg-white p-4 shadow-md transition-shadow",
+                "flex cursor-pointer flex-col items-center rounded-3xl p-4 shadow-md transition-shadow",
+                doll.bg,
                 isSelected
-                  ? "ring-4 ring-blue-500 ring-offset-2"
+                  ? `ring-4 ${doll.ring} ring-offset-2`
                   : "ring-2 ring-transparent",
               ].join(" ")}
               whileTap={{ scale: 0.97 }}
@@ -55,12 +60,9 @@ export default function PickDollPage() {
               <img
                 src={doll.src}
                 alt={doll.alt}
-                className="mb-3 h-72 w-full object-contain"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).style.display = "none";
-                }}
+                className="mb-3 h-64 w-full object-contain drop-shadow-md"
               />
-              <span className="text-lg font-semibold">{doll.label}</span>
+              <span className="text-lg font-bold">{doll.label}</span>
             </motion.button>
           );
         })}
