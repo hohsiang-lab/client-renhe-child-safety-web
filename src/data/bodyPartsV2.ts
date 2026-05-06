@@ -18,7 +18,7 @@ export const bodyPartsV2: BodyPartV2[] = [
   {
     id: "head",
     name: "頭 / 頭髮",
-    zones: [{ cx: 50, cy: 13, w: 28, h: 18 }],
+    zones: [{ cx: 50, cy: 9.5, w: 24, h: 9 }],
   },
   {
     id: "face",
@@ -28,7 +28,10 @@ export const bodyPartsV2: BodyPartV2[] = [
   {
     id: "ear",
     name: "耳朵",
-    zones: [{ cx: 38, cy: 14, w: 8, h: 7 }],
+    zones: [
+      { cx: 39.5, cy: 20, w: 6, h: 7 },
+      { cx: 60.5, cy: 20, w: 6, h: 7 },
+    ],
   },
   {
     id: "mouth",

@@ -3,7 +3,6 @@ import { bodyPartsV2 } from "../src/data/bodyPartsV2";
 
 // HO-776: 身體紅綠燈 v2 — 觸碰測試互動（語音回應）
 
-
 async function installAudioSpy(page: Page) {
   await page.addInitScript(() => {
     type MockAudio = {
@@ -70,6 +69,30 @@ async function setupTouchTest(page: Page, doll: "female" | "male" = "female") {
 }
 
 test.describe("觸碰測試頁 (HO-776)", () => {
+  test("女生頭髮與耳朵標記點對準圖像位置", async ({ page }) => {
+    await page.goto("/body-traffic-light/mark?doll=female");
+
+    const hair = page.locator('[data-part-id="head"]').first();
+    const ears = page.locator('[data-part-id="ear"]');
+
+    await expect(ears).toHaveCount(2);
+
+    const hairBox = await hair.boundingBox();
+    const leftEarBox = await ears.first().boundingBox();
+    const rightEarBox = await ears.nth(1).boundingBox();
+
+    expect(hairBox).not.toBeNull();
+    expect(leftEarBox).not.toBeNull();
+    expect(rightEarBox).not.toBeNull();
+
+    const hairCenterY = hairBox!.y + hairBox!.height / 2;
+    const leftEarCenterY = leftEarBox!.y + leftEarBox!.height / 2;
+    const rightEarCenterY = rightEarBox!.y + rightEarBox!.height / 2;
+
+    // Hair marker belongs on top hair/bangs, not on the ear/hair-tie row.
+    expect(hairCenterY).toBeLessThan(leftEarCenterY - 20);
+    expect(hairCenterY).toBeLessThan(rightEarCenterY - 20);
+  });
   // Store is in-memory (no persist). page.goto() always reloads the page and
   // resets the store to empty, so only the empty-store path is E2E-testable.
   // The guard uses < bodyPartsV2.length (not === 0) for forward-compatibility
