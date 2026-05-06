@@ -65,7 +65,7 @@ export default function BodyMarkPage() {
         {/* Left: doll image with hit zones */}
         <div className="relative flex-[3]" style={{ userSelect: "none" }}>
           <img
-            src={doll === "female" ? "/images/doll-female.svg" : `/images/doll-${doll}.png`}
+            src={`/images/doll-${doll}.svg`}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
             className="w-full"
             draggable={false}
