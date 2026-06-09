@@ -7,12 +7,15 @@ async function installAudioSpy(page: Page) {
   await page.addInitScript(() => {
     type MockAudio = {
       src: string;
+      preload: string;
       muted: boolean;
       currentTime: number;
       onended: (() => void) | null;
       onerror: (() => void) | null;
       play: () => Promise<void>;
       pause: () => void;
+      addEventListener: (name: string, listener: () => void) => void;
+      removeEventListener: (name: string, listener: () => void) => void;
       removeAttribute: (name: string) => void;
       load: () => void;
     };
@@ -23,12 +26,15 @@ async function installAudioSpy(page: Page) {
       if (src) state.__audioSrcs.push(src);
       return {
         src: src ?? "",
+        preload: "",
         muted: false,
         currentTime: 0,
         onended: null,
         onerror: null,
         play: () => Promise.resolve(),
         pause: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
         removeAttribute: () => {},
         load: () => {},
       };
@@ -146,10 +152,10 @@ test.describe("觸碰測試頁 (HO-776)", () => {
     // regression where AUDIO_MAP[color] lookup early-returns for any
     // non-red color (or hardcodes red).
     await setupTouchTest(page);
-    await page.locator('[data-part-id="head"]').first().click();
+    await page.locator('[data-part-id="hand"]').first().click();
     await expect(page.getByTestId("touch-test-page")).toHaveAttribute(
       "data-playing",
-      "head",
+      "hand",
     );
   });
 
