@@ -16,7 +16,8 @@ export const bodyParts: BodyPart[] = [
     id: "chest",
     name: "胸部",
     signal: "red",
-    description: "這裡是私密的地方，除了洗澡和看醫生，別人不可以碰",
+    description:
+      "這是私密部位，任何人都不能隨意看或碰。照顧、清潔或醫療需要時，也要先說明並尊重你的感受。",
   },
   {
     id: "hand",
@@ -28,7 +29,8 @@ export const bodyParts: BodyPart[] = [
     id: "private",
     name: "私密處",
     signal: "red",
-    description: "這是身體最私密的地方，絕對不能讓別人碰",
+    description:
+      "這是身體最私密的地方，任何人都不能隨意看或碰。需要照顧或醫療時，也應先說明並尊重你的感受。",
   },
   {
     id: "leg",

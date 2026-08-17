@@ -86,6 +86,10 @@ export default function TouchTestPage() {
       data-playing={playingPartId ?? ""}
     >
       <div className="w-full max-w-[360px] px-4 pt-8">
+        <div className="mb-4 flex justify-end gap-2">
+          <button className="text-button" onClick={() => document.documentElement.requestFullscreen?.()}>全螢幕</button>
+          <button className="text-button" onClick={() => navigate("/menu")}>回主選單</button>
+        </div>
         <h1 className="mb-4 text-center text-xl font-bold text-gray-800">
           點擊各部位，聽聽怎麼說 👂
         </h1>
@@ -164,6 +168,12 @@ export default function TouchTestPage() {
         className="fixed bottom-6 right-6 rounded-full bg-green-500 px-6 py-3 text-lg font-bold text-white shadow-lg hover:bg-green-600 active:scale-95"
       >
         我學會了！✅
+      </button>
+      <button
+        onClick={() => navigate("/body-traffic-light/mark")}
+        className="fixed bottom-6 left-6 rounded-full border-2 border-green-500 bg-white px-5 py-3 text-base font-bold text-green-700 shadow-lg"
+      >
+        重新開始
       </button>
     </div>
   );

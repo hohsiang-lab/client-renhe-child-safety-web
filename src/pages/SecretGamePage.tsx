@@ -1,293 +1,117 @@
-import { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { secretQuestions } from "../data/secrets";
-import type { SecretQuestion } from "../data/secrets";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
-import { SecretCard } from "../components/SecretCard";
 
-type Phase = "intro" | "grid" | "trusted-adults";
-
-const trustedAdultCards = [
-  { name: "媽媽", src: "/images/trusted-adults/mom.png" },
-  { name: "爸爸", src: "/images/trusted-adults/dad.png" },
-  { name: "奶奶", src: "/images/trusted-adults/grandma.png" },
-  { name: "老師", src: "/images/trusted-adults/teacher.png" },
-  { name: "警察", src: "/images/trusted-adults/police.png" },
-  { name: "親戚", src: "/images/trusted-adults/relatives.png" },
-  { name: "隔壁叔叔阿姨", src: "/images/trusted-adults/neighbors.png" },
-  { name: "媽媽的男朋友", src: "/images/trusted-adults/moms-boyfriend.png" },
-];
+type Phase = "playing" | "wrong" | "correct" | "complete";
+const questions = secretQuestions.slice(0, 6);
 
 export default function SecretGamePage() {
   const navigate = useNavigate();
-  const { stop } = useAudioPlayer();
+  const { play, stop } = useAudioPlayer();
+  const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
+  const [phase, setPhase] = useState<Phase>("playing");
+  const [selected, setSelected] = useState<"good" | "bad" | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const current = questions[index];
 
-  const [phase, setPhase] = useState<Phase>("intro");
-  const [viewedIds, setViewedIds] = useState<Set<number>>(new Set());
-  const [selectedCard, setSelectedCard] = useState<SecretQuestion | null>(null);
-  const [modalBackError, setModalBackError] = useState(false);
-
-  useEffect(() => {
-    return () => stop();
+  useEffect(() => () => {
+    stop();
+    if (timerRef.current) clearTimeout(timerRef.current);
   }, [stop]);
 
-  function handleCardSelect(q: SecretQuestion) {
-    setModalBackError(false);
-    setSelectedCard(q);
-    setViewedIds((prev) => new Set(prev).add(q.id));
-  }
-
-  function closeModal() {
-    setSelectedCard(null);
-  }
-
-  function openTrustedAdults() {
+  function answer(value: "good" | "bad") {
+    if (phase !== "playing") return;
     stop();
-    setSelectedCard(null);
-    setPhase("trusted-adults");
+    setSelected(value);
+    if (value === current.answer) {
+      setScore((n) => n + 1);
+      setPhase("correct");
+      play(`/audio/secret-q${current.id}-correct.mp3`);
+      timerRef.current = window.setTimeout(next, 1500);
+    } else {
+      setPhase("wrong");
+      play(`/audio/secret-q${current.id}-wrong.mp3`);
+    }
   }
 
-  const allViewed = viewedIds.size === secretQuestions.length;
-
-  if (phase === "intro") {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
-        <motion.h1
-          className="mb-2 text-3xl font-bold"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          秘密遊戲 🔑
-        </motion.h1>
-        <motion.p
-          className="text-text-light mb-10 text-center text-base"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          你知道什麼是好秘密、什麼是壞秘密嗎？
-        </motion.p>
-
-        <div className="grid w-full max-w-md grid-cols-2 gap-4">
-          <motion.button
-            onClick={() => setPhase("grid")}
-            className="bg-green-safe-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <span className="mb-3 text-5xl">⭕</span>
-            <h2 className="mb-1 text-xl font-bold">好秘密</h2>
-            <p className="text-text-light text-center text-xs leading-relaxed">
-              讓人開心<br />不會讓你害怕
-            </p>
-          </motion.button>
-
-          <motion.button
-            onClick={() => setPhase("grid")}
-            className="bg-red-danger-bg flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <span className="mb-3 text-5xl">❌</span>
-            <h2 className="mb-1 text-xl font-bold">壞秘密</h2>
-            <p className="text-text-light text-center text-xs leading-relaxed">
-              讓你不舒服<br />或感到害怕
-            </p>
-          </motion.button>
-        </div>
-
-        <motion.button
-          onClick={() => navigate("/menu")}
-          className="text-text-light hover:text-primary mt-10 cursor-pointer px-6 py-3 text-sm transition-colors"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-        >
-          ← 回到選單
-        </motion.button>
-      </div>
-    );
+  function next() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (index === questions.length - 1) setPhase("complete");
+    else {
+      setIndex((n) => n + 1);
+      setSelected(null);
+      setPhase("playing");
+    }
   }
 
-  if (phase === "grid") {
-    return (
-      <div className="flex min-h-dvh flex-col px-4 py-8">
-        <motion.div
-          className="mb-6 text-center"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <h1 className="mb-1 text-2xl font-bold">秘密卡片 🔒</h1>
-          <p className="text-text-light text-sm">
-            點擊每張卡片翻面看看 👇
-          </p>
-        </motion.div>
-
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-4 gap-4">
-          {secretQuestions.map((q, i) => (
-            <motion.div
-              key={q.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.07 }}
-            >
-              <SecretCard
-                question={q}
-                viewed={viewedIds.has(q.id)}
-                onSelect={handleCardSelect}
-              />
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex flex-col items-center gap-3">
-          {allViewed && (
-            <motion.button
-              onClick={() => navigate("/ending")}
-              className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-3 font-bold text-white shadow-md"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.97 }}
-              data-testid="complete-button"
-            >
-              完成遊戲 🎉
-            </motion.button>
-          )}
-          <motion.button
-            onClick={() => setPhase("intro")}
-            className="text-text-light hover:text-primary cursor-pointer px-6 py-2 text-sm transition-colors"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            ← 返回
-          </motion.button>
-        </div>
-
-        {/* Card Modal */}
-        {selectedCard && (
-          <motion.div
-            className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/60 px-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            onClick={closeModal}
-          >
-            <motion.div
-              className="relative flex flex-col items-center"
-              initial={{ scale: 0.7, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                className="absolute -right-3 -top-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-white text-gray-600 shadow-lg hover:bg-gray-100"
-                onClick={closeModal}
-                data-testid="card-modal-close"
-              >
-                ✕
-              </button>
-
-              <div
-                className="overflow-hidden rounded-2xl shadow-2xl"
-                style={{ width: "min(360px, calc(100vw - 3rem))", aspectRatio: "1414 / 2000" }}
-                data-testid={`card-back-${selectedCard.id}`}
-              >
-                {modalBackError ? (
-                  <div
-                    className={`flex h-full w-full flex-col items-center justify-center p-6 text-center ${
-                      selectedCard.answer === "bad" ? "bg-red-danger-bg" : "bg-green-safe-bg"
-                    }`}
-                  >
-                    <p className={`mb-2 text-base font-bold ${selectedCard.answer === "bad" ? "text-red-danger" : "text-green-safe"}`}>
-                      {selectedCard.answer === "bad" ? "❌ 壞秘密" : "⭕ 好秘密"}
-                    </p>
-                    <p className="text-sm leading-relaxed">{selectedCard.explanation}</p>
-                  </div>
-                ) : (
-                  <img
-                    src={selectedCard.backImage}
-                    alt={selectedCard.explanation}
-                    className="h-full w-full object-cover"
-                    onError={() => setModalBackError(true)}
-                  />
-                )}
-              </div>
-
-              {selectedCard.answer === "bad" && (
-                <button
-                  className="bg-primary hover:bg-primary-hover mt-4 cursor-pointer rounded-full py-3 font-bold text-white shadow-md"
-                  style={{ width: "min(360px, calc(100vw - 3rem))" }}
-                  onClick={openTrustedAdults}
-                  data-testid={`trusted-adults-cta-${selectedCard.id}`}
-                >
-                  誰是信任的大人？
-                </button>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </div>
-    );
+  function retry() {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setSelected(null);
+    setPhase("playing");
+    play(`/audio/secret-q${current.id}-scenario.mp3`);
   }
 
-  if (phase === "trusted-adults") {
+  if (phase === "complete") {
     return (
-      <motion.div
-        className="flex min-h-dvh flex-col items-center px-6 py-10"
-        initial={{ opacity: 0, y: 40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="mb-8 text-center">
-          <h2 className="mb-2 text-3xl font-bold">信任的大人 💛</h2>
-          <p className="text-text-light text-base">遇到問題時，可以找這些人求助</p>
-        </div>
-
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-4 gap-6">
-          {trustedAdultCards.map((card) => (
-            <div
-              key={card.name}
-              className="flex flex-col items-center"
-              data-testid={`trusted-adult-${card.name}`}
-            >
-              <img
-                src={card.src}
-                alt={card.name}
-                className="w-full rounded-2xl object-contain"
-              />
-            </div>
-          ))}
-        </div>
-
-        <motion.button
-          onClick={() => setPhase("grid")}
-          className="bg-primary hover:bg-primary-hover mt-10 cursor-pointer rounded-full px-12 py-3 text-lg font-bold text-white shadow-md"
-          whileHover={{ scale: 1.04 }}
-          whileTap={{ scale: 0.96 }}
-        >
-          我知道了
-        </motion.button>
-      </motion.div>
+      <main className="game-shell">
+        <section className="completion-card" aria-live="polite">
+          <span className="completion-icon" aria-hidden="true">✓</span>
+          <h1>遊戲完成！</h1>
+          <p>你答對了 {score} / {questions.length} 題</p>
+          {score === questions.length && <strong>太厲害了，全部答對！</strong>}
+          <div className="button-row">
+            <button className="primary-button" onClick={() => { setIndex(0); setScore(0); setSelected(null); setPhase("playing"); }}>
+              再玩一次
+            </button>
+            <button className="secondary-button" onClick={() => navigate("/menu")}>回主選單</button>
+            <button className="secondary-button" onClick={() => navigate("/ending")}>完成</button>
+          </div>
+        </section>
+      </main>
     );
   }
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
-      <p className="mb-4 text-base">頁面狀態異常，請回到選單。</p>
-      <button
-        onClick={() => navigate("/menu")}
-        className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-6 py-3 font-bold text-white"
-      >
-        ← 回到選單
-      </button>
-    </div>
+    <main className="game-shell">
+      <header className="game-header">
+        <div><span className="eyebrow">仁和社區兒童安全學習</span><h1>秘密遊戲</h1></div>
+        <div className="button-row compact"><button className="text-button" onClick={() => document.documentElement.requestFullscreen?.()}>全螢幕</button><button className="text-button" onClick={() => navigate("/menu")}>回主選單</button></div>
+      </header>
+      <div className="progress-wrap" aria-label={`第 ${index + 1} / ${questions.length} 題`}>
+        <div className="progress-label"><span>第 {index + 1} / {questions.length} 題</span><span>答對 {score} 題</span></div>
+        <div className="progress-track"><div className="progress-value" style={{ width: `${((index + 1) / questions.length) * 100}%` }} /></div>
+      </div>
+      <div className="facilitator-bar">
+        <label>
+          選擇題目
+          <select aria-label="選擇秘密題目" value={index} onChange={(event) => {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            setIndex(Number(event.target.value));
+            setSelected(null);
+            setPhase("playing");
+          }}>
+            {questions.map((question, questionIndex) => <option key={question.id} value={questionIndex}>第 {questionIndex + 1} 題</option>)}
+          </select>
+        </label>
+        <button className="secondary-button" onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); setIndex(0); setScore(0); setSelected(null); setPhase("playing"); }}>重新開始</button>
+      </div>
+      <motion.section className="question-card" key={current.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+        <span className="question-tag">情境題</span>
+        <p className="question-text text-lg leading-relaxed">{current.scenario}</p>
+        {phase === "correct" && <div className="feedback success" role="status"><b>⭐ 答對了！好棒！</b><span>這是{current.answer === "good" ? "好" : "壞"}秘密。{current.explanation}</span></div>}
+        {phase === "wrong" && <div className="feedback error" role="status"><b>不太對喔～</b><span>{current.explanation}</span></div>}
+        <button className="text-button" onClick={() => play(`/audio/secret-q${current.id}-scenario.mp3`)}>重播題目語音</button>
+        <div className="answer-grid">
+          <button className={`answer-button good ${selected === "good" ? "selected" : ""}`} onClick={() => answer("good")} disabled={phase !== "playing"}><span aria-hidden="true">○</span>好秘密</button>
+          <button className={`answer-button bad ${selected === "bad" ? "selected" : ""}`} onClick={() => answer("bad")} disabled={phase !== "playing"}><span aria-hidden="true">×</span>壞秘密</button>
+        </div>
+        {phase === "wrong" && <button className="primary-button full-button" onClick={index === questions.length - 1 ? () => setPhase("complete") : next}>我知道了</button>}
+        {current.answer === "bad" && phase !== "playing" && <div className="safety-steps"><b>遇到壞秘密，記得：</b><span>1. 說不要</span><span>2. 離開</span><span>3. 告訴可信任的大人</span></div>}
+        {phase === "wrong" && <button className="text-button retry-button" onClick={retry}>再試一次</button>}
+      </motion.section>
+    </main>
   );
 }

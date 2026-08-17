@@ -40,9 +40,10 @@ export default function HomePage() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.5 }}
       >
-        <div className="mx-auto mb-2 text-6xl">🌟</div>
+        <div className="brand-mark" aria-hidden="true">仁和</div>
       </motion.div>
 
+      <p className="eyebrow">仁和社區｜兒童安全互動學習</p>
       <h1 className="mb-3 text-4xl font-bold md:text-5xl">保護自己大冒險</h1>
       <p className="text-text-light mb-8 text-lg md:text-xl">
         一起來學習怎麼保護自己吧！
@@ -67,8 +68,14 @@ export default function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.6, duration: 0.4 }}
       >
-        開始探險 🚀
+        開始探險
       </motion.button>
+      <p className="mt-6 max-w-md text-sm text-text-light">適用年齡：5–12 歲 · 主辦：仁和社區</p>
+      <div className="home-links" aria-label="四個遊戲入口">
+        {[["秘密", "/secret-game"], ["身體界線", "/body-traffic-light"], ["信任大人", "/trusted-adult"], ["網路安全", "/network-safety"]].map(([label, path]) => (
+          <button key={path} onClick={() => navigate(path)}>{label}</button>
+        ))}
+      </div>
     </motion.div>
   );
 }

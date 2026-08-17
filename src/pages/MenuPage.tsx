@@ -7,12 +7,28 @@ const modules = [
     description: "學習分辨好秘密和壞秘密",
     path: "/secret-game",
     emoji: "🔑",
+    age: "適合 5–12 歲",
   },
   {
     name: "身體紅綠燈",
     description: "認識身體的安全界線",
     path: "/body-traffic-light",
     emoji: "🚦",
+    age: "適合 5–12 歲",
+  },
+  {
+    name: "信任的大人",
+    description: "找到可以求助的大人",
+    path: "/trusted-adult",
+    emoji: "♥",
+    age: "適合 5–12 歲",
+  },
+  {
+    name: "網路安全",
+    description: "學會保護自己的網路界線",
+    path: "/network-safety",
+    emoji: "◎",
+    age: "適合 8–12 歲",
   },
 ];
 
@@ -41,9 +57,10 @@ export default function MenuPage() {
             whileHover={{ scale: 1.03, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
             whileTap={{ scale: 0.97 }}
           >
-            <span className="mb-3 text-5xl">{mod.emoji}</span>
+            <span className="module-icon" aria-hidden="true">{mod.emoji}</span>
             <h2 className="mb-2 text-xl font-bold">{mod.name}</h2>
             <p className="text-text-light text-sm">{mod.description}</p>
+            <span className="mt-3 text-xs text-text-light">{mod.age}</span>
           </motion.button>
         ))}
       </div>
