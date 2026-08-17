@@ -29,7 +29,7 @@ export default function BodyMarkPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  const { doll, setDoll, marks, setMark } = useBodyTrafficLightStore();
+  const { doll, setDoll, marks, setMark, reset } = useBodyTrafficLightStore();
 
   // Support direct navigation / E2E via ?doll= URL param
   useEffect(() => {
@@ -50,11 +50,39 @@ export default function BodyMarkPage() {
     setMark(selectedPartId, color);
   }
 
+  function restart() {
+    reset();
+    setSelectedPartId(null);
+  }
+
   return (
     <div className="flex min-h-dvh flex-col bg-pink-50">
       {/* Header */}
-      <div className="px-4 pt-6 text-center">
-        <h1 className="text-xl font-bold text-gray-800">幫身體各部位選燈色 🚦</h1>
+      <div className="game-header px-4 pt-6">
+        <div>
+          <span className="eyebrow">仁和社區兒童安全學習</span>
+          <h1 className="text-xl font-bold text-gray-800">幫身體各部位選燈色 🚦</h1>
+        </div>
+        <div className="button-row compact">
+          <button className="text-button" onClick={() => document.documentElement.requestFullscreen?.()}>全螢幕</button>
+          <button className="text-button" onClick={() => navigate("/menu")}>回主選單</button>
+        </div>
+      </div>
+      <div className="facilitator-bar mx-3">
+        <label>
+          選擇題目
+          <select
+            aria-label="選擇身體部位"
+            value={selectedPartId ?? ""}
+            onChange={(event) => setSelectedPartId(event.target.value || null)}
+          >
+            <option value="">請選擇</option>
+            {bodyPartsV2.map((part) => <option key={part.id} value={part.id}>{part.name}</option>)}
+          </select>
+        </label>
+        <button className="secondary-button" onClick={restart}>重新開始</button>
+      </div>
+      <div className="px-4 text-center">
         <p className="mt-1 text-sm text-gray-500">
           已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
         </p>

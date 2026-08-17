@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import BodySvg from "../components/BodySvg";
 
 const LIGHTS = [
   {
@@ -19,7 +20,7 @@ const LIGHTS = [
   {
     id: "red",
     emoji: "🔴",
-    text: "任何人都不能隨意碰的地方（除了家長和醫生）",
+    text: "任何人都不能隨意看或碰的私密部位",
     audio: "/audio/btl-red.mp3",
   },
 ] as const;
@@ -64,7 +65,7 @@ export default function BodyTrafficLightPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        身體紅綠燈 🚦
+        身體紅綠燈
       </motion.h1>
 
       <div className="flex w-full max-w-sm flex-col gap-5">
@@ -77,11 +78,17 @@ export default function BodyTrafficLightPage() {
                 {...popIn}
               >
                 <span className="text-5xl">{light.emoji}</span>
-                <p className="text-base font-medium leading-snug">{light.text}</p>
+                <p className="text-base font-medium leading-snug">
+                  {light.text}
+                  {light.id === "red" && <small className="mt-1 block text-sm font-normal">照顧、清潔或醫療需要時，也要先說明並尊重你的感受。</small>}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
         ))}
+      </div>
+      <div className="mt-8 w-full max-w-xs rounded-2xl bg-white p-3 shadow-sm">
+        <BodySvg activePart={null} exploredParts={new Set()} onPartClick={() => undefined} />
       </div>
 
       <AnimatePresence>

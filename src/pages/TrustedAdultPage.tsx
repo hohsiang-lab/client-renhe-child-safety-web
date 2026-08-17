@@ -10,6 +10,7 @@ export default function TrustedAdultPage() {
   const navigate = useNavigate();
   const { play, stop } = useAudioPlayer();
   const [index, setIndex] = useState(0);
+  const [score, setScore] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,10 +40,11 @@ export default function TrustedAdultPage() {
   }, [index, play]);
 
   function handleAnswer(optionIndex: number) {
-    if (phase === "correct" || !current) return;
+    if (phase !== "playing" || !current) return;
     stop();
     setSelectedIndex(optionIndex);
     if (optionIndex === current.correctIndex) {
+      setScore((n) => n + 1);
       setPhase("correct");
       play(`/audio/trust-q${current.id}-correct.mp3`);
       timerRef.current = setTimeout(advance, 2200);
@@ -67,26 +69,32 @@ export default function TrustedAdultPage() {
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="mb-6 text-7xl"
+          className="completion-icon mb-6"
           initial={{ scale: 0 }}
           animate={{ scale: 1, rotate: [0, 15, -15, 0] }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          💛
+          ✓
         </motion.div>
-        <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
+        <h1 className="mb-3 text-3xl font-bold">信任大人完成！</h1>
+        <p className="mb-3 text-xl font-bold">你答對了 {score} / {trustQuestions.length} 題</p>
         <p className="text-text-light mb-10 text-lg leading-relaxed">
           你學會了怎麼找到可以信任的大人！<br />
-          遇到困難時，記得去找信任的大人幫忙喔！
+          如果第一位大人沒有相信你或沒有幫助你，<br />
+          也可以繼續告訴下一位可信任的大人。
         </p>
+        <div className="button-row">
         <motion.button
-          onClick={() => navigate("/ending")}
-          className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-4 text-lg font-bold text-white shadow-lg"
+          onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); setIndex(0); setScore(0); setSelectedIndex(null); setPhase("playing"); }}
+          className="primary-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
-          完成
+          再玩一次
         </motion.button>
+        <button className="secondary-button" onClick={() => navigate("/menu")}>回主選單</button>
+        <button className="secondary-button" onClick={() => navigate("/ending")}>完成</button>
+        </div>
       </motion.div>
     );
   }
@@ -99,15 +107,31 @@ export default function TrustedAdultPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="mb-2 text-2xl font-bold">信任大人 💛</h1>
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="mb-2 text-2xl font-bold">信任大人</h1>
+            <div className="button-row compact">
+              <button className="text-button" onClick={() => document.documentElement.requestFullscreen?.()}>全螢幕</button>
+              <button className="text-button" onClick={() => navigate("/menu")}>回主選單</button>
+            </div>
+          </div>
           <p className="text-text-light text-sm">
-            第 {index + 1} / {trustQuestions.length} 題
+            第 {index + 1} / {trustQuestions.length} 題 · 答對 {score} 題
           </p>
         </motion.div>
 
-        <div className="bg-warm-bg mb-2 h-2 w-full overflow-hidden rounded-full">
+        <div className="facilitator-bar">
+          <label>
+            選擇題目
+            <select aria-label="選擇信任大人題目" value={index} onChange={(event) => { if (timerRef.current) clearTimeout(timerRef.current); setIndex(Number(event.target.value)); setPhase("playing"); setSelectedIndex(null); }}>
+              {trustQuestions.map((question, questionIndex) => <option key={question.id} value={questionIndex}>第 {questionIndex + 1} 題</option>)}
+            </select>
+          </label>
+          <button className="secondary-button" onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); setIndex(0); setScore(0); setPhase("playing"); setSelectedIndex(null); }}>重新開始</button>
+        </div>
+
+        <div className="progress-track">
           <motion.div
-            className="bg-primary h-full rounded-full"
+            className="progress-value"
             initial={{ width: 0 }}
             animate={{ width: `${((index + 1) / trustQuestions.length) * 100}%` }}
             transition={{ duration: 0.3 }}
