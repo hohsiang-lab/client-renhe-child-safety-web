@@ -71,7 +71,7 @@ function getCalloutArrowSpec(
       angle: 55,
       size: "large",
       anchorX: 34,
-      anchorY: 10,
+      anchorY: 7,
     };
   }
   if (partId === "face") {

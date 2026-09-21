@@ -106,7 +106,7 @@ test.describe("身體標記頁 (HO-775)", () => {
 
   test("matches the male and female Drive reference arrow placement contract", async ({ page }) => {
     const expected = new Map([
-      ["head:0", { x: 34, y: 10, angle: 55, size: "large" }],
+      ["head:0", { x: 34, y: 7, angle: 55, size: "large" }],
       ["face:0", { x: 55, y: 29, angle: 205, size: "small" }],
       ["mouth:0", { x: 63, y: 34, angle: 205, size: "small" }],
       ["ear:0", { x: 16, y: 25, angle: 0, size: "small" }],
