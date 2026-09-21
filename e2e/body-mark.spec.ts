@@ -45,6 +45,20 @@ test.describe("身體標記頁 (HO-775)", () => {
     ).toEqual([1024, 1705]);
   });
 
+  test("shows outlined callout arrows with an explicit two-step instruction", async ({ page }) => {
+    await page.goto("/body-traffic-light/mark?doll=male");
+
+    await expect(page.getByTestId("body-mark-instruction")).toHaveText(
+      "先點箭頭，再選燈色",
+    );
+    const arrows = page.getByTestId("body-part-arrow");
+    await expect(arrows).toHaveCount(
+      bodyPartsV2.reduce((count, part) => count + part.zones.length, 0),
+    );
+    await expect(arrows.first()).toHaveAttribute("data-arrow-style", "outlined-callout");
+    await expect(arrows.first().locator("svg")).toBeVisible();
+  });
+
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=female");
 

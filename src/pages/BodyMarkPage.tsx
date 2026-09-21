@@ -13,11 +13,61 @@ const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
   { color: "red", label: "🔴 紅燈", bg: "bg-red-400" },
 ];
 
-const COLOR_ARROW_BG: Record<LightColor, string> = {
-  green: "bg-green-500",
-  yellow: "bg-yellow-400",
-  red: "bg-red-500",
+const CALLOUT_ARROW_STROKE: Record<LightColor, string> = {
+  green: "#15803d",
+  yellow: "#a16207",
+  red: "#b91c1c",
 };
+
+const CALLOUT_ARROW_FILL: Record<LightColor, string> = {
+  green: "#dcfce7",
+  yellow: "#fef9c3",
+  red: "#fee2e2",
+};
+
+type CalloutArrowDirection = "right" | "left" | "down";
+
+function OutlinedCalloutArrow({
+  direction,
+  color,
+}: {
+  direction: CalloutArrowDirection;
+  color?: LightColor;
+}) {
+  const rotation = direction === "right" ? "0deg" : direction === "left" ? "180deg" : "90deg";
+
+  return (
+    <svg
+      viewBox="0 0 64 48"
+      className="shrink-0"
+      style={{
+        filter: "drop-shadow(0 1px 1px rgb(15 23 42 / 0.25))",
+        height: "clamp(1.125rem, 6vw, 2.5rem)",
+        transform: `rotate(${rotation})`,
+        transformOrigin: "center",
+        width: "clamp(1.5rem, 8vw, 3.5rem)",
+      }}
+      aria-hidden="true"
+    >
+      <path
+        d="M4 18C14 18 22 19 30 18V6l30 18-30 18V30C21 29 14 30 4 30c-3-4-3-8 0-12Z"
+        fill={color ? CALLOUT_ARROW_FILL[color] : "#fffdf5"}
+        stroke={color ? CALLOUT_ARROW_STROKE[color] : "#111827"}
+        strokeWidth="3"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function getCalloutArrowDirection(
+  partId: string,
+  isLeftZone: boolean,
+): CalloutArrowDirection {
+  if (partId === "head") return "down";
+  if (partId === "face") return "right";
+  return isLeftZone ? "right" : "left";
+}
 
 // Zones sorted largest → smallest so smaller (more specific) zones render on
 // top and win click events when bounding boxes overlap (Live2D priority rule).
@@ -85,11 +135,13 @@ export default function BodyMarkPage() {
                   : "（右）"
                 : "";
             const isLeftZone = zone.cx < 50;
-            const arrowBgClass = color
-              ? COLOR_ARROW_BG[color]
-              : isSelected
-              ? "bg-gray-500"
-              : "bg-gray-300";
+            const arrowDirection = getCalloutArrowDirection(part.id, isLeftZone);
+            const arrowAlignment =
+              arrowDirection === "right"
+                ? "justify-start"
+                : arrowDirection === "left"
+                ? "justify-end"
+                : "justify-center";
 
             return (
               <button
@@ -101,7 +153,7 @@ export default function BodyMarkPage() {
                 onClick={() => setSelectedPartId(part.id)}
                 className={[
                   "absolute flex items-center rounded-xl border-2 transition-all",
-                  isLeftZone ? "justify-start" : "justify-end",
+                  arrowAlignment,
                   isSelected ? "border-white/80" : "border-transparent",
                   "bg-transparent hover:bg-white/10",
                 ].join(" ")}
@@ -116,10 +168,14 @@ export default function BodyMarkPage() {
                 }}
               >
                 <span
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base font-black text-white shadow-md ring-2 ring-white/80 transition-all duration-200 ${arrowBgClass}`}
-                  aria-hidden="true"
+                  data-testid="body-part-arrow"
+                  data-arrow-direction={arrowDirection}
+                  data-arrow-style="outlined-callout"
+                  className={`flex items-center transition-transform duration-200 ${
+                    isSelected ? "scale-110" : "hover:scale-105"
+                  }`}
                 >
-                  {isLeftZone ? "→" : "←"}
+                  <OutlinedCalloutArrow direction={arrowDirection} color={color} />
                 </span>
               </button>
             );
@@ -139,7 +195,9 @@ export default function BodyMarkPage() {
                 </span>
               </p>
             ) : (
-              <p className="text-xs text-gray-400">點擊左側部位</p>
+              <p data-testid="body-mark-instruction" className="text-sm font-semibold text-gray-500">
+                先點箭頭，再選燈色
+              </p>
             )}
           </div>
 
