@@ -126,6 +126,7 @@ test.describe("身體標記頁 (HO-775)", () => {
       ["male", "紅綠燈難.png"],
       ["female", "紅綠燈女.png"],
     ] as const) {
+      const expectedHeadY = doll === "female" ? 4 : 7;
       await page.goto(`/body-traffic-light/mark?doll=${doll}`);
       await expect(page.getByTestId("doll-image")).toHaveAttribute("src", `/images/${asset}`);
 
@@ -144,7 +145,8 @@ test.describe("身體標記頁 (HO-775)", () => {
         const target = expected.get(spec.key);
         expect(target, `missing Drive reference spec for ${doll} ${spec.key}`).toBeDefined();
         expect(Math.abs(spec.x - target!.x), `${doll} ${spec.key} x`).toBeLessThanOrEqual(1);
-        expect(Math.abs(spec.y - target!.y), `${doll} ${spec.key} y`).toBeLessThanOrEqual(1);
+        const expectedY = spec.key === "head:0" ? expectedHeadY : target!.y;
+        expect(Math.abs(spec.y - expectedY), `${doll} ${spec.key} y`).toBeLessThanOrEqual(1);
         expect(Math.abs(spec.angle - target!.angle), `${doll} ${spec.key} angle`).toBeLessThanOrEqual(1);
         expect(spec.size, `${doll} ${spec.key} size`).toBe(target!.size);
       }

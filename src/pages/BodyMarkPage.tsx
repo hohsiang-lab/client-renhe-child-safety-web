@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { bodyPartsV2 } from "../data/bodyPartsV2";
 import {
   useBodyTrafficLightStore,
+  type DollType,
   type LightColor,
 } from "../stores/useBodyTrafficLightStore";
 
@@ -64,6 +65,7 @@ function OutlinedCalloutArrow({
 function getCalloutArrowSpec(
   partId: string,
   isLeftZone: boolean,
+  doll: DollType,
 ): CalloutArrowSpec {
   if (partId === "head") {
     return {
@@ -71,7 +73,7 @@ function getCalloutArrowSpec(
       angle: 55,
       size: "large",
       anchorX: 34,
-      anchorY: 7,
+      anchorY: doll === "female" ? 4 : 7,
     };
   }
   if (partId === "face") {
@@ -265,7 +267,7 @@ export default function BodyMarkPage() {
           >
             {sortedZones.map(({ part, zone, zoneIdx }) => {
               const isSelected = selectedPartId === part.id;
-              const arrow = getCalloutArrowSpec(part.id, zone.cx < 50);
+              const arrow = getCalloutArrowSpec(part.id, zone.cx < 50, doll);
 
               return (
                 <span
