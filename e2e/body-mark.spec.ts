@@ -49,7 +49,7 @@ test.describe("身體標記頁 (HO-775)", () => {
     await page.goto("/body-traffic-light/mark?doll=male");
 
     await expect(page.getByTestId("body-mark-instruction")).toHaveText(
-      "先點箭頭，再選燈色",
+      "先點箭頭指向的部位，再選燈色",
     );
     const arrows = page.getByTestId("body-part-arrow");
     await expect(arrows).toHaveCount(
@@ -76,6 +76,32 @@ test.describe("身體標記頁 (HO-775)", () => {
     expect(new Set(specs.map((spec) => spec.angle)).size).toBeGreaterThan(3);
     expect(specs.some((spec) => Math.abs(spec.angle) % 90 > 1)).toBe(true);
     await expect(arrows.first().locator("path")).toHaveAttribute("fill", "none");
+  });
+
+  test("keeps visual arrows separate from body hit zones", async ({ page }) => {
+    await page.goto("/body-traffic-light/mark?doll=male");
+
+    const arrowLayer = page.getByTestId("body-part-arrow-layer");
+    await expect(arrowLayer).toHaveAttribute("aria-hidden", "true");
+    await expect(arrowLayer).toHaveCSS("pointer-events", "none");
+
+    const arrowPlacement = await page.getByTestId("body-part-arrow").evaluateAll((elements) => ({
+      count: elements.length,
+      insideHitButtons: elements.some((element) => element.closest("button") !== null),
+      anchored: elements.every(
+        (element) =>
+          element.getAttribute("data-arrow-anchor-x") !== null &&
+          element.getAttribute("data-arrow-anchor-y") !== null,
+      ),
+    }));
+    expect(arrowPlacement.count).toBeGreaterThan(0);
+    expect(arrowPlacement.insideHitButtons).toBe(false);
+    expect(arrowPlacement.anchored).toBe(true);
+
+    const hitZone = page.locator('[data-part-id="chest"]').first();
+    await expect(hitZone).toHaveAttribute("data-hit-zone", "true");
+    await expect(hitZone).toHaveCSS("min-width", "48px");
+    await expect(hitZone).toHaveCSS("min-height", "48px");
   });
 
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
