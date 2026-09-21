@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { bodyPartsV2 } from "../data/bodyPartsV2";
 import {
   useBodyTrafficLightStore,
+  type DollType,
   type LightColor,
 } from "../stores/useBodyTrafficLightStore";
 
@@ -20,7 +21,8 @@ type CalloutArrowSpec = {
   direction: CalloutArrowDirection;
   angle: number;
   size: CalloutArrowSize;
-  alignment: "justify-start" | "justify-end" | "justify-center";
+  anchorX: number;
+  anchorY: number;
 };
 
 const CALLOUT_ARROW_SCALE: Record<CalloutArrowSize, number> = {
@@ -63,50 +65,103 @@ function OutlinedCalloutArrow({
 function getCalloutArrowSpec(
   partId: string,
   isLeftZone: boolean,
+  doll: DollType,
 ): CalloutArrowSpec {
   if (partId === "head") {
-    return { direction: "down", angle: 55, size: "large", alignment: "justify-center" };
+    return {
+      direction: "down",
+      angle: 55,
+      size: "large",
+      anchorX: 34,
+      anchorY: doll === "female" ? 4 : 7,
+    };
   }
   if (partId === "face") {
-    return { direction: "right", angle: -35, size: "small", alignment: "justify-start" };
+    return {
+      direction: "right",
+      angle: 205,
+      size: "small",
+      anchorX: 55,
+      anchorY: 29,
+    };
   }
   if (partId === "mouth") {
-    return { direction: "left", angle: 205, size: "small", alignment: "justify-end" };
+    return {
+      direction: "left",
+      angle: 205,
+      size: "small",
+      anchorX: 63,
+      anchorY: 34,
+    };
   }
   if (partId === "chest") {
-    return { direction: "left", angle: 160, size: "medium", alignment: "justify-end" };
+    return {
+      direction: "left",
+      angle: 0,
+      size: "medium",
+      anchorX: 39,
+      anchorY: 47,
+    };
   }
   if (partId === "belly") {
-    return { direction: "left", angle: 220, size: "medium", alignment: "justify-end" };
+    return {
+      direction: "left",
+      angle: -20,
+      size: "medium",
+      anchorX: 45,
+      anchorY: 54,
+    };
   }
   if (partId === "private") {
-    return { direction: "down", angle: 90, size: "small", alignment: "justify-center" };
+    return {
+      direction: "down",
+      angle: 110,
+      size: "small",
+      anchorX: 55,
+      anchorY: 60,
+    };
   }
   if (isLeftZone) {
     const angleByPart: Record<string, number> = {
-      ear: 12,
-      hand: 8,
-      shoulder: -10,
-      thigh: -8,
+      ear: 0,
+      hand: 0,
+      shoulder: -15,
+      thigh: 0,
     };
+    const anchorByPart: Record<string, { x: number; y: number }> = {
+      ear: { x: 16, y: 25 },
+      hand: { x: 7, y: 52 },
+      shoulder: { x: 30, y: 39 },
+      thigh: { x: 35, y: 71 },
+    };
+    const anchor = anchorByPart[partId] ?? { x: 35, y: 50 };
     return {
       direction: "right",
       angle: angleByPart[partId] ?? 0,
       size: partId === "hand" || partId === "thigh" ? "medium" : "small",
-      alignment: "justify-start",
+      anchorX: anchor.x,
+      anchorY: anchor.y,
     };
   }
   const angleByPart: Record<string, number> = {
-    ear: 178,
-    hand: 195,
-    shoulder: 145,
-    thigh: 170,
+    ear: 180,
+    hand: 180,
+    shoulder: 135,
+    thigh: 180,
   };
+  const anchorByPart: Record<string, { x: number; y: number }> = {
+    ear: { x: 84, y: 25 },
+    hand: { x: 93, y: 52 },
+    shoulder: { x: 70, y: 39 },
+    thigh: { x: 67, y: 71 },
+  };
+  const anchor = anchorByPart[partId] ?? { x: 65, y: 50 };
   return {
     direction: "left",
     angle: angleByPart[partId] ?? 180,
     size: partId === "hand" || partId === "thigh" ? "medium" : "small",
-    alignment: "justify-end",
+    anchorX: anchor.x,
+    anchorY: anchor.y,
   };
 }
 
@@ -166,58 +221,79 @@ export default function BodyMarkPage() {
             }}
           />
 
-          {sortedZones.map(({ part, zone, zoneIdx }) => {
-            const color = marks[part.id] as LightColor | undefined;
-            const isSelected = selectedPartId === part.id;
-            const side =
-              part.zones.length > 1
-                ? zoneIdx === 0
-                  ? "（左）"
-                  : "（右）"
-                : "";
-            const isLeftZone = zone.cx < 50;
-            const arrow = getCalloutArrowSpec(part.id, isLeftZone);
+          <div data-testid="body-part-hit-layer" className="absolute inset-0 z-10">
+            {sortedZones.map(({ part, zone, zoneIdx }) => {
+              const color = marks[part.id] as LightColor | undefined;
+              const isSelected = selectedPartId === part.id;
+              const side =
+                part.zones.length > 1
+                  ? zoneIdx === 0
+                    ? "（左）"
+                    : "（右）"
+                  : "";
 
-            return (
-              <button
-                key={`${part.id}-${zoneIdx}`}
-                aria-label={`${part.name}${side}`}
-                aria-pressed={isSelected}
-                data-part-id={part.id}
-                data-color={color ?? ""}
-                onClick={() => setSelectedPartId(part.id)}
-                className={[
-                  "absolute flex items-center rounded-xl border-2 transition-all",
-                  arrow.alignment,
-                  isSelected ? "border-white/80" : "border-transparent",
-                  "bg-transparent hover:bg-white/10",
-                ].join(" ")}
-                style={{
-                  left: `${zone.cx}%`,
-                  top: `${zone.cy}%`,
-                  width: `${zone.w}%`,
-                  height: `${zone.h}%`,
-                  transform: "translate(-50%, -50%)",
-                  minWidth: "48px",
-                  minHeight: "48px",
-                }}
-              >
+              return (
+                <button
+                  key={`${part.id}-${zoneIdx}`}
+                  aria-label={`${part.name}${side}`}
+                  aria-pressed={isSelected}
+                  data-part-id={part.id}
+                  data-hit-zone="true"
+                  data-color={color ?? ""}
+                  onClick={() => setSelectedPartId(part.id)}
+                  className={[
+                    "absolute flex items-center rounded-xl border-2 transition-all",
+                    isSelected ? "border-white/80" : "border-transparent",
+                    "bg-transparent hover:bg-white/10",
+                  ].join(" ")}
+                  style={{
+                    left: `${zone.cx}%`,
+                    top: `${zone.cy}%`,
+                    width: `${zone.w}%`,
+                    height: `${zone.h}%`,
+                    transform: "translate(-50%, -50%)",
+                    minWidth: "48px",
+                    minHeight: "48px",
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          <div
+            data-testid="body-part-arrow-layer"
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-20"
+          >
+            {sortedZones.map(({ part, zone, zoneIdx }) => {
+              const isSelected = selectedPartId === part.id;
+              const arrow = getCalloutArrowSpec(part.id, zone.cx < 50, doll);
+
+              return (
                 <span
+                  key={`${part.id}-${zoneIdx}`}
                   data-testid="body-part-arrow"
+                  data-arrow-part-id={part.id}
+                  data-arrow-zone-index={zoneIdx}
+                  data-arrow-anchor-x={arrow.anchorX}
+                  data-arrow-anchor-y={arrow.anchorY}
                   data-arrow-angle={arrow.angle}
                   data-arrow-direction={arrow.direction}
                   data-arrow-fill="transparent"
                   data-arrow-size={arrow.size}
                   data-arrow-style="outlined-callout"
-                  className={`flex items-center transition-transform duration-200 ${
-                    isSelected ? "scale-110" : "hover:scale-105"
-                  }`}
+                  className="absolute transition-transform duration-200"
+                  style={{
+                    left: `${arrow.anchorX}%`,
+                    top: `${arrow.anchorY}%`,
+                    transform: `translate(-50%, -50%) scale(${isSelected ? 1.1 : 1})`,
+                  }}
                 >
                   <OutlinedCalloutArrow angle={arrow.angle} size={arrow.size} />
                 </span>
-              </button>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
 
         {/* Right: traffic light color picker */}
@@ -234,7 +310,7 @@ export default function BodyMarkPage() {
               </p>
             ) : (
               <p data-testid="body-mark-instruction" className="text-sm font-semibold text-gray-500">
-                先點箭頭，再選燈色
+                先點箭頭指向的部位，再選燈色
               </p>
             )}
           </div>
