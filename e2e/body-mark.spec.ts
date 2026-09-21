@@ -59,6 +59,25 @@ test.describe("身體標記頁 (HO-775)", () => {
     await expect(arrows.first().locator("svg")).toBeVisible();
   });
 
+  test("uses transparent arrows with varied angles and sizes", async ({ page }) => {
+    await page.goto("/body-traffic-light/mark?doll=male");
+
+    const arrows = page.getByTestId("body-part-arrow");
+    const specs = await arrows.evaluateAll((elements) =>
+      elements.map((element) => ({
+        angle: Number(element.getAttribute("data-arrow-angle")),
+        fill: element.getAttribute("data-arrow-fill"),
+        size: element.getAttribute("data-arrow-size"),
+      })),
+    );
+
+    expect(specs.every((spec) => spec.fill === "transparent")).toBe(true);
+    expect(new Set(specs.map((spec) => spec.size)).size).toBeGreaterThan(1);
+    expect(new Set(specs.map((spec) => spec.angle)).size).toBeGreaterThan(3);
+    expect(specs.some((spec) => Math.abs(spec.angle) % 90 > 1)).toBe(true);
+    await expect(arrows.first().locator("path")).toHaveAttribute("fill", "none");
+  });
+
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=female");
 
