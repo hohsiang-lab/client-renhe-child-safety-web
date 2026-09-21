@@ -92,7 +92,7 @@ export default function TouchTestPage() {
 
         <div className="relative mx-auto w-full" style={{ userSelect: "none" }}>
           <img
-            src={`/images/doll-${doll}.svg`}
+            src={doll === "female" ? "/images/紅綠燈女.png" : "/images/紅綠燈難.png"}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
             className="w-full"
             draggable={false}

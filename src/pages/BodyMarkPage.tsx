@@ -65,7 +65,7 @@ export default function BodyMarkPage() {
         {/* Left: doll image with hit zones */}
         <div className="relative flex-[3]" style={{ userSelect: "none" }}>
           <img
-            src={`/images/doll-${doll}.svg`}
+            src={doll === "female" ? "/images/紅綠燈女.png" : "/images/紅綠燈難.png"}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
             className="w-full"
             draggable={false}
@@ -111,8 +111,8 @@ export default function BodyMarkPage() {
                   width: `${zone.w}%`,
                   height: `${zone.h}%`,
                   transform: "translate(-50%, -50%)",
-                  minWidth: "44px",
-                  minHeight: "44px",
+                  minWidth: "48px",
+                  minHeight: "48px",
                 }}
               >
                 <span

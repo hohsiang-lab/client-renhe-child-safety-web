@@ -8,7 +8,7 @@ const DOLLS: { id: DollType; label: string; src: string; alt: string; bg: string
   {
     id: "female",
     label: "女生 👧",
-    src: "/images/doll-female.svg",
+    src: "/images/紅綠燈女.png",
     alt: "女生人偶",
     bg: "bg-pink-50",
     ring: "ring-pink-400",
@@ -16,7 +16,7 @@ const DOLLS: { id: DollType; label: string; src: string; alt: string; bg: string
   {
     id: "male",
     label: "男生 👦",
-    src: "/images/doll-male.svg",
+    src: "/images/紅綠燈難.png",
     alt: "男生人偶",
     bg: "bg-blue-50",
     ring: "ring-blue-400",

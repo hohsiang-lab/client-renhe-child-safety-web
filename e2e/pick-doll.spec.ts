@@ -13,6 +13,17 @@ test.describe("人偶選擇頁 (HO-774)", () => {
     await expect(page.getByTestId("doll-card-male")).toBeVisible();
   });
 
+  test("兩張人偶卡都載入客戶 PNG", async ({ page }) => {
+    await expect(page.getByTestId("doll-card-female").locator("img")).toHaveAttribute(
+      "src",
+      "/images/紅綠燈女.png",
+    );
+    await expect(page.getByTestId("doll-card-male").locator("img")).toHaveAttribute(
+      "src",
+      "/images/紅綠燈難.png",
+    );
+  });
+
   test("未選擇時「選好了」按鈕為 disabled", async ({ page }) => {
     const btn = page.getByTestId("confirm-btn");
     await expect(btn).toBeDisabled();
