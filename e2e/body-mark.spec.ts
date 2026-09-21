@@ -104,6 +104,46 @@ test.describe("身體標記頁 (HO-775)", () => {
     await expect(hitZone).toHaveCSS("min-height", "48px");
   });
 
+  test("matches the Drive reference arrow placement contract", async ({ page }) => {
+    await page.goto("/body-traffic-light/mark?doll=male");
+
+    const expected = new Map([
+      ["head:0", { x: 34, y: 10, angle: 55, size: "large" }],
+      ["face:0", { x: 55, y: 29, angle: 205, size: "small" }],
+      ["mouth:0", { x: 63, y: 34, angle: 205, size: "small" }],
+      ["ear:0", { x: 16, y: 25, angle: 0, size: "small" }],
+      ["ear:1", { x: 84, y: 25, angle: 180, size: "small" }],
+      ["shoulder:0", { x: 30, y: 39, angle: -15, size: "small" }],
+      ["shoulder:1", { x: 70, y: 39, angle: 135, size: "small" }],
+      ["chest:0", { x: 39, y: 47, angle: 0, size: "medium" }],
+      ["hand:0", { x: 7, y: 52, angle: 0, size: "medium" }],
+      ["hand:1", { x: 93, y: 52, angle: 180, size: "medium" }],
+      ["belly:0", { x: 45, y: 54, angle: -20, size: "medium" }],
+      ["private:0", { x: 55, y: 60, angle: 110, size: "small" }],
+      ["thigh:0", { x: 35, y: 71, angle: 0, size: "medium" }],
+      ["thigh:1", { x: 67, y: 71, angle: 180, size: "medium" }],
+    ]);
+    const actual = await page.getByTestId("body-part-arrow").evaluateAll((elements) =>
+      elements.map((element) => ({
+        key: `${element.getAttribute("data-arrow-part-id")}:${element.getAttribute("data-arrow-zone-index")}`,
+        x: Number(element.getAttribute("data-arrow-anchor-x")),
+        y: Number(element.getAttribute("data-arrow-anchor-y")),
+        angle: Number(element.getAttribute("data-arrow-angle")),
+        size: element.getAttribute("data-arrow-size"),
+      })),
+    );
+
+    expect(actual).toHaveLength(expected.size);
+    for (const spec of actual) {
+      const target = expected.get(spec.key);
+      expect(target, `missing Drive reference spec for ${spec.key}`).toBeDefined();
+      expect(Math.abs(spec.x - target!.x), `${spec.key} x`).toBeLessThanOrEqual(1);
+      expect(Math.abs(spec.y - target!.y), `${spec.key} y`).toBeLessThanOrEqual(1);
+      expect(Math.abs(spec.angle - target!.angle), `${spec.key} angle`).toBeLessThanOrEqual(1);
+      expect(spec.size, `${spec.key} size`).toBe(target!.size);
+    }
+  });
+
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=female");
 

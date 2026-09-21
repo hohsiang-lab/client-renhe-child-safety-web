@@ -70,17 +70,17 @@ function getCalloutArrowSpec(
       direction: "down",
       angle: 55,
       size: "large",
-      anchorX: 50,
+      anchorX: 34,
       anchorY: 10,
     };
   }
   if (partId === "face") {
     return {
       direction: "right",
-      angle: -35,
+      angle: 205,
       size: "small",
-      anchorX: 37,
-      anchorY: 27,
+      anchorX: 55,
+      anchorY: 29,
     };
   }
   if (partId === "mouth") {
@@ -88,49 +88,49 @@ function getCalloutArrowSpec(
       direction: "left",
       angle: 205,
       size: "small",
-      anchorX: 61,
+      anchorX: 63,
       anchorY: 34,
     };
   }
   if (partId === "chest") {
     return {
       direction: "left",
-      angle: 160,
+      angle: 0,
       size: "medium",
-      anchorX: 63,
-      anchorY: 46,
+      anchorX: 39,
+      anchorY: 47,
     };
   }
   if (partId === "belly") {
     return {
       direction: "left",
-      angle: 220,
+      angle: -20,
       size: "medium",
-      anchorX: 63,
-      anchorY: 56,
+      anchorX: 45,
+      anchorY: 54,
     };
   }
   if (partId === "private") {
     return {
       direction: "down",
-      angle: 90,
+      angle: 110,
       size: "small",
-      anchorX: 50,
-      anchorY: 61,
+      anchorX: 55,
+      anchorY: 60,
     };
   }
   if (isLeftZone) {
     const angleByPart: Record<string, number> = {
-      ear: 12,
-      hand: 8,
-      shoulder: -10,
-      thigh: -8,
+      ear: 0,
+      hand: 0,
+      shoulder: -15,
+      thigh: 0,
     };
     const anchorByPart: Record<string, { x: number; y: number }> = {
-      ear: { x: 23, y: 28 },
-      hand: { x: 7, y: 55 },
-      shoulder: { x: 28, y: 40 },
-      thigh: { x: 40, y: 72 },
+      ear: { x: 16, y: 25 },
+      hand: { x: 7, y: 52 },
+      shoulder: { x: 30, y: 39 },
+      thigh: { x: 35, y: 71 },
     };
     const anchor = anchorByPart[partId] ?? { x: 35, y: 50 };
     return {
@@ -142,16 +142,16 @@ function getCalloutArrowSpec(
     };
   }
   const angleByPart: Record<string, number> = {
-    ear: 178,
-    hand: 195,
-    shoulder: 145,
-    thigh: 170,
+    ear: 180,
+    hand: 180,
+    shoulder: 135,
+    thigh: 180,
   };
   const anchorByPart: Record<string, { x: number; y: number }> = {
-    ear: { x: 77, y: 28 },
-    hand: { x: 93, y: 55 },
-    shoulder: { x: 72, y: 40 },
-    thigh: { x: 60, y: 72 },
+    ear: { x: 84, y: 25 },
+    hand: { x: 93, y: 52 },
+    shoulder: { x: 70, y: 39 },
+    thigh: { x: 67, y: 71 },
   };
   const anchor = anchorByPart[partId] ?? { x: 65, y: 50 };
   return {
