@@ -13,29 +13,29 @@ const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
   { color: "red", label: "🔴 紅燈", bg: "bg-red-400" },
 ];
 
-const CALLOUT_ARROW_STROKE: Record<LightColor, string> = {
-  green: "#15803d",
-  yellow: "#a16207",
-  red: "#b91c1c",
-};
-
-const CALLOUT_ARROW_FILL: Record<LightColor, string> = {
-  green: "#dcfce7",
-  yellow: "#fef9c3",
-  red: "#fee2e2",
-};
-
 type CalloutArrowDirection = "right" | "left" | "down";
+type CalloutArrowSize = "small" | "medium" | "large";
+
+type CalloutArrowSpec = {
+  direction: CalloutArrowDirection;
+  angle: number;
+  size: CalloutArrowSize;
+  alignment: "justify-start" | "justify-end" | "justify-center";
+};
+
+const CALLOUT_ARROW_SCALE: Record<CalloutArrowSize, number> = {
+  small: 0.72,
+  medium: 0.92,
+  large: 1.12,
+};
 
 function OutlinedCalloutArrow({
-  direction,
-  color,
+  angle,
+  size,
 }: {
-  direction: CalloutArrowDirection;
-  color?: LightColor;
+  angle: number;
+  size: CalloutArrowSize;
 }) {
-  const rotation = direction === "right" ? "0deg" : direction === "left" ? "180deg" : "90deg";
-
   return (
     <svg
       viewBox="0 0 64 48"
@@ -43,7 +43,7 @@ function OutlinedCalloutArrow({
       style={{
         filter: "drop-shadow(0 1px 1px rgb(15 23 42 / 0.25))",
         height: "clamp(1.125rem, 6vw, 2.5rem)",
-        transform: `rotate(${rotation})`,
+        transform: `rotate(${angle}deg) scale(${CALLOUT_ARROW_SCALE[size]})`,
         transformOrigin: "center",
         width: "clamp(1.5rem, 8vw, 3.5rem)",
       }}
@@ -51,8 +51,8 @@ function OutlinedCalloutArrow({
     >
       <path
         d="M4 18C14 18 22 19 30 18V6l30 18-30 18V30C21 29 14 30 4 30c-3-4-3-8 0-12Z"
-        fill={color ? CALLOUT_ARROW_FILL[color] : "#fffdf5"}
-        stroke={color ? CALLOUT_ARROW_STROKE[color] : "#111827"}
+        fill="none"
+        stroke="#111827"
         strokeWidth="3"
         strokeLinejoin="round"
       />
@@ -60,13 +60,54 @@ function OutlinedCalloutArrow({
   );
 }
 
-function getCalloutArrowDirection(
+function getCalloutArrowSpec(
   partId: string,
   isLeftZone: boolean,
-): CalloutArrowDirection {
-  if (partId === "head") return "down";
-  if (partId === "face") return "right";
-  return isLeftZone ? "right" : "left";
+): CalloutArrowSpec {
+  if (partId === "head") {
+    return { direction: "down", angle: 55, size: "large", alignment: "justify-center" };
+  }
+  if (partId === "face") {
+    return { direction: "right", angle: -35, size: "small", alignment: "justify-start" };
+  }
+  if (partId === "mouth") {
+    return { direction: "left", angle: 205, size: "small", alignment: "justify-end" };
+  }
+  if (partId === "chest") {
+    return { direction: "left", angle: 160, size: "medium", alignment: "justify-end" };
+  }
+  if (partId === "belly") {
+    return { direction: "left", angle: 220, size: "medium", alignment: "justify-end" };
+  }
+  if (partId === "private") {
+    return { direction: "down", angle: 90, size: "small", alignment: "justify-center" };
+  }
+  if (isLeftZone) {
+    const angleByPart: Record<string, number> = {
+      ear: 12,
+      hand: 8,
+      shoulder: -10,
+      thigh: -8,
+    };
+    return {
+      direction: "right",
+      angle: angleByPart[partId] ?? 0,
+      size: partId === "hand" || partId === "thigh" ? "medium" : "small",
+      alignment: "justify-start",
+    };
+  }
+  const angleByPart: Record<string, number> = {
+    ear: 178,
+    hand: 195,
+    shoulder: 145,
+    thigh: 170,
+  };
+  return {
+    direction: "left",
+    angle: angleByPart[partId] ?? 180,
+    size: partId === "hand" || partId === "thigh" ? "medium" : "small",
+    alignment: "justify-end",
+  };
 }
 
 // Zones sorted largest → smallest so smaller (more specific) zones render on
@@ -135,13 +176,7 @@ export default function BodyMarkPage() {
                   : "（右）"
                 : "";
             const isLeftZone = zone.cx < 50;
-            const arrowDirection = getCalloutArrowDirection(part.id, isLeftZone);
-            const arrowAlignment =
-              arrowDirection === "right"
-                ? "justify-start"
-                : arrowDirection === "left"
-                ? "justify-end"
-                : "justify-center";
+            const arrow = getCalloutArrowSpec(part.id, isLeftZone);
 
             return (
               <button
@@ -153,7 +188,7 @@ export default function BodyMarkPage() {
                 onClick={() => setSelectedPartId(part.id)}
                 className={[
                   "absolute flex items-center rounded-xl border-2 transition-all",
-                  arrowAlignment,
+                  arrow.alignment,
                   isSelected ? "border-white/80" : "border-transparent",
                   "bg-transparent hover:bg-white/10",
                 ].join(" ")}
@@ -169,13 +204,16 @@ export default function BodyMarkPage() {
               >
                 <span
                   data-testid="body-part-arrow"
-                  data-arrow-direction={arrowDirection}
+                  data-arrow-angle={arrow.angle}
+                  data-arrow-direction={arrow.direction}
+                  data-arrow-fill="transparent"
+                  data-arrow-size={arrow.size}
                   data-arrow-style="outlined-callout"
                   className={`flex items-center transition-transform duration-200 ${
                     isSelected ? "scale-110" : "hover:scale-105"
                   }`}
                 >
-                  <OutlinedCalloutArrow direction={arrowDirection} color={color} />
+                  <OutlinedCalloutArrow angle={arrow.angle} size={arrow.size} />
                 </span>
               </button>
             );
