@@ -104,9 +104,7 @@ test.describe("身體標記頁 (HO-775)", () => {
     await expect(hitZone).toHaveCSS("min-height", "48px");
   });
 
-  test("matches the Drive reference arrow placement contract", async ({ page }) => {
-    await page.goto("/body-traffic-light/mark?doll=male");
-
+  test("matches the male and female Drive reference arrow placement contract", async ({ page }) => {
     const expected = new Map([
       ["head:0", { x: 34, y: 10, angle: 55, size: "large" }],
       ["face:0", { x: 55, y: 29, angle: 205, size: "small" }],
@@ -123,24 +121,33 @@ test.describe("身體標記頁 (HO-775)", () => {
       ["thigh:0", { x: 35, y: 71, angle: 0, size: "medium" }],
       ["thigh:1", { x: 67, y: 71, angle: 180, size: "medium" }],
     ]);
-    const actual = await page.getByTestId("body-part-arrow").evaluateAll((elements) =>
-      elements.map((element) => ({
-        key: `${element.getAttribute("data-arrow-part-id")}:${element.getAttribute("data-arrow-zone-index")}`,
-        x: Number(element.getAttribute("data-arrow-anchor-x")),
-        y: Number(element.getAttribute("data-arrow-anchor-y")),
-        angle: Number(element.getAttribute("data-arrow-angle")),
-        size: element.getAttribute("data-arrow-size"),
-      })),
-    );
 
-    expect(actual).toHaveLength(expected.size);
-    for (const spec of actual) {
-      const target = expected.get(spec.key);
-      expect(target, `missing Drive reference spec for ${spec.key}`).toBeDefined();
-      expect(Math.abs(spec.x - target!.x), `${spec.key} x`).toBeLessThanOrEqual(1);
-      expect(Math.abs(spec.y - target!.y), `${spec.key} y`).toBeLessThanOrEqual(1);
-      expect(Math.abs(spec.angle - target!.angle), `${spec.key} angle`).toBeLessThanOrEqual(1);
-      expect(spec.size, `${spec.key} size`).toBe(target!.size);
+    for (const [doll, asset] of [
+      ["male", "紅綠燈難.png"],
+      ["female", "紅綠燈女.png"],
+    ] as const) {
+      await page.goto(`/body-traffic-light/mark?doll=${doll}`);
+      await expect(page.getByTestId("doll-image")).toHaveAttribute("src", `/images/${asset}`);
+
+      const actual = await page.getByTestId("body-part-arrow").evaluateAll((elements) =>
+        elements.map((element) => ({
+          key: `${element.getAttribute("data-arrow-part-id")}:${element.getAttribute("data-arrow-zone-index")}`,
+          x: Number(element.getAttribute("data-arrow-anchor-x")),
+          y: Number(element.getAttribute("data-arrow-anchor-y")),
+          angle: Number(element.getAttribute("data-arrow-angle")),
+          size: element.getAttribute("data-arrow-size"),
+        })),
+      );
+
+      expect(actual).toHaveLength(expected.size);
+      for (const spec of actual) {
+        const target = expected.get(spec.key);
+        expect(target, `missing Drive reference spec for ${doll} ${spec.key}`).toBeDefined();
+        expect(Math.abs(spec.x - target!.x), `${doll} ${spec.key} x`).toBeLessThanOrEqual(1);
+        expect(Math.abs(spec.y - target!.y), `${doll} ${spec.key} y`).toBeLessThanOrEqual(1);
+        expect(Math.abs(spec.angle - target!.angle), `${doll} ${spec.key} angle`).toBeLessThanOrEqual(1);
+        expect(spec.size, `${doll} ${spec.key} size`).toBe(target!.size);
+      }
     }
   });
 
