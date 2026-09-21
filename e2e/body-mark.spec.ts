@@ -13,7 +13,7 @@ test.describe("身體標記頁 (HO-775)", () => {
         const img = element as HTMLImageElement;
         return [img.naturalWidth, img.naturalHeight];
       }),
-    ).toEqual([2268, 6047]);
+    ).toEqual([1024, 1705]);
 
     const logicalPartIds = await page.locator("[data-part-id]").evaluateAll((elements) => [
       ...new Set(elements.map((element) => element.getAttribute("data-part-id"))),
@@ -32,10 +32,17 @@ test.describe("身體標記頁 (HO-775)", () => {
 
   test("loads the customer male PNG for the male selection", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=male");
-    await expect(page.getByTestId("doll-image")).toHaveAttribute(
+    const image = page.getByTestId("doll-image");
+    await expect(image).toHaveAttribute(
       "src",
       "/images/紅綠燈難.png",
     );
+    await expect.poll(() =>
+      image.evaluate((element) => {
+        const img = element as HTMLImageElement;
+        return [img.naturalWidth, img.naturalHeight];
+      }),
+    ).toEqual([1024, 1705]);
   });
 
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
