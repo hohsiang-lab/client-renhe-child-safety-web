@@ -24,6 +24,14 @@ test.describe("人偶選擇頁 (HO-774)", () => {
     );
   });
 
+  test("兩張人偶圖使用 clean portrait canvas 而非舊 infographic canvas", async ({ page }) => {
+    for (const id of ["doll-card-female", "doll-card-male"]) {
+      const image = page.getByTestId(id).locator("img");
+      await expect(image).toHaveJSProperty("naturalWidth", 1024);
+      await expect(image).toHaveJSProperty("naturalHeight", 1705);
+    }
+  });
+
   test("未選擇時「選好了」按鈕為 disabled", async ({ page }) => {
     const btn = page.getByTestId("confirm-btn");
     await expect(btn).toBeDisabled();
