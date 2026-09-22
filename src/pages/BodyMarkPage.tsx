@@ -124,7 +124,7 @@ function getCalloutArrowSpec(
   if (isLeftZone) {
     const angleByPart: Record<string, number> = {
       ear: 0,
-      hand: 0,
+      hand: 15,
       shoulder: -15,
       thigh: 0,
     };
@@ -145,7 +145,7 @@ function getCalloutArrowSpec(
   }
   const angleByPart: Record<string, number> = {
     ear: 180,
-    hand: 180,
+    hand: 165,
     shoulder: 135,
     thigh: 180,
   };
