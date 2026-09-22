@@ -129,7 +129,7 @@ function getCalloutArrowSpec(
       thigh: 0,
     };
     const anchorByPart: Record<string, { x: number; y: number }> = {
-      ear: { x: 16, y: 25 },
+      ear: { x: 20, y: 25 },
       hand: { x: 7, y: 52 },
       shoulder: { x: 30, y: 39 },
       thigh: { x: 35, y: 71 },
@@ -150,7 +150,7 @@ function getCalloutArrowSpec(
     thigh: 180,
   };
   const anchorByPart: Record<string, { x: number; y: number }> = {
-    ear: { x: 84, y: 25 },
+    ear: { x: 80, y: 25 },
     hand: { x: 93, y: 52 },
     shoulder: { x: 70, y: 39 },
     thigh: { x: 67, y: 71 },
