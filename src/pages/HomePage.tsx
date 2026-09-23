@@ -74,12 +74,28 @@ export default function HomePage() {
             aria-hidden="true"
             className="pointer-events-none absolute bottom-8 right-8 size-2 rounded-full bg-green-safe-dark/50"
           />
-          <span aria-hidden="true" className="relative z-10 flex size-24 items-center justify-center rounded-[26px] border border-white/80 bg-white/75 text-6xl shadow-sm sm:size-28 md:size-32 md:text-7xl">
-            👦
-          </span>
-          <span aria-hidden="true" className="relative z-10 flex size-24 items-center justify-center rounded-[26px] border border-white/80 bg-white/75 text-6xl shadow-sm sm:size-28 md:size-32 md:text-7xl">
-            👧
-          </span>
+          <div
+            data-testid="homepage-avatar-male"
+            className="relative z-10 size-24 overflow-hidden rounded-[26px] border border-white/80 bg-white/75 shadow-sm sm:size-28 md:size-32"
+          >
+            <img
+              src="/images/紅綠燈難.png"
+              alt="男生人偶頭像"
+              draggable={false}
+              className="h-full w-full object-cover object-top"
+            />
+          </div>
+          <div
+            data-testid="homepage-avatar-female"
+            className="relative z-10 size-24 overflow-hidden rounded-[26px] border border-white/80 bg-white/75 shadow-sm sm:size-28 md:size-32"
+          >
+            <img
+              src="/images/紅綠燈女.png"
+              alt="女生人偶頭像"
+              draggable={false}
+              className="h-full w-full object-cover object-top"
+            />
+          </div>
         </div>
 
         <motion.button

@@ -6,8 +6,8 @@ test.describe("首頁 (HO-606)", () => {
 
     await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
     await expect(page.getByRole("button", { name: /開始探險/ })).toBeVisible();
-    await expect(page.getByText("👦")).toBeVisible();
-    await expect(page.getByText("👧")).toBeVisible();
+    await expect(page.getByRole("img", { name: "男生人偶頭像" })).toBeVisible();
+    await expect(page.getByRole("img", { name: "女生人偶頭像" })).toBeVisible();
   });
 
   test("點擊「開始探險」導航至選單頁", async ({ page }) => {
@@ -44,6 +44,8 @@ test.describe("首頁 (HO-606)", () => {
       const hero = page.getByTestId("homepage-hero");
       const intro = page.getByTestId("homepage-intro");
       const characters = page.getByTestId("homepage-characters");
+      const maleAvatar = page.getByTestId("homepage-avatar-male").locator("img");
+      const femaleAvatar = page.getByTestId("homepage-avatar-female").locator("img");
       const action = page.getByTestId("homepage-start");
       const titleLine1 = page.getByTestId("homepage-title-line-1");
       const titleLine2 = page.getByTestId("homepage-title-line-2");
@@ -51,6 +53,14 @@ test.describe("首頁 (HO-606)", () => {
       await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
       await expect(titleLine1).toHaveText("保護自己");
       await expect(titleLine2).toHaveText("大冒險");
+      await expect(maleAvatar).toHaveAttribute("src", "/images/紅綠燈難.png");
+      await expect(femaleAvatar).toHaveAttribute("src", "/images/紅綠燈女.png");
+      await expect(maleAvatar).toHaveJSProperty("naturalWidth", 1024);
+      await expect(femaleAvatar).toHaveJSProperty("naturalWidth", 1024);
+      await expect(maleAvatar).toHaveCSS("object-fit", "cover");
+      await expect(femaleAvatar).toHaveCSS("object-fit", "cover");
+      await expect(maleAvatar).toHaveCSS("object-position", "50% 0%");
+      await expect(femaleAvatar).toHaveCSS("object-position", "50% 0%");
       await expect(action).toBeInViewport();
       await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
 
