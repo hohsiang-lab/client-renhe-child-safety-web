@@ -44,6 +44,8 @@ test.describe("首頁 (HO-606)", () => {
       const hero = page.getByTestId("homepage-hero");
       const intro = page.getByTestId("homepage-intro");
       const characters = page.getByTestId("homepage-characters");
+      const maleFrame = page.getByTestId("homepage-avatar-male");
+      const femaleFrame = page.getByTestId("homepage-avatar-female");
       const maleAvatar = page.getByTestId("homepage-avatar-male").locator("img");
       const femaleAvatar = page.getByTestId("homepage-avatar-female").locator("img");
       const action = page.getByTestId("homepage-start");
@@ -57,10 +59,20 @@ test.describe("首頁 (HO-606)", () => {
       await expect(femaleAvatar).toHaveAttribute("src", "/images/紅綠燈女.png");
       await expect(maleAvatar).toHaveJSProperty("naturalWidth", 1024);
       await expect(femaleAvatar).toHaveJSProperty("naturalWidth", 1024);
-      await expect(maleAvatar).toHaveCSS("object-fit", "cover");
-      await expect(femaleAvatar).toHaveCSS("object-fit", "cover");
-      await expect(maleAvatar).toHaveCSS("object-position", "50% 0%");
-      await expect(femaleAvatar).toHaveCSS("object-position", "50% 0%");
+      await expect(maleFrame).toHaveCSS("overflow", "hidden");
+      await expect(femaleFrame).toHaveCSS("overflow", "hidden");
+      const maleFrameBox = await maleFrame.boundingBox();
+      const femaleFrameBox = await femaleFrame.boundingBox();
+      const maleAvatarBox = await maleAvatar.boundingBox();
+      const femaleAvatarBox = await femaleAvatar.boundingBox();
+      expect(maleFrameBox).not.toBeNull();
+      expect(femaleFrameBox).not.toBeNull();
+      expect(maleAvatarBox).not.toBeNull();
+      expect(femaleAvatarBox).not.toBeNull();
+      expect(maleAvatarBox!.width).toBeGreaterThan(maleFrameBox!.width);
+      expect(femaleAvatarBox!.width).toBeGreaterThan(femaleFrameBox!.width);
+      expect(maleAvatarBox!.height / maleAvatarBox!.width).toBeCloseTo(1705 / 1024, 2);
+      expect(femaleAvatarBox!.height / femaleAvatarBox!.width).toBeCloseTo(1705 / 1024, 2);
       await expect(action).toBeInViewport();
       await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
 
