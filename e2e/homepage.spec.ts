@@ -55,8 +55,8 @@ test.describe("首頁 (HO-606)", () => {
       await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
       await expect(titleLine1).toHaveText("保護自己");
       await expect(titleLine2).toHaveText("大冒險");
-      await expect(maleAvatar).toHaveAttribute("src", "/images/homepage-boy-head-transparent.png");
-      await expect(femaleAvatar).toHaveAttribute("src", "/images/homepage-girl-head-transparent.png");
+      await expect(maleAvatar).toHaveAttribute("src", "/images/homepage-boy-upper-body-transparent.png");
+      await expect(femaleAvatar).toHaveAttribute("src", "/images/homepage-girl-upper-body-transparent.png");
       await expect(maleAvatar).toHaveJSProperty("naturalWidth", 512);
       await expect(femaleAvatar).toHaveJSProperty("naturalWidth", 512);
       await expect(maleAvatar).toHaveJSProperty("naturalHeight", 512);
@@ -75,8 +75,7 @@ test.describe("首頁 (HO-606)", () => {
           const points = [
             [0, 0], [image.naturalWidth - 1, 0],
             [0, image.naturalHeight - 1], [image.naturalWidth - 1, image.naturalHeight - 1],
-            [image.naturalWidth / 2, 0], [0, image.naturalHeight / 2],
-            [image.naturalWidth - 1, image.naturalHeight / 2],
+            [image.naturalWidth / 2, 0],
           ];
           return {
             edgeAlpha: points.map(([x, y]) => context.getImageData(x, y, 1, 1).data[3]),
@@ -84,12 +83,12 @@ test.describe("首頁 (HO-606)", () => {
           };
         };
         return {
-          male: await sample('[data-testid="homepage-avatar-male"] img', [256, 256]),
-          female: await sample('[data-testid="homepage-avatar-female"] img', [256, 256]),
+          male: await sample('[data-testid="homepage-avatar-male"] img', [256, 350]),
+          female: await sample('[data-testid="homepage-avatar-female"] img', [256, 350]),
         };
       });
-      expect(transparency.male.edgeAlpha).toEqual(Array(7).fill(0));
-      expect(transparency.female.edgeAlpha).toEqual(Array(7).fill(0));
+      expect(transparency.male.edgeAlpha).toEqual(Array(5).fill(0));
+      expect(transparency.female.edgeAlpha).toEqual(Array(5).fill(0));
       expect(transparency.male.subjectAlpha).toBe(255);
       expect(transparency.female.subjectAlpha).toBe(255);
       await expect(maleFrame).toHaveCSS("overflow", "hidden");
@@ -162,10 +161,10 @@ test.describe("首頁 (HO-606)", () => {
     }
   });
 
-  test("男女頭像保留完整下巴且視覺尺寸一致", async ({ page }) => {
+  test("男女頭像恢復含身體的構圖且尺寸一致", async ({ page }) => {
     await page.goto("/");
     const metrics = await page.evaluate(async () => {
-      const readBounds = async (selector: string, role: "male" | "female") => {
+      const inspectAvatar = async (selector: string) => {
         const image = document.querySelector<HTMLImageElement>(selector);
         if (!image) throw new Error(`Missing image: ${selector}`);
         await image.decode();
@@ -175,14 +174,17 @@ test.describe("首頁 (HO-606)", () => {
         const context = canvas.getContext("2d");
         if (!context) throw new Error("Canvas 2D context is unavailable");
         context.drawImage(image, 0, 0);
-        const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+        const frame = image.parentElement;
+        if (!frame) throw new Error("Avatar frame is missing");
+        const frameBox = frame.getBoundingClientRect();
+        const headPixels = context.getImageData(0, 0, canvas.width, 300).data;
         let left = canvas.width;
-        let top = canvas.height;
+        let top = 300;
         let right = -1;
         let bottom = -1;
-        for (let y = 0; y < canvas.height; y += 1) {
+        for (let y = 0; y < 300; y += 1) {
           for (let x = 0; x < canvas.width; x += 1) {
-            if (data[(y * canvas.width + x) * 4 + 3] > 16) {
+            if (headPixels[(y * canvas.width + x) * 4 + 3] > 16) {
               left = Math.min(left, x);
               top = Math.min(top, y);
               right = Math.max(right, x);
@@ -191,26 +193,33 @@ test.describe("首頁 (HO-606)", () => {
           }
         }
         return {
-          width: right - left + 1,
-          height: bottom - top + 1,
-          topMargin: top,
-          bottomMargin: canvas.height - 1 - bottom,
-          chinAlpha: context.getImageData(canvas.width / 2, role === "male" ? 484 : 474, 1, 1).data[3],
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          headWidth: right - left + 1,
+          headHeight: bottom - top + 1,
+          bodyAlpha: context.getImageData(256, 350, 1, 1).data[3],
+          fit: getComputedStyle(image).objectFit,
+          position: getComputedStyle(image).objectPosition,
+          frameWidth: frameBox.width,
+          frameHeight: frameBox.height,
         };
       };
       return {
-        male: await readBounds('[data-testid="homepage-avatar-male"] img', "male"),
-        female: await readBounds('[data-testid="homepage-avatar-female"] img', "female"),
+        male: await inspectAvatar('[data-testid="homepage-avatar-male"] img'),
+        female: await inspectAvatar('[data-testid="homepage-avatar-female"] img'),
       };
     });
 
-    expect(metrics.male.topMargin).toBeGreaterThanOrEqual(12);
-    expect(metrics.female.topMargin).toBeGreaterThanOrEqual(12);
-    expect(metrics.male.bottomMargin).toBeGreaterThanOrEqual(12);
-    expect(metrics.female.bottomMargin).toBeGreaterThanOrEqual(12);
-    expect(metrics.male.chinAlpha).toBeGreaterThanOrEqual(200);
-    expect(metrics.female.chinAlpha).toBeGreaterThanOrEqual(200);
-    expect(Math.abs(metrics.male.height / metrics.female.height - 1)).toBeLessThanOrEqual(0.06);
-    expect(Math.abs(metrics.male.width / metrics.female.width - 1)).toBeLessThanOrEqual(0.10);
+    for (const avatar of [metrics.male, metrics.female]) {
+      expect(avatar.naturalWidth).toBe(512);
+      expect(avatar.naturalHeight).toBe(512);
+      expect(avatar.bodyAlpha).toBeGreaterThanOrEqual(200);
+      expect(avatar.fit).toBe("contain");
+      expect(avatar.position).toBe("50% 50%");
+    }
+    expect(metrics.male.frameWidth).toBeCloseTo(metrics.female.frameWidth, 1);
+    expect(metrics.male.frameHeight).toBeCloseTo(metrics.female.frameHeight, 1);
+    expect(Math.abs(metrics.male.headHeight / metrics.female.headHeight - 1)).toBeLessThanOrEqual(0.06);
+    expect(Math.abs(metrics.male.headWidth / metrics.female.headWidth - 1)).toBeLessThanOrEqual(0.12);
   });
 });

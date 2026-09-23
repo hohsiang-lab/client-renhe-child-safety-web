@@ -79,7 +79,7 @@ export default function HomePage() {
             className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
           >
             <img
-              src="/images/homepage-boy-head-transparent.png"
+              src="/images/homepage-boy-upper-body-transparent.png"
               alt="男生人偶頭像"
               draggable={false}
               className="absolute inset-0 size-full object-contain"
@@ -90,7 +90,7 @@ export default function HomePage() {
             className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
           >
             <img
-              src="/images/homepage-girl-head-transparent.png"
+              src="/images/homepage-girl-upper-body-transparent.png"
               alt="女生人偶頭像"
               draggable={false}
               className="absolute inset-0 size-full object-contain"
