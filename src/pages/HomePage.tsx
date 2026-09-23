@@ -76,10 +76,10 @@ export default function HomePage() {
           />
           <div
             data-testid="homepage-avatar-male"
-            className="relative z-10 size-24 overflow-hidden rounded-[26px] border border-white/80 bg-white/75 shadow-sm sm:size-28 md:size-32"
+            className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
           >
             <img
-              src="/images/紅綠燈難.png"
+              src="/images/homepage-boy-head-transparent.png"
               alt="男生人偶頭像"
               draggable={false}
               className="absolute left-1/2 top-0 h-auto w-[165%] max-w-none -translate-x-1/2"
@@ -87,10 +87,10 @@ export default function HomePage() {
           </div>
           <div
             data-testid="homepage-avatar-female"
-            className="relative z-10 size-24 overflow-hidden rounded-[26px] border border-white/80 bg-white/75 shadow-sm sm:size-28 md:size-32"
+            className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
           >
             <img
-              src="/images/紅綠燈女.png"
+              src="/images/homepage-girl-head-transparent.png"
               alt="女生人偶頭像"
               draggable={false}
               className="absolute left-1/2 top-0 h-auto w-[165%] max-w-none -translate-x-1/2"
