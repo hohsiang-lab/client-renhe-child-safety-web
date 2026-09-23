@@ -57,10 +57,10 @@ test.describe("首頁 (HO-606)", () => {
       await expect(titleLine2).toHaveText("大冒險");
       await expect(maleAvatar).toHaveAttribute("src", "/images/homepage-boy-head-transparent.png");
       await expect(femaleAvatar).toHaveAttribute("src", "/images/homepage-girl-head-transparent.png");
-      await expect(maleAvatar).toHaveJSProperty("naturalWidth", 1024);
-      await expect(femaleAvatar).toHaveJSProperty("naturalWidth", 1024);
-      await expect(maleAvatar).toHaveJSProperty("naturalHeight", 620);
-      await expect(femaleAvatar).toHaveJSProperty("naturalHeight", 620);
+      await expect(maleAvatar).toHaveJSProperty("naturalWidth", 512);
+      await expect(femaleAvatar).toHaveJSProperty("naturalWidth", 512);
+      await expect(maleAvatar).toHaveJSProperty("naturalHeight", 512);
+      await expect(femaleAvatar).toHaveJSProperty("naturalHeight", 512);
       const transparency = await page.evaluate(async () => {
         const sample = async (selector: string, subjectPoint: [number, number]) => {
           const image = document.querySelector<HTMLImageElement>(selector);
@@ -84,8 +84,8 @@ test.describe("首頁 (HO-606)", () => {
           };
         };
         return {
-          male: await sample('[data-testid="homepage-avatar-male"] img', [512, 200]),
-          female: await sample('[data-testid="homepage-avatar-female"] img', [512, 100]),
+          male: await sample('[data-testid="homepage-avatar-male"] img', [256, 256]),
+          female: await sample('[data-testid="homepage-avatar-female"] img', [256, 256]),
         };
       });
       expect(transparency.male.edgeAlpha).toEqual(Array(7).fill(0));
@@ -106,10 +106,10 @@ test.describe("首頁 (HO-606)", () => {
       expect(femaleFrameBox).not.toBeNull();
       expect(maleAvatarBox).not.toBeNull();
       expect(femaleAvatarBox).not.toBeNull();
-      expect(maleAvatarBox!.width).toBeGreaterThan(maleFrameBox!.width);
-      expect(femaleAvatarBox!.width).toBeGreaterThan(femaleFrameBox!.width);
-      expect(maleAvatarBox!.height / maleAvatarBox!.width).toBeCloseTo(620 / 1024, 2);
-      expect(femaleAvatarBox!.height / femaleAvatarBox!.width).toBeCloseTo(620 / 1024, 2);
+      expect(maleAvatarBox!.width).toBeCloseTo(maleFrameBox!.width, 1);
+      expect(femaleAvatarBox!.width).toBeCloseTo(femaleFrameBox!.width, 1);
+      expect(maleAvatarBox!.height).toBeCloseTo(maleFrameBox!.height, 1);
+      expect(femaleAvatarBox!.height).toBeCloseTo(femaleFrameBox!.height, 1);
       await expect(action).toBeInViewport();
       await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
 
@@ -160,5 +160,57 @@ test.describe("首頁 (HO-606)", () => {
         expect(layout.characters!.y).toBeLessThan(layout.action!.y);
       }
     }
+  });
+
+  test("男女頭像保留完整下巴且視覺尺寸一致", async ({ page }) => {
+    await page.goto("/");
+    const metrics = await page.evaluate(async () => {
+      const readBounds = async (selector: string, role: "male" | "female") => {
+        const image = document.querySelector<HTMLImageElement>(selector);
+        if (!image) throw new Error(`Missing image: ${selector}`);
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Canvas 2D context is unavailable");
+        context.drawImage(image, 0, 0);
+        const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+        let left = canvas.width;
+        let top = canvas.height;
+        let right = -1;
+        let bottom = -1;
+        for (let y = 0; y < canvas.height; y += 1) {
+          for (let x = 0; x < canvas.width; x += 1) {
+            if (data[(y * canvas.width + x) * 4 + 3] > 16) {
+              left = Math.min(left, x);
+              top = Math.min(top, y);
+              right = Math.max(right, x);
+              bottom = Math.max(bottom, y);
+            }
+          }
+        }
+        return {
+          width: right - left + 1,
+          height: bottom - top + 1,
+          topMargin: top,
+          bottomMargin: canvas.height - 1 - bottom,
+          chinAlpha: context.getImageData(canvas.width / 2, role === "male" ? 484 : 474, 1, 1).data[3],
+        };
+      };
+      return {
+        male: await readBounds('[data-testid="homepage-avatar-male"] img', "male"),
+        female: await readBounds('[data-testid="homepage-avatar-female"] img', "female"),
+      };
+    });
+
+    expect(metrics.male.topMargin).toBeGreaterThanOrEqual(12);
+    expect(metrics.female.topMargin).toBeGreaterThanOrEqual(12);
+    expect(metrics.male.bottomMargin).toBeGreaterThanOrEqual(12);
+    expect(metrics.female.bottomMargin).toBeGreaterThanOrEqual(12);
+    expect(metrics.male.chinAlpha).toBeGreaterThanOrEqual(200);
+    expect(metrics.female.chinAlpha).toBeGreaterThanOrEqual(200);
+    expect(Math.abs(metrics.male.height / metrics.female.height - 1)).toBeLessThanOrEqual(0.06);
+    expect(Math.abs(metrics.male.width / metrics.female.width - 1)).toBeLessThanOrEqual(0.10);
   });
 });

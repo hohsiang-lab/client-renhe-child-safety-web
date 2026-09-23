@@ -82,7 +82,7 @@ export default function HomePage() {
               src="/images/homepage-boy-head-transparent.png"
               alt="男生人偶頭像"
               draggable={false}
-              className="absolute left-1/2 top-0 h-auto w-[165%] max-w-none -translate-x-1/2"
+              className="absolute inset-0 size-full object-contain"
             />
           </div>
           <div
@@ -93,7 +93,7 @@ export default function HomePage() {
               src="/images/homepage-girl-head-transparent.png"
               alt="女生人偶頭像"
               draggable={false}
-              className="absolute left-1/2 top-0 h-auto w-[165%] max-w-none -translate-x-1/2"
+              className="absolute inset-0 size-full object-contain"
             />
           </div>
         </div>
