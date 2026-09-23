@@ -45,8 +45,12 @@ test.describe("首頁 (HO-606)", () => {
       const intro = page.getByTestId("homepage-intro");
       const characters = page.getByTestId("homepage-characters");
       const action = page.getByTestId("homepage-start");
+      const titleLine1 = page.getByTestId("homepage-title-line-1");
+      const titleLine2 = page.getByTestId("homepage-title-line-2");
       await expect(hero).toBeVisible();
       await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
+      await expect(titleLine1).toHaveText("保護自己");
+      await expect(titleLine2).toHaveText("大冒險");
       await expect(action).toBeInViewport();
       await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
 
@@ -61,6 +65,8 @@ test.describe("首頁 (HO-606)", () => {
           viewportWidth: window.innerWidth,
           documentWidth: document.documentElement.scrollWidth,
           intro: rect("homepage-intro"),
+          titleLine1: rect("homepage-title-line-1"),
+          titleLine2: rect("homepage-title-line-2"),
           characters: rect("homepage-characters"),
           action: rect("homepage-start"),
           charactersBackground: getComputedStyle(
@@ -84,6 +90,7 @@ test.describe("首頁 (HO-606)", () => {
       expect(layout.charactersBackground).toBe("rgb(255, 245, 225)");
       expect(layout.actionBackground).toBe("rgb(255, 159, 67)");
       expect(layout.muteOverlapsAction).toBe(false);
+      expect(layout.titleLine2!.y).toBeGreaterThan(layout.titleLine1!.y);
       expect(await intro.count()).toBe(1);
       expect(await characters.count()).toBe(1);
 

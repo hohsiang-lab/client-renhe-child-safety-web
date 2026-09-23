@@ -45,10 +45,13 @@ export default function HomePage() {
             aria-hidden="true"
             className="mb-5 flex size-16 items-center justify-center rounded-[22px] border border-warm-border/30 bg-warm-card text-4xl shadow-sm"
           >
-            🌟
+            <svg aria-hidden="true" className="size-10" viewBox="0 0 64 64" fill="none">
+              <path d="m32 5 7.4 17.2 18.7 1.4-14.3 12.1 4.7 18.4L32 44.2 15.5 54.1l4.7-18.4L5.9 23.6l18.7-1.4L32 5Z" fill="#FFD447" stroke="#E7A522" strokeWidth="2.5" strokeLinejoin="round" />
+            </svg>
           </div>
-          <h1 className="mb-3 max-w-full text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.2] font-bold tracking-[0.02em] text-text-main">
-            保護自己大冒險
+          <h1 aria-label="保護自己大冒險" className="mb-3 max-w-full text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.2] font-bold tracking-[0.02em] text-text-main">
+            <span data-testid="homepage-title-line-1">保護自己</span>
+            <span className="block" data-testid="homepage-title-line-2">大冒險</span>
           </h1>
           <p className="text-text-light max-w-[22rem] text-base leading-7 sm:text-lg md:text-xl">
             一起來學習怎麼保護自己吧！
@@ -86,7 +89,13 @@ export default function HomePage() {
           whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
         >
-          開始探險 🚀
+          <span>開始探險</span>
+          <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24" fill="none">
+            <path d="M14.7 4.1c-3.4 1.2-6.2 4-7.4 7.4l5.2 5.2c3.4-1.2 6.2-4 7.4-7.4l.7-5.9-5.9.7Z" fill="#FFF7E7" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
+            <circle cx="15.8" cy="8.2" r="1.8" fill="#FF9F43" />
+            <path d="m7.2 11.8-3.3.8-.8 3.3 5.3-1.1m5.6 1.1-.8 3.3 3.3-.8.8-3.3" fill="#FFD447" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
+            <path d="m10.1 17.1-1.2 3.7 3.7-1.2" fill="#FFD447" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
+          </svg>
         </motion.button>
       </motion.main>
     </div>
