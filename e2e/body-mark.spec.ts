@@ -59,7 +59,7 @@ test.describe("身體標記頁 (HO-775)", () => {
     await expect(arrows.first().locator("svg")).toBeVisible();
   });
 
-  test("uses transparent arrows with varied angles and sizes", async ({ page }) => {
+  test("keeps unmarked arrows transparent and follows each part's selected color", async ({ page }) => {
     await page.goto("/body-traffic-light/mark?doll=male");
 
     const arrows = page.getByTestId("body-part-arrow");
@@ -76,6 +76,33 @@ test.describe("身體標記頁 (HO-775)", () => {
     expect(new Set(specs.map((spec) => spec.angle)).size).toBeGreaterThan(3);
     expect(specs.some((spec) => Math.abs(spec.angle) % 90 > 1)).toBe(true);
     await expect(arrows.first().locator("path")).toHaveAttribute("fill", "none");
+
+    const readFills = () =>
+      arrows.evaluateAll((elements) =>
+        elements.map((element) => ({
+          partId: element.getAttribute("data-arrow-part-id")!,
+          fill: getComputedStyle(element.querySelector("path")!).fill,
+        })),
+      );
+    const setColor = async (partId: string, colorName: string) => {
+      await page.locator(`[data-part-id="${partId}"]`).first().click();
+      const button = page.getByRole("button", { name: colorName, exact: true });
+      const fill = await button.evaluate((element) => getComputedStyle(element).backgroundColor);
+      await button.click();
+      return fill;
+    };
+    const expectFills = async (expectedByPart: Record<string, string>) => {
+      for (const { partId, fill } of await readFills()) {
+        expect(fill, `${partId} arrow background`).toBe(expectedByPart[partId] ?? "none");
+      }
+    };
+
+    const yellow = await setColor("hand", "黃燈");
+    await expectFills({ hand: yellow });
+    const green = await setColor("head", "綠燈");
+    await expectFills({ hand: yellow, head: green });
+    const red = await setColor("hand", "紅燈");
+    await expectFills({ hand: red, head: green });
   });
 
   test("keeps visual arrows separate from body hit zones", async ({ page }) => {
