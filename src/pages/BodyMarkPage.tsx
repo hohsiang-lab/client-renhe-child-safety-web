@@ -13,24 +13,28 @@ const COLOR_OPTIONS: {
   label: string;
   buttonClassName: string;
   dotClassName: string;
+  arrowFill: string;
 }[] = [
   {
     color: "green",
     label: "綠燈",
     buttonClassName: "border-green-safe/60 bg-green-safe-bg",
     dotClassName: "bg-green-safe-dark",
+    arrowFill: "var(--color-green-safe-bg)",
   },
   {
     color: "yellow",
     label: "黃燈",
     buttonClassName: "border-amber-300 bg-amber-50",
     dotClassName: "bg-amber-500",
+    arrowFill: "var(--color-amber-50)",
   },
   {
     color: "red",
     label: "紅燈",
     buttonClassName: "border-red-danger/60 bg-red-danger-bg",
     dotClassName: "bg-red-danger-dark",
+    arrowFill: "var(--color-red-danger-bg)",
   },
 ];
 
@@ -54,9 +58,11 @@ const CALLOUT_ARROW_SCALE: Record<CalloutArrowSize, number> = {
 function OutlinedCalloutArrow({
   angle,
   size,
+  fill,
 }: {
   angle: number;
   size: CalloutArrowSize;
+  fill: string;
 }) {
   return (
     <svg
@@ -73,7 +79,7 @@ function OutlinedCalloutArrow({
     >
       <path
         d="M4 18C14 18 22 19 30 18V6l30 18-30 18V30C21 29 14 30 4 30c-3-4-3-8 0-12Z"
-        fill="none"
+        fill={fill}
         stroke="#111827"
         strokeWidth="3"
         strokeLinejoin="round"
@@ -218,15 +224,15 @@ export default function BodyMarkPage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center bg-warm-bg px-[clamp(14px,3vw,30px)] pb-[34px] pt-6 text-text-main max-[900px]:pt-4 max-[520px]:px-3 max-[520px]:pb-6 max-[520px]:pt-[13px]">
-      <header className="mt-1 mb-[18px] w-full max-w-[680px] text-center max-[900px]:mb-3 max-[520px]:mb-[9px]">
-        <p className="mb-[5px] text-[.78rem] font-extrabold tracking-[.09em] text-amber-800 max-[520px]:text-[.7rem]">
+      <header className="mt-[2px] mb-[18px] w-full max-w-[680px] text-center max-[900px]:mb-3 max-[520px]:mb-[14px]">
+        <p className="mb-[5px] text-[.78rem] font-extrabold tracking-[.09em] text-amber-800 max-[520px]:mb-[clamp(15px,3.9vw,20px)] max-[520px]:text-[clamp(1.15rem,5.2vw,1.65rem)]">
           身體界線練習
         </p>
-        <h1 className="m-0 text-[clamp(1.35rem,2.2vw,1.9rem)] font-bold leading-[1.3] max-[520px]:text-[1.12rem]">
+        <h1 className="m-0 text-[clamp(1.35rem,2.2vw,1.9rem)] font-bold leading-[1.3] max-[520px]:text-[clamp(2rem,8.8vw,2.9rem)] max-[520px]:leading-[1.15]">
           幫身體各部位選燈色
         </h1>
-        <div className="mx-auto mt-[10px] w-full max-w-[430px] max-[520px]:mt-[7px]">
-          <p className="m-0 text-[.9rem] font-semibold leading-normal text-text-light max-[520px]:text-[.82rem]">
+        <div className="mx-auto mt-[10px] w-full max-w-[430px] max-[520px]:mt-[clamp(13px,3.3vw,17px)]">
+          <p className="m-0 text-[.9rem] font-semibold leading-normal text-text-light max-[520px]:text-[clamp(1.5rem,6.2vw,2rem)] max-[520px]:font-bold">
             已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
           </p>
           <div
@@ -306,6 +312,8 @@ export default function BodyMarkPage() {
           >
             {sortedZones.map(({ part, zone, zoneIdx }) => {
               const isSelected = selectedPartId === part.id;
+              const color = marks[part.id] as LightColor | undefined;
+              const fill = COLOR_OPTIONS.find((option) => option.color === color)?.arrowFill ?? "none";
               const arrow = getCalloutArrowSpec(part.id, zone.cx < 50, doll);
 
               return (
@@ -318,7 +326,7 @@ export default function BodyMarkPage() {
                   data-arrow-anchor-y={arrow.anchorY}
                   data-arrow-angle={arrow.angle}
                   data-arrow-direction={arrow.direction}
-                  data-arrow-fill="transparent"
+                  data-arrow-fill={color ?? "transparent"}
                   data-arrow-size={arrow.size}
                   data-arrow-style="outlined-callout"
                   className="absolute transition-transform duration-200"
@@ -328,7 +336,7 @@ export default function BodyMarkPage() {
                     transform: `translate(-50%, -50%) scale(${isSelected ? 1.1 : 1})`,
                   }}
                 >
-                  <OutlinedCalloutArrow angle={arrow.angle} size={arrow.size} />
+                  <OutlinedCalloutArrow angle={arrow.angle} size={arrow.size} fill={fill} />
                 </span>
               );
             })}
