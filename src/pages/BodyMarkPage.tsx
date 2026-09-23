@@ -8,10 +8,30 @@ import {
   type LightColor,
 } from "../stores/useBodyTrafficLightStore";
 
-const COLOR_OPTIONS: { color: LightColor; label: string; bg: string }[] = [
-  { color: "green", label: "🟢 綠燈", bg: "bg-green-400" },
-  { color: "yellow", label: "🟡 黃燈", bg: "bg-yellow-400" },
-  { color: "red", label: "🔴 紅燈", bg: "bg-red-400" },
+const COLOR_OPTIONS: {
+  color: LightColor;
+  label: string;
+  buttonClassName: string;
+  dotClassName: string;
+}[] = [
+  {
+    color: "green",
+    label: "綠燈",
+    buttonClassName: "border-green-safe/60 bg-green-safe-bg",
+    dotClassName: "bg-green-safe-dark",
+  },
+  {
+    color: "yellow",
+    label: "黃燈",
+    buttonClassName: "border-amber-300 bg-amber-50",
+    dotClassName: "bg-amber-500",
+  },
+  {
+    color: "red",
+    label: "紅燈",
+    buttonClassName: "border-red-danger/60 bg-red-danger-bg",
+    dotClassName: "bg-red-danger-dark",
+  },
 ];
 
 type CalloutArrowDirection = "right" | "left" | "down";
@@ -44,10 +64,10 @@ function OutlinedCalloutArrow({
       className="shrink-0"
       style={{
         filter: "drop-shadow(0 1px 1px rgb(15 23 42 / 0.25))",
-        height: "clamp(1.125rem, 6vw, 2.5rem)",
+        height: "clamp(18px, 2.3vw, 32px)",
         transform: `rotate(${angle}deg) scale(${CALLOUT_ARROW_SCALE[size]})`,
         transformOrigin: "center",
-        width: "clamp(1.5rem, 8vw, 3.5rem)",
+        width: "clamp(24px, 3vw, 42px)",
       }}
       aria-hidden="true"
     >
@@ -197,23 +217,42 @@ export default function BodyMarkPage() {
   }
 
   return (
-    <div className="flex min-h-dvh flex-col bg-pink-50">
-      {/* Header */}
-      <div className="px-4 pt-6 text-center">
-        <h1 className="text-xl font-bold text-gray-800">幫身體各部位選燈色 🚦</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
+    <div className="flex min-h-dvh flex-col items-center bg-warm-bg px-[clamp(14px,3vw,30px)] pb-[34px] pt-6 text-text-main max-[900px]:pt-4 max-[520px]:px-3 max-[520px]:pb-6 max-[520px]:pt-[13px]">
+      <header className="mt-1 mb-[18px] w-full max-w-[680px] text-center max-[900px]:mb-3 max-[520px]:mb-[9px]">
+        <p className="mb-[5px] text-[.78rem] font-extrabold tracking-[.09em] text-amber-800 max-[520px]:text-[.7rem]">
+          身體界線練習
         </p>
-      </div>
+        <h1 className="m-0 text-[clamp(1.35rem,2.2vw,1.9rem)] font-bold leading-[1.3] max-[520px]:text-[1.12rem]">
+          幫身體各部位選燈色
+        </h1>
+        <div className="mx-auto mt-[10px] w-full max-w-[430px] max-[520px]:mt-[7px]">
+          <p className="m-0 text-[.9rem] font-semibold leading-normal text-text-light max-[520px]:text-[.82rem]">
+            已標記 {Object.keys(marks).length} / {bodyPartsV2.length} 個部位
+          </p>
+          <div
+            className="mt-2 h-2 w-full overflow-hidden rounded-full bg-warm-muted"
+            role="progressbar"
+            aria-label="已標記部位"
+            aria-valuemin={0}
+            aria-valuemax={bodyPartsV2.length}
+            aria-valuenow={Object.keys(marks).length}
+          >
+            <div
+              className="h-full rounded-full bg-primary transition-[width]"
+              style={{ width: `${(Object.keys(marks).length / bodyPartsV2.length) * 100}%` }}
+            />
+          </div>
+        </div>
+      </header>
 
-      {/* Two-column layout */}
-      <div className="flex flex-1 items-start gap-2 px-3 pt-4">
-        {/* Left: doll image with hit zones */}
-        <div className="relative flex-[3]" style={{ userSelect: "none" }}>
+      <main className="flex w-full flex-1 flex-col items-center gap-[15px] max-[520px]:gap-[10px]">
+        <div
+          className="relative mx-auto w-fit max-w-full select-none rounded-[24px] border border-[#e7ecdf] bg-[#f5f8ef] shadow-sm max-[900px]:rounded-[20px] max-[520px]:rounded-[17px]"
+        >
           <img
             src={doll === "female" ? "/images/紅綠燈女.png" : "/images/紅綠燈難.png"}
             alt={doll === "female" ? "女生人偶" : "男生人偶"}
-            className="w-full"
+            className="block h-[min(62svh,610px)] w-auto max-w-full rounded-[24px] object-contain max-[900px]:h-[min(59svh,590px)] max-[900px]:rounded-[20px] max-[520px]:h-[min(50svh,430px)] max-[520px]:rounded-[17px]"
             draggable={false}
             data-testid="doll-image"
             onError={(e) => {
@@ -296,50 +335,47 @@ export default function BodyMarkPage() {
           </div>
         </div>
 
-        {/* Right: traffic light color picker */}
-        <div className="flex flex-[2] flex-col items-center gap-4 pt-6">
-          {/* Selected part name */}
-          <div className="min-h-[40px] text-center">
-            {selectedPartId ? (
-              <p className="text-sm font-medium text-gray-600">
-                已選：
-                <br />
-                <span className="font-bold text-gray-900">
-                  {bodyPartsV2.find((p) => p.id === selectedPartId)?.name}
-                </span>
-              </p>
-            ) : (
-              <p data-testid="body-mark-instruction" className="text-sm font-semibold text-gray-500">
-                先點箭頭指向的部位，再選燈色
-              </p>
-            )}
+        <section
+          aria-label="部位燈色選擇"
+          className="flex w-full max-w-[740px] flex-col items-center rounded-[22px] border border-warm-muted/50 bg-warm-card px-5 pt-4 pb-[18px] shadow-sm max-[900px]:rounded-[20px] max-[900px]:p-[15px] max-[520px]:rounded-[17px] max-[520px]:p-3"
+        >
+          <div className="w-full text-center">
+            <p data-testid="body-mark-instruction" className="mb-[9px] text-sm font-semibold leading-[1.5] text-text-light max-[520px]:mb-1.5 max-[520px]:text-[.85rem]">
+              先點箭頭指向的部位，再選燈色
+            </p>
+            <p data-testid="selected-body-part" aria-live="polite" className="mb-[11px] flex min-h-[25px] items-center justify-center gap-2 text-[.9rem] leading-normal text-text-light max-[520px]:mb-2 max-[520px]:text-[.84rem]">
+              目前選取：
+              <strong className="ml-1 font-bold text-text-main">
+                {selectedPartId
+                  ? bodyPartsV2.find((p) => p.id === selectedPartId)?.name
+                  : "尚未選擇部位"}
+              </strong>
+            </p>
           </div>
 
-          {/* Color buttons */}
-          <div className="flex w-full flex-col gap-3">
-            {COLOR_OPTIONS.map(({ color, label, bg }) => {
+          <div data-testid="color-picker" className="grid w-full grid-cols-3 gap-3 max-[900px]:gap-2 max-[520px]:gap-1.5">
+            {COLOR_OPTIONS.map(({ color, label, buttonClassName, dotClassName }) => {
               const isActive = selectedColor === color;
               return (
                 <button
                   key={color}
                   onClick={() => handleColorPick(color)}
                   disabled={!selectedPartId}
+                  aria-pressed={isActive}
                   className={[
-                    "w-full rounded-full py-3 text-sm font-bold text-white transition-all",
-                    bg,
-                    isActive ? "scale-105 shadow-lg" : "opacity-80",
-                    !selectedPartId
-                      ? "cursor-not-allowed opacity-40"
-                      : "cursor-pointer hover:brightness-105",
+                    "flex min-h-[60px] w-full flex-row items-center justify-center gap-[9px] rounded-2xl border-2 px-3 py-2.5 text-[.9rem] font-extrabold text-text-main transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary max-[900px]:min-h-[68px] max-[520px]:min-h-[60px] max-[520px]:flex-col max-[520px]:gap-[3px] max-[520px]:px-[3px] max-[520px]:py-2 max-[520px]:text-[.82rem]",
+                    buttonClassName,
+                    isActive ? "border-primary shadow-md ring-2 ring-primary/20" : "hover:brightness-95",
+                    !selectedPartId ? "cursor-not-allowed opacity-80" : "cursor-pointer",
                   ].join(" ")}
                 >
-                  {label}
+                  <span aria-hidden="true" className={`h-[19px] w-[19px] rounded-full max-[520px]:h-[17px] max-[520px]:w-[17px] ${dotClassName}`} />
+                  <span>{label}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Complete button appears here when all parts marked */}
           <AnimatePresence>
             {isComplete && (
               <motion.button
@@ -349,14 +385,14 @@ export default function BodyMarkPage() {
                 exit={{ opacity: 0, scale: 0.8 }}
                 transition={{ type: "spring", stiffness: 300, damping: 25 }}
                 onClick={() => navigate("/body-traffic-light/touch-test")}
-                className="w-full rounded-full bg-green-500 py-3 text-base font-bold text-white shadow-lg"
+                className="mt-3 min-h-[52px] w-full rounded-[15px] bg-green-safe-dark px-5 py-3 text-base font-bold text-white shadow-md transition-colors hover:brightness-95"
               >
-                完成設定 ✅
+                完成設定
               </motion.button>
             )}
           </AnimatePresence>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
