@@ -26,4 +26,73 @@ test.describe("首頁 (HO-606)", () => {
     expect(box!.height).toBeGreaterThanOrEqual(48);
     expect(box!.width).toBeGreaterThanOrEqual(48);
   });
+
+  test("首頁 hero 在桌機分欄、手機堆疊且保留暖色視覺", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 768, height: 1024 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/");
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+
+      const hero = page.getByTestId("homepage-hero");
+      const intro = page.getByTestId("homepage-intro");
+      const characters = page.getByTestId("homepage-characters");
+      const action = page.getByTestId("homepage-start");
+      await expect(hero).toBeVisible();
+      await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
+      await expect(action).toBeInViewport();
+      await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
+
+      const layout = await page.evaluate(() => {
+        const rect = (testId: string) => {
+          const element = document.querySelector(`[data-testid="${testId}"]`);
+          if (!element) return null;
+          const { x, y, width, height } = element.getBoundingClientRect();
+          return { x, y, width, height };
+        };
+        return {
+          viewportWidth: window.innerWidth,
+          documentWidth: document.documentElement.scrollWidth,
+          intro: rect("homepage-intro"),
+          characters: rect("homepage-characters"),
+          action: rect("homepage-start"),
+          charactersBackground: getComputedStyle(
+            document.querySelector('[data-testid="homepage-characters"]')!,
+          ).backgroundColor,
+          actionBackground: getComputedStyle(
+            document.querySelector('[data-testid="homepage-start"]')!,
+          ).backgroundColor,
+          muteOverlapsAction: (() => {
+            const action = document.querySelector('[data-testid="homepage-start"]')?.getBoundingClientRect();
+            const mute = document.querySelector('button[aria-label]')?.getBoundingClientRect();
+            return Boolean(
+              action && mute && action.left < mute.right && action.right > mute.left &&
+              action.top < mute.bottom && action.bottom > mute.top,
+            );
+          })(),
+        };
+      });
+
+      expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth);
+      expect(layout.charactersBackground).toBe("rgb(255, 245, 225)");
+      expect(layout.actionBackground).toBe("rgb(255, 159, 67)");
+      expect(layout.muteOverlapsAction).toBe(false);
+      expect(await intro.count()).toBe(1);
+      expect(await characters.count()).toBe(1);
+
+      if (viewport.width >= 768) {
+        expect(layout.characters!.x).toBeGreaterThan(layout.intro!.x);
+      } else {
+        expect(layout.intro!.y).toBeLessThan(layout.characters!.y);
+        expect(layout.characters!.y).toBeLessThan(layout.action!.y);
+      }
+    }
+  });
 });
