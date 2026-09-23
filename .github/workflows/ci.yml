@@ -43,6 +43,7 @@ jobs:
         run: >-
           npx playwright test
           e2e/body-mark.spec.ts
+          e2e/homepage.spec.ts
           e2e/pick-doll.spec.ts
           e2e/touch-test.spec.ts
           --project=chromium --workers=1 --reporter=line
