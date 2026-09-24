@@ -76,16 +76,16 @@ export default function TrustedAdultPage() {
         </motion.div>
         <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
         <p className="text-text-light mb-10 text-lg leading-relaxed">
-          你學會了怎麼找到可以信任的大人！<br />
-          遇到困難時，記得去找信任的大人幫忙喔！
+          你可以找一位你覺得安全、願意聽你說的大人幫忙。<br />
+          如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
         </p>
         <motion.button
-          onClick={() => navigate("/ending")}
+          onClick={() => navigate("/menu")}
           className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-4 text-lg font-bold text-white shadow-lg"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.97 }}
         >
-          完成
+          回到主選單
         </motion.button>
       </motion.div>
     );

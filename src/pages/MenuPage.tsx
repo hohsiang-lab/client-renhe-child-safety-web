@@ -14,6 +14,12 @@ const modules = [
     path: "/body-traffic-light",
     emoji: "🚦",
   },
+  {
+    name: "信任大人",
+    description: "認識可能協助你的大人",
+    path: "/trusted-adult",
+    emoji: "💛",
+  },
 ];
 
 export default function MenuPage() {
