@@ -1,6 +1,13 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { useAudioContext } from "../hooks/useAudioContext";
+
+const homeModules = [
+  { name: "秘密遊戲", description: "學習分辨好秘密和壞秘密", path: "/secret-game" },
+  { name: "身體紅綠燈", description: "認識身體的安全界線", path: "/body-traffic-light" },
+  { name: "信任的大人", description: "認識可能協助你的大人", path: "/trusted-adult" },
+  { name: "網路安全", description: "認識網路誘惑，學會安全求助", path: "/network-safety" },
+];
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -29,7 +36,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-4 py-20 sm:px-6 md:py-10">
+    <div className="flex min-h-dvh items-center justify-center px-4 py-8 sm:px-6 md:py-10">
       <motion.main
         data-testid="homepage-hero"
         className="relative grid w-full max-w-[880px] grid-cols-1 items-center gap-6 overflow-hidden rounded-[32px] border border-warm-border/30 bg-white/65 p-6 shadow-[0_24px_64px_rgba(72,54,30,0.08)] sm:p-8 md:grid-cols-[1fr_0.9fr] md:gap-10 md:p-10"
@@ -56,6 +63,20 @@ export default function HomePage() {
           <p className="text-text-light max-w-[22rem] text-base leading-7 sm:text-lg md:text-xl">
             一起來學習怎麼保護自己吧！
           </p>
+          <nav aria-label="遊戲單元入口" className="mt-4 grid w-full grid-cols-2 gap-2 sm:gap-3">
+            {homeModules.map((module) => (
+              <Link
+                key={module.path}
+                to={module.path}
+                className="bg-warm-card focus-visible:ring-text-main focus-visible:ring-offset-warm-bg flex min-h-[72px] flex-col justify-center rounded-2xl border border-warm-border/30 px-3 py-2 text-left text-text-main shadow-sm transition-colors hover:bg-white focus-visible:ring-4 focus-visible:outline-none"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm leading-tight font-bold">{module.name}</span>
+                  <span className="text-text-light mt-1 block text-sm leading-tight">{module.description}</span>
+                </span>
+              </Link>
+            ))}
+          </nav>
         </div>
 
         <div
@@ -101,7 +122,7 @@ export default function HomePage() {
         <motion.button
           data-testid="homepage-start"
           onClick={handleStart}
-          className="bg-primary hover:bg-primary-hover focus-visible:ring-primary focus-visible:ring-offset-warm-bg flex min-h-[60px] w-full cursor-pointer items-center justify-center gap-3 rounded-full px-8 py-4 text-lg font-bold text-white shadow-lg transition-colors focus-visible:ring-4 focus-visible:outline-none md:max-w-[340px] md:text-xl"
+          className="bg-primary focus-visible:ring-text-main focus-visible:ring-offset-warm-bg flex min-h-[60px] w-full cursor-pointer items-center justify-center gap-3 rounded-full px-8 py-4 text-lg font-bold text-text-main shadow-lg transition-colors focus-visible:ring-4 focus-visible:outline-none md:max-w-[340px] md:text-xl"
           whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
           whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
         >
