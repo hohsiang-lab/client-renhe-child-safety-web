@@ -9,6 +9,7 @@ import PickDollPage from "./pages/PickDollPage";
 import BodyMarkPage from "./pages/BodyMarkPage";
 import TouchTestPage from "./pages/TouchTestPage";
 import TrustedAdultPage from "./pages/TrustedAdultPage";
+import NetworkSafetyPage from "./pages/NetworkSafetyPage";
 import EndingPage from "./pages/EndingPage";
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/body-traffic-light/mark" element={<BodyMarkPage />} />
           <Route path="/body-traffic-light/touch-test" element={<TouchTestPage />} />
           <Route path="/trusted-adult" element={<TrustedAdultPage />} />
+          <Route path="/network-safety" element={<NetworkSafetyPage />} />
           <Route path="/ending" element={<EndingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
