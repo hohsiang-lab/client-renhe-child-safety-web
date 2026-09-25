@@ -19,8 +19,8 @@ const LIGHTS = [
   {
     id: "red",
     emoji: "🔴",
-    text: "任何人都不能隨意碰的地方（除了家長和醫生）",
-    audio: "/audio/btl-red.mp3",
+    text: "身體的私密部位，任何人都不可以隨意看或碰。如果照顧、清潔或看醫生需要碰觸，對方要先用你聽得懂的話說明原因和接下來要做什麼，也要聽你表達感受、尊重你的感受。你可以說不舒服、提問，並找信任的大人幫忙。",
+    audio: null,
   },
 ] as const;
 
@@ -40,8 +40,13 @@ export default function BodyTrafficLightPage() {
 
     function playNext(index: number) {
       if (cancelled || index >= LIGHTS.length) return;
+      const light = LIGHTS[index];
       setVisibleCount(index + 1);
-      play(LIGHTS[index].audio, {
+      if (!light.audio) {
+        playNext(index + 1);
+        return;
+      }
+      play(light.audio, {
         onEnd: () => {
           if (!cancelled) playNext(index + 1);
         },
