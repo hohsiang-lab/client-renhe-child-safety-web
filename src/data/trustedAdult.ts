@@ -1,10 +1,29 @@
-export interface TrustQuestion {
-  id: number;
-  scenario: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
+export type TrustQuestion =
+  | {
+      id: number;
+      scenario: string;
+      options: string[];
+      correctIndex: number;
+      explanation: string;
+      roleSelection?: false;
+    }
+  | {
+      id: number;
+      scenario: string;
+      explanation: string;
+      roleSelection: true;
+    };
+
+export const trustedAdultCards = [
+  { name: "媽媽", src: "/images/trusted-adults/mom.png" },
+  { name: "爸爸", src: "/images/trusted-adults/dad.png" },
+  { name: "奶奶", src: "/images/trusted-adults/grandma.png" },
+  { name: "老師", src: "/images/trusted-adults/teacher.png" },
+  { name: "警察", src: "/images/trusted-adults/police.png" },
+  { name: "親戚", src: "/images/trusted-adults/relatives.png" },
+  { name: "隔壁叔叔阿姨", src: "/images/trusted-adults/neighbors.png" },
+  { name: "媽媽的男朋友", src: "/images/trusted-adults/moms-boyfriend.png" },
+] as const;
 
 export const trustQuestions: TrustQuestion[] = [
   {
@@ -37,9 +56,8 @@ export const trustQuestions: TrustQuestion[] = [
   },
   {
     id: 5,
-    scenario: "下面哪些人是你可以信任、可以說秘密的大人？",
-    options: ["一位你覺得安全、願意聽你說的大人（例如家人、老師或警察）", "自己忍耐，不告訴任何人", "告訴一位讓你害怕或要求你保密的大人"],
-    correctIndex: 0,
-    explanation: "家人、老師、警察或其他大人都可能幫忙；沒有哪種身分一定安全。選擇讓你覺得安全、願意聽你說的大人。",
+    scenario: "遇到問題時，可以從下面選一位你覺得安全、願意聽你說的大人求助：",
+    roleSelection: true,
+    explanation: "這些身分只是可能的求助對象，沒有哪種身分一定安全。若第一位沒有幫忙，可以再告訴下一位你覺得安全、願意聽你說的大人。",
   },
 ];

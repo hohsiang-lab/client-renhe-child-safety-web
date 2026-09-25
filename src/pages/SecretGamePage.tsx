@@ -3,21 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { secretQuestions } from "../data/secrets";
 import type { SecretQuestion } from "../data/secrets";
+import { trustedAdultCards } from "../data/trustedAdult";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { SecretCard } from "../components/SecretCard";
 
 type Phase = "intro" | "grid" | "trusted-adults";
-
-const trustedAdultCards = [
-  { name: "媽媽", src: "/images/trusted-adults/mom.png" },
-  { name: "爸爸", src: "/images/trusted-adults/dad.png" },
-  { name: "奶奶", src: "/images/trusted-adults/grandma.png" },
-  { name: "老師", src: "/images/trusted-adults/teacher.png" },
-  { name: "警察", src: "/images/trusted-adults/police.png" },
-  { name: "親戚", src: "/images/trusted-adults/relatives.png" },
-  { name: "隔壁叔叔阿姨", src: "/images/trusted-adults/neighbors.png" },
-  { name: "媽媽的男朋友", src: "/images/trusted-adults/moms-boyfriend.png" },
-];
 
 export default function SecretGamePage() {
   const navigate = useNavigate();

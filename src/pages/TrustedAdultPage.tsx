@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { trustQuestions, type TrustQuestion } from "../data/trustedAdult";
+import {
+  trustQuestions,
+  trustedAdultCards,
+  type TrustQuestion,
+} from "../data/trustedAdult";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 
 type Phase = "playing" | "wrong" | "correct" | "complete";
@@ -42,10 +46,10 @@ export default function TrustedAdultPage() {
     if (phase === "correct" || !current) return;
     stop();
     setSelectedIndex(optionIndex);
-    if (optionIndex === current.correctIndex) {
+    if (current.roleSelection || optionIndex === current.correctIndex) {
       setPhase("correct");
       play(`/audio/trust-q${current.id}-correct.mp3`);
-      timerRef.current = setTimeout(advance, 2200);
+      timerRef.current = setTimeout(advance, current.roleSelection ? 4000 : 2200);
     } else {
       setPhase("wrong");
       play(`/audio/trust-q${current.id}-wrong.mp3`);
@@ -93,7 +97,7 @@ export default function TrustedAdultPage() {
 
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
-      <div className="w-full max-w-lg">
+      <div className={`w-full ${current?.roleSelection ? "max-w-2xl" : "max-w-lg"}`}>
         <motion.div
           className="mb-6 text-center"
           initial={{ opacity: 0, y: -10 }}
@@ -131,6 +135,8 @@ export default function TrustedAdultPage() {
 
               {phase === "correct" && (
                 <motion.div
+                  role="status"
+                  aria-live="polite"
                   className="mb-4 text-center"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -143,8 +149,15 @@ export default function TrustedAdultPage() {
                     ⭐
                   </motion.div>
                   <p className="text-green-safe text-lg font-bold">
-                    答對了！好棒！
+                    {current.roleSelection
+                      ? "你可以選一位可能願意幫助你的大人。"
+                      : "答對了！好棒！"}
                   </p>
+                  {current.roleSelection && (
+                    <p className="text-text-light mt-2 text-sm leading-relaxed">
+                      {current.explanation}
+                    </p>
+                  )}
                 </motion.div>
               )}
 
@@ -163,36 +176,73 @@ export default function TrustedAdultPage() {
                 </motion.div>
               )}
 
-              <div className="flex flex-col gap-3">
-                {current.options.map((option, i) => {
-                  const isSelected = selectedIndex === i;
-                  const isCorrect = i === current.correctIndex;
-                  const showResult = phase === "wrong" || phase === "correct";
-                  let buttonClass =
-                    "w-full cursor-pointer rounded-xl px-4 py-4 text-base font-bold text-left transition-colors";
-                  if (!showResult) {
-                    buttonClass += " bg-warm-bg hover:bg-primary hover:text-white";
-                  } else if (phase === "correct" && isCorrect) {
-                    buttonClass += " bg-green-safe-bg text-green-safe";
-                  } else if (phase === "wrong" && isSelected) {
-                    buttonClass += " bg-red-danger-bg text-red-danger";
-                  } else {
-                    buttonClass += " bg-warm-bg opacity-60";
-                  }
-                  return (
-                    <motion.button
-                      key={i}
-                      onClick={() => handleAnswer(i)}
-                      className={buttonClass}
-                      whileHover={phase !== "correct" ? { scale: 1.02 } : {}}
-                      whileTap={phase !== "correct" ? { scale: 0.97 } : {}}
-                      disabled={phase === "correct"}
-                    >
-                      {option}
-                    </motion.button>
-                  );
-                })}
-              </div>
+              {current.roleSelection ? (
+                <div
+                  role="group"
+                  aria-label="選擇可能求助的大人"
+                  className="grid grid-cols-2 gap-3 sm:grid-cols-4"
+                >
+                  {trustedAdultCards.map((card, i) => {
+                    const isSelected = selectedIndex === i;
+                    return (
+                      <motion.button
+                        key={card.src}
+                        type="button"
+                        onClick={() => handleAnswer(i)}
+                        aria-label={card.name}
+                        aria-pressed={isSelected}
+                        className={`flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                          isSelected
+                            ? "border-green-safe bg-green-safe-bg text-green-safe"
+                            : "border-transparent bg-warm-bg hover:border-primary"
+                        }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.97 }}
+                        disabled={phase === "correct"}
+                      >
+                        <img
+                          src={card.src}
+                          alt=""
+                          aria-hidden="true"
+                          className="h-36 w-full object-contain"
+                        />
+                        {isSelected && <span className="text-xs">✓ 已選擇</span>}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {current.options.map((option, i) => {
+                    const isSelected = selectedIndex === i;
+                    const isCorrect = i === current.correctIndex;
+                    const showResult = phase === "wrong" || phase === "correct";
+                    let buttonClass =
+                      "w-full cursor-pointer rounded-xl px-4 py-4 text-base font-bold text-left transition-colors";
+                    if (!showResult) {
+                      buttonClass += " bg-warm-bg hover:bg-primary hover:text-white";
+                    } else if (phase === "correct" && isCorrect) {
+                      buttonClass += " bg-green-safe-bg text-green-safe";
+                    } else if (phase === "wrong" && isSelected) {
+                      buttonClass += " bg-red-danger-bg text-red-danger";
+                    } else {
+                      buttonClass += " bg-warm-bg opacity-60";
+                    }
+                    return (
+                      <motion.button
+                        key={i}
+                        onClick={() => handleAnswer(i)}
+                        className={buttonClass}
+                        whileHover={phase !== "correct" ? { scale: 1.02 } : {}}
+                        whileTap={phase !== "correct" ? { scale: 0.97 } : {}}
+                        disabled={phase === "correct"}
+                      >
+                        {option}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              )}
 
               {phase === "wrong" && (
                 <motion.button
