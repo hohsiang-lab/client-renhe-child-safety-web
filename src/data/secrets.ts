@@ -60,7 +60,7 @@ export const secretQuestions: SecretQuestion[] = [
     id: 7,
     scenario: "網友說這是我們的秘密，不能讓你爸媽知道",
     answer: "bad",
-    explanation: "不隨便透漏個資給網路認識的朋友",
+    explanation: "網友要你瞞著爸媽，這是危險警訊。不要答應保密，找信任的大人幫忙。",
     frontImage: "/images/secrets/q7-front.png",
     backImage: "/images/secrets/q7-back.png",
   },
