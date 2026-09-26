@@ -168,7 +168,7 @@ export default function FacilitatorModePage() {
       >
         <header
           className={`rounded-2xl bg-white/90 shadow-sm ${
-            isPresentation ? "mb-3 p-3 sm:p-4" : "mb-6 p-4 sm:p-5"
+            isPresentation ? "mb-2 p-3" : "mb-6 p-4 sm:p-5"
           }`}
         >
           <div className={`flex flex-wrap items-center justify-between ${isPresentation ? "mb-2 gap-2" : "mb-4 gap-3"}`}>
@@ -212,7 +212,7 @@ export default function FacilitatorModePage() {
           </div>
 
           {cssPresentation && (
-            <p role="status" className="mb-4 rounded-xl bg-warm-card px-4 py-3 text-sm">
+            <p role="status" className="mb-2 rounded-xl bg-warm-card px-3 py-2 text-sm">
               瀏覽器無法切換全螢幕，已開啟投影顯示模式。
             </p>
           )}
@@ -252,7 +252,7 @@ export default function FacilitatorModePage() {
         <section
           aria-labelledby="facilitator-slide-title"
           className={`flex flex-1 flex-col rounded-3xl bg-white shadow-md ${
-            isPresentation ? "min-h-0 p-4 sm:p-5" : "p-5 sm:p-8"
+            isPresentation ? "min-h-0 p-3 sm:p-4" : "p-5 sm:p-8"
           }`}
         >
           <div className={`flex flex-wrap items-center justify-between gap-2 ${isPresentation ? "mb-3" : "mb-5"}`}>
@@ -271,7 +271,7 @@ export default function FacilitatorModePage() {
               src={slide.image}
               alt={slide.prompt}
               className={`mx-auto max-w-full rounded-xl object-contain ${
-                isPresentation ? "mb-3 max-h-[20vh]" : "mb-5 max-h-[34vh]"
+                isPresentation ? "mb-3 max-h-[16vh]" : "mb-5 max-h-[34vh]"
               }`}
             />
           )}
@@ -279,7 +279,7 @@ export default function FacilitatorModePage() {
           {slide.adultOptions && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
               {slide.adultOptions.map((adult) => (
-                <div key={adult.name} className="flex flex-col items-center rounded-2xl bg-warm-card p-3 text-center font-bold">
+                <div key={adult.name} className={`flex flex-col items-center rounded-2xl bg-warm-card ${isPresentation ? "p-2" : "p-3"} text-center font-bold`}>
                   <img
                     src={adult.src}
                     alt=""
@@ -305,7 +305,7 @@ export default function FacilitatorModePage() {
             <div
               role="status"
               aria-live="polite"
-              className={`rounded-2xl bg-green-safe-bg ${isPresentation ? "mt-3 p-3" : "mt-5 p-5"}`}
+              className={`rounded-2xl bg-green-safe-bg ${isPresentation ? "mt-2 p-2" : "mt-5 p-5"}`}
             >
               {slide.answer && (
                 <p className={`mb-2 font-bold text-green-safe-dark ${enlarged ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"}`}>
