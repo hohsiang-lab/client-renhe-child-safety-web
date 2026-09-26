@@ -213,7 +213,10 @@ export default function FacilitatorModePage() {
           </div>
 
           {cssPresentation && (
-            <p role="status" className="mb-2 rounded-xl bg-warm-card px-3 py-2 text-sm">
+            <p
+              role="status"
+              className={`mb-2 rounded-xl bg-warm-card px-3 py-2 text-sm ${isPresentation ? "sr-only" : ""}`}
+            >
               瀏覽器無法切換全螢幕，已開啟投影顯示模式。
             </p>
           )}
@@ -272,7 +275,7 @@ export default function FacilitatorModePage() {
               src={slide.image}
               alt={slide.prompt}
               className={`mx-auto max-w-full rounded-xl object-contain ${
-                isPresentation ? "mb-3 max-h-[12vh]" : "mb-5 max-h-[34vh]"
+                isPresentation ? "mb-1 max-h-[25vh]" : "mb-5 max-h-[34vh]"
               }`}
             />
           )}
