@@ -61,8 +61,20 @@ export default function MenuPage() {
       </div>
 
       <motion.button
+        type="button"
+        onClick={() => navigate("/facilitator")}
+        className="bg-warm-card mt-7 flex min-h-[76px] w-full max-w-2xl cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-primary/40 px-6 py-4 shadow-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <span className="text-lg font-bold">📽️ 宣導帶領模式</span>
+        <span className="text-text-light mt-1 text-sm">投影教學，可直接選擇單元與題目</span>
+      </motion.button>
+
+      <motion.button
         onClick={() => navigate("/")}
-        className="text-text-light hover:text-primary mt-10 cursor-pointer px-6 py-3 text-sm transition-colors"
+        className="text-text-light hover:text-primary mt-6 cursor-pointer px-6 py-3 text-sm transition-colors"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
