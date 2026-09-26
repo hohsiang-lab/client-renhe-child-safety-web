@@ -5,7 +5,7 @@ import { useAudioContext } from "../hooks/useAudioContext";
 const homeModules = [
   { name: "秘密遊戲", description: "學習分辨好秘密和壞秘密", path: "/secret-game" },
   { name: "身體紅綠燈", description: "認識身體的安全界線", path: "/body-traffic-light" },
-  { name: "信任的大人", description: "認識可能協助你的大人", path: "/trusted-adult" },
+  { name: "信任大人", description: "認識可能協助你的大人", path: "/trusted-adult" },
   { name: "網路安全", description: "認識網路誘惑，學會安全求助", path: "/network-safety" },
 ];
 
