@@ -20,6 +20,12 @@ const modules = [
     path: "/trusted-adult",
     emoji: "💛",
   },
+  {
+    name: "網路安全",
+    description: "認識網路誘惑，學會安全求助",
+    path: "/network-safety",
+    emoji: "🛡️",
+  },
 ];
 
 export default function MenuPage() {
