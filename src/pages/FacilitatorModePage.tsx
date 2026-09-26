@@ -173,7 +173,8 @@ export default function FacilitatorModePage() {
         >
           <div className={`flex flex-wrap items-center justify-between ${isPresentation ? "mb-2 gap-2" : "mb-4 gap-3"}`}>
             <h1 className="text-2xl font-bold sm:text-3xl">宣導帶領模式</h1>
-            <div className="flex flex-wrap gap-2">
+            {/* Leave room for the app-wide fixed mute control. */}
+            <div className="flex flex-wrap gap-2 sm:mr-14">
               <button
                 type="button"
                 onClick={returnToMenu}
