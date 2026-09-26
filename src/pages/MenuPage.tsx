@@ -15,6 +15,12 @@ const modules = [
     emoji: "🚦",
   },
   {
+    name: "信任大人",
+    description: "認識可能協助你的大人",
+    path: "/trusted-adult",
+    emoji: "💛",
+  },
+  {
     name: "網路安全",
     description: "認識網路誘惑，學會安全求助",
     path: "/network-safety",
