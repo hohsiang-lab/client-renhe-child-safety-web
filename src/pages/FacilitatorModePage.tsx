@@ -272,7 +272,7 @@ export default function FacilitatorModePage() {
               src={slide.image}
               alt={slide.prompt}
               className={`mx-auto max-w-full rounded-xl object-contain ${
-                isPresentation ? "mb-3 max-h-[16vh]" : "mb-5 max-h-[34vh]"
+                isPresentation ? "mb-3 max-h-[12vh]" : "mb-5 max-h-[34vh]"
               }`}
             />
           )}
