@@ -65,32 +65,26 @@ export default function TrustedAdultPage() {
   if (phase === "complete") {
     return (
       <motion.div
-        className="flex min-h-dvh flex-col items-center justify-center px-6 text-center"
+        className="flex min-h-dvh flex-col items-center justify-center px-6 py-8 text-center"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div
-          className="mb-6 text-7xl"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1, rotate: [0, 15, -15, 0] }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          💛
-        </motion.div>
-        <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
-        <p className="text-text-light mb-10 text-lg leading-relaxed">
-          你可以找一位你覺得安全、願意聽你說的大人幫忙。<br />
-          如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
-        </p>
-        <motion.button
-          onClick={() => navigate("/menu")}
-          className="bg-primary hover:bg-primary-hover cursor-pointer rounded-full px-10 py-4 text-lg font-bold text-white shadow-lg"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.97 }}
-        >
-          回到主選單
-        </motion.button>
+        <div className="paper-card w-full max-w-3xl bg-warm-card p-6 sm:p-8">
+          <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
+          <p className="text-text-light mb-8 text-lg leading-relaxed">
+            你可以找一位你覺得安全、願意聽你說的大人幫忙。<br />
+            如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
+          </p>
+          <motion.button
+            onClick={() => navigate("/menu")}
+            className="paper-button bg-primary hover:bg-primary-hover cursor-pointer px-10 py-4 text-lg font-bold text-text-main"
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            回到主選單
+          </motion.button>
+        </div>
       </motion.div>
     );
   }
@@ -103,7 +97,7 @@ export default function TrustedAdultPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="mb-2 text-2xl font-bold">信任大人 💛</h1>
+          <h1 className="mb-2 text-2xl font-bold">信任大人</h1>
           <p className="text-text-light text-sm">
             第 {index + 1} / {trustQuestions.length} 題
           </p>
@@ -122,13 +116,12 @@ export default function TrustedAdultPage() {
           {current && (
             <motion.div
               key={current.id}
-              className="bg-warm-card mt-6 rounded-2xl p-8 shadow-md"
+              className="paper-card bg-warm-card mt-6 p-6 sm:p-8"
               initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -40 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="mb-4 text-center text-4xl">🤔</div>
               <p className="mb-6 text-center text-lg leading-relaxed">
                 {current.scenario}
               </p>
@@ -137,18 +130,11 @@ export default function TrustedAdultPage() {
                 <motion.div
                   role="status"
                   aria-live="polite"
-                  className="mb-4 text-center"
+                  className="paper-card mb-4 bg-green-safe-bg p-4 text-center"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <motion.div
-                    className="mb-3 text-5xl"
-                    animate={{ scale: [1, 1.3, 1], rotate: [0, 20, -20, 0] }}
-                    transition={{ duration: 0.6 }}
-                  >
-                    ⭐
-                  </motion.div>
-                  <p className="text-green-safe text-lg font-bold">
+                  <p className="text-text-main text-lg font-bold">
                     {current.roleSelection
                       ? "你可以選一位可能願意幫助你的大人。"
                       : "答對了！好棒！"}
@@ -163,11 +149,11 @@ export default function TrustedAdultPage() {
 
               {phase === "wrong" && (
                 <motion.div
-                  className="bg-red-danger-bg mb-4 rounded-xl p-4"
+                  className="paper-card bg-red-danger-bg mb-4 p-4"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <p className="text-red-danger mb-1 text-center text-base font-bold">
+                  <p className="text-text-main mb-1 text-center text-base font-bold">
                     再想想看喔～
                   </p>
                   <p className="text-text-light text-center text-sm">
@@ -191,9 +177,9 @@ export default function TrustedAdultPage() {
                         onClick={() => handleAnswer(i)}
                         aria-label={card.name}
                         aria-pressed={isSelected}
-                        className={`flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 p-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
+                        className={`paper-choice flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 p-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                           isSelected
-                            ? "border-green-safe bg-green-safe-bg text-green-safe"
+                            ? "border-green-safe bg-green-safe-bg text-text-main"
                             : "border-transparent bg-warm-bg hover:border-primary"
                         }`}
                         whileHover={{ scale: 1.02 }}
@@ -218,13 +204,13 @@ export default function TrustedAdultPage() {
                     const isCorrect = i === current.correctIndex;
                     const showResult = phase === "wrong" || phase === "correct";
                     let buttonClass =
-                      "w-full cursor-pointer rounded-xl px-4 py-4 text-base font-bold text-left transition-colors";
+                      "paper-choice w-full cursor-pointer px-4 py-4 text-left text-base font-bold transition-colors";
                     if (!showResult) {
                       buttonClass += " bg-warm-bg hover:bg-primary hover:text-white";
                     } else if (phase === "correct" && isCorrect) {
-                      buttonClass += " bg-green-safe-bg text-green-safe";
+                      buttonClass += " bg-green-safe-bg text-text-main";
                     } else if (phase === "wrong" && isSelected) {
-                      buttonClass += " bg-red-danger-bg text-red-danger";
+                      buttonClass += " bg-red-danger-bg text-text-main";
                     } else {
                       buttonClass += " bg-warm-bg opacity-60";
                     }
@@ -247,7 +233,7 @@ export default function TrustedAdultPage() {
               {phase === "wrong" && (
                 <motion.button
                   onClick={handleRetry}
-                  className="bg-primary hover:bg-primary-hover mt-4 w-full cursor-pointer rounded-full py-3 font-bold text-white"
+                  className="paper-button bg-primary hover:bg-primary-hover mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}

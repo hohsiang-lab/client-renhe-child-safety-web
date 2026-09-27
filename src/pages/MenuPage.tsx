@@ -6,25 +6,29 @@ const modules = [
     name: "秘密遊戲",
     description: "學習分辨好秘密和壞秘密",
     path: "/secret-game",
-    emoji: "🔑",
+    image: "/images/secrets/q1-front.png",
+    imageAlt: "秘密遊戲教材卡：孩子製作生日驚喜卡",
   },
   {
     name: "身體紅綠燈",
     description: "認識身體的安全界線",
     path: "/body-traffic-light",
-    emoji: "🚦",
+    image: "/images/紅綠燈女.png",
+    imageAlt: "身體紅綠燈教材插畫",
   },
   {
     name: "信任大人",
     description: "認識可能協助你的大人",
     path: "/trusted-adult",
-    emoji: "💛",
+    image: "/images/trusted-adults/grandma.png",
+    imageAlt: "信任大人奶奶教材插畫",
   },
   {
     name: "網路安全",
     description: "認識網路誘惑，學會安全求助",
     path: "/network-safety",
-    emoji: "🛡️",
+    image: "/images/network-safety/五不.png",
+    imageAlt: "數位性暴力防治「五不」宣導教材原圖",
   },
 ];
 
@@ -32,47 +36,79 @@ export default function MenuPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12">
+    <div className="menu-page flex min-h-dvh flex-col items-center justify-start px-3 pb-8 md:px-0">
       <motion.h1
-        className="mb-10 text-3xl font-bold md:text-4xl"
+        className="menu-page__title w-full max-w-[1160px] font-bold"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        選擇你想玩的遊戲
+        選擇主題
       </motion.h1>
 
-      <div className="grid w-full max-w-2xl grid-cols-1 gap-6 md:grid-cols-2">
-        {modules.map((mod, i) => (
-          <motion.button
-            key={mod.path}
-            onClick={() => navigate(mod.path)}
-            className="bg-warm-card flex cursor-pointer flex-col items-center rounded-2xl p-8 shadow-md"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.15 }}
-            whileHover={{ scale: 1.03, boxShadow: "0 8px 30px rgba(0,0,0,0.12)" }}
-            whileTap={{ scale: 0.97 }}
-          >
-            <span className="mb-3 text-5xl">{mod.emoji}</span>
-            <h2 className="mb-2 text-xl font-bold">{mod.name}</h2>
-            <p className="text-text-light text-sm">{mod.description}</p>
-          </motion.button>
-        ))}
+      <p className="menu-page__subtitle w-full max-w-[1160px]">
+        一起來學習怎麼保護自己吧！
+      </p>
+
+      <div className="menu-page__grid w-full max-w-[1160px]">
+        {modules.map((mod, i) => {
+          const titleId = `menu-module-title-${i}`;
+          const descriptionId = `menu-module-description-${i}`;
+
+          return (
+            <motion.div
+              key={mod.path}
+              className="paper-card menu-module bg-warm-card flex items-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.15 }}
+              whileHover={{ scale: 1.03 }}
+            >
+              <img className="menu-module__art" src={mod.image} alt={mod.imageAlt} />
+              <div className="menu-module__copy min-w-0">
+                <h2 id={titleId} className="menu-module__title">{mod.name}</h2>
+                <p id={descriptionId} className="menu-module__description">{mod.description}</p>
+                <span aria-hidden="true" className="menu-module__rule" />
+              </div>
+              <button
+                type="button"
+                aria-labelledby={`${titleId} ${descriptionId}`}
+                onClick={() => navigate(mod.path)}
+                className="menu-module__action"
+              />
+            </motion.div>
+          );
+        })}
       </div>
 
       <motion.button
         type="button"
         onClick={() => navigate("/facilitator")}
-        className="bg-warm-card mt-7 flex min-h-[76px] w-full max-w-2xl cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-primary/40 px-6 py-4 shadow-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="paper-card bg-warm-card mt-7 flex min-h-[76px] w-full max-w-[1160px] cursor-pointer flex-col items-center justify-center px-6 py-4 transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
       >
-        <span className="text-lg font-bold">📽️ 宣導帶領模式</span>
+        <span className="flex items-center gap-2 text-lg font-bold">
+          <svg
+            aria-hidden="true"
+            className="size-5"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <rect x="4" y="5" width="16" height="11" rx="2" />
+            <path d="M8 19h8M12 16v3M8 9l4 2.5L8 14V9Z" />
+          </svg>
+          宣導帶領模式
+        </span>
         <span className="text-text-light mt-1 text-sm">投影教學，可直接選擇單元與題目</span>
       </motion.button>
 
       <motion.button
+        type="button"
         onClick={() => navigate("/")}
         className="text-text-light hover:text-primary mt-6 cursor-pointer px-6 py-3 text-sm transition-colors"
         initial={{ opacity: 0 }}

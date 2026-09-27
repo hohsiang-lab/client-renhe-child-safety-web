@@ -4,22 +4,18 @@ import { motion } from "framer-motion";
 
 type DollType = "female" | "male";
 
-const DOLLS: { id: DollType; label: string; src: string; alt: string; bg: string; ring: string }[] = [
+const DOLLS: { id: DollType; label: string; src: string; alt: string }[] = [
   {
     id: "female",
-    label: "女生 👧",
+    label: "女生",
     src: "/images/紅綠燈女.png",
     alt: "女生人偶",
-    bg: "bg-pink-50",
-    ring: "ring-pink-400",
   },
   {
     id: "male",
-    label: "男生 👦",
+    label: "男生",
     src: "/images/紅綠燈難.png",
     alt: "男生人偶",
-    bg: "bg-blue-50",
-    ring: "ring-blue-400",
   },
 ];
 
@@ -46,10 +42,9 @@ export default function PickDollPage() {
               data-testid={`doll-card-${doll.id}`}
               aria-pressed={isSelected}
               className={[
-                "flex cursor-pointer flex-col items-center rounded-3xl p-4 shadow-md transition-shadow",
-                doll.bg,
+                "paper-card flex cursor-pointer flex-col items-center bg-warm-card p-4 transition-shadow",
                 isSelected
-                  ? `ring-4 ${doll.ring} ring-offset-2`
+                  ? "ring-4 ring-primary ring-offset-2"
                   : "ring-2 ring-transparent",
               ].join(" ")}
               whileTap={{ scale: 0.97 }}
@@ -71,10 +66,10 @@ export default function PickDollPage() {
       <motion.button
         data-testid="confirm-btn"
         className={[
-          "mt-12 rounded-full px-12 py-4 text-lg font-bold text-white shadow-lg transition-opacity",
+          "paper-button mt-12 px-12 py-4 text-lg font-bold text-text-main transition-colors",
           selected
-            ? "cursor-pointer bg-green-500 opacity-100"
-            : "cursor-not-allowed bg-gray-400 opacity-50",
+            ? "cursor-pointer bg-primary"
+            : "cursor-not-allowed bg-warm-muted",
         ].join(" ")}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
