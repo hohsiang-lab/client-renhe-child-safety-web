@@ -156,7 +156,7 @@ test.describe("首頁 (HO-606)", () => {
         expect(layout.characters!.x).toBeGreaterThan(layout.intro!.x);
       } else {
         expect(layout.intro!.y).toBeLessThan(layout.characters!.y);
-        expect(layout.characters!.y).toBeLessThan(layout.action!.y);
+        expect(layout.action!.y).toBeLessThan(layout.characters!.y);
       }
     }
   });

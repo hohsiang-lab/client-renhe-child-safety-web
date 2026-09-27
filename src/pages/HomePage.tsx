@@ -36,68 +36,56 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-dvh items-center justify-center px-4 py-8 sm:px-6 md:py-10">
+    <div className="flex min-h-dvh items-start justify-center px-3 md:px-0">
       <motion.main
         data-testid="homepage-hero"
-        className="relative grid w-full max-w-[880px] grid-cols-1 items-center gap-6 overflow-hidden rounded-[32px] border border-warm-border/30 bg-white/65 p-6 shadow-[0_24px_64px_rgba(72,54,30,0.08)] sm:p-8 md:grid-cols-[1fr_0.9fr] md:gap-10 md:p-10"
+        className="homepage-hero paper-card relative grid w-full grid-cols-1 items-center overflow-hidden"
         initial={prefersReducedMotion ? false : { opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: prefersReducedMotion ? 0 : 0.45 }}
       >
         <div
           data-testid="homepage-intro"
-          className="relative z-10 flex flex-col items-center text-center md:items-start md:text-left"
+          className="homepage-intro relative z-10 flex flex-col"
         >
-          <div
-            aria-hidden="true"
-            className="mb-5 flex size-16 items-center justify-center rounded-[22px] border border-warm-border/30 bg-warm-card text-4xl shadow-sm"
-          >
-            <svg aria-hidden="true" className="size-10" viewBox="0 0 64 64" fill="none">
-              <path d="m32 5 7.4 17.2 18.7 1.4-14.3 12.1 4.7 18.4L32 44.2 15.5 54.1l4.7-18.4L5.9 23.6l18.7-1.4L32 5Z" fill="#FFD447" stroke="#E7A522" strokeWidth="2.5" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <h1 aria-label="保護自己大冒險" className="mb-3 max-w-full text-[clamp(2.25rem,5vw,3.5rem)] leading-[1.2] font-bold tracking-[0.02em] text-text-main">
+          <h1 aria-label="保護自己大冒險" className="homepage-title font-bold text-text-main">
             <span data-testid="homepage-title-line-1">保護自己</span>
-            <span className="block" data-testid="homepage-title-line-2">大冒險</span>
+            <span className="block text-[var(--paper-purple)]" data-testid="homepage-title-line-2">大冒險</span>
           </h1>
-          <p className="text-text-light max-w-[22rem] text-base leading-7 sm:text-lg md:text-xl">
+          <p className="homepage-lead text-text-light">
             一起來學習怎麼保護自己吧！
           </p>
-          <nav aria-label="遊戲單元入口" className="mt-4 grid w-full grid-cols-2 gap-2 sm:gap-3">
+          <nav aria-label="遊戲單元入口" className="homepage-topics grid w-full grid-cols-2">
             {homeModules.map((module) => (
               <Link
                 key={module.path}
                 to={module.path}
-                className="bg-warm-card focus-visible:ring-text-main focus-visible:ring-offset-warm-bg flex min-h-[72px] flex-col justify-center rounded-2xl border border-warm-border/30 px-3 py-2 text-left text-text-main shadow-sm transition-colors hover:bg-white focus-visible:ring-4 focus-visible:outline-none"
+                className="homepage-topic flex min-w-0 flex-col justify-center text-left text-text-main transition-colors hover:bg-white"
               >
-                <span className="min-w-0">
-                  <span className="block text-sm leading-tight font-bold">{module.name}</span>
-                  <span className="text-text-light mt-1 block text-sm leading-tight">{module.description}</span>
-                </span>
+                <span className="homepage-topic__title">{module.name}</span>
+                <span className="homepage-topic__description text-text-light">{module.description}</span>
               </Link>
             ))}
           </nav>
+          <motion.button
+            data-testid="homepage-start"
+            type="button"
+            onClick={handleStart}
+            className="homepage-start paper-card cursor-pointer font-bold"
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+            whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+          >
+            開始探險
+          </motion.button>
         </div>
 
         <div
           data-testid="homepage-characters"
-          className="relative flex min-h-[216px] items-center justify-center gap-3 overflow-hidden rounded-[28px] border border-[#ffe5b3] bg-warm-card p-5 sm:min-h-[236px] sm:gap-4 md:row-span-2 md:min-h-[350px]"
+          className="homepage-characters relative flex items-center justify-center gap-3 overflow-hidden"
         >
           <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-1/2 size-48 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/80 bg-white/35"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute left-8 top-8 size-3 rounded-full bg-primary/50"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute bottom-8 right-8 size-2 rounded-full bg-green-safe-dark/50"
-          />
-          <div
             data-testid="homepage-avatar-male"
-            className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
+            className="homepage-avatar relative z-10 overflow-hidden"
           >
             <img
               src="/images/homepage-boy-upper-body-transparent.png"
@@ -108,7 +96,7 @@ export default function HomePage() {
           </div>
           <div
             data-testid="homepage-avatar-female"
-            className="relative z-10 size-24 overflow-hidden sm:size-28 md:size-32"
+            className="homepage-avatar relative z-10 overflow-hidden"
           >
             <img
               src="/images/homepage-girl-upper-body-transparent.png"
@@ -118,22 +106,6 @@ export default function HomePage() {
             />
           </div>
         </div>
-
-        <motion.button
-          data-testid="homepage-start"
-          onClick={handleStart}
-          className="bg-primary focus-visible:ring-text-main focus-visible:ring-offset-warm-bg flex min-h-[60px] w-full cursor-pointer items-center justify-center gap-3 rounded-full px-8 py-4 text-lg font-bold text-text-main shadow-lg transition-colors focus-visible:ring-4 focus-visible:outline-none md:max-w-[340px] md:text-xl"
-          whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
-          whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
-        >
-          <span>開始探險</span>
-          <svg aria-hidden="true" className="size-5" viewBox="0 0 24 24" fill="none">
-            <path d="M14.7 4.1c-3.4 1.2-6.2 4-7.4 7.4l5.2 5.2c3.4-1.2 6.2-4 7.4-7.4l.7-5.9-5.9.7Z" fill="#FFF7E7" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
-            <circle cx="15.8" cy="8.2" r="1.8" fill="#FF9F43" />
-            <path d="m7.2 11.8-3.3.8-.8 3.3 5.3-1.1m5.6 1.1-.8 3.3 3.3-.8.8-3.3" fill="#FFD447" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
-            <path d="m10.1 17.1-1.2 3.7 3.7-1.2" fill="#FFD447" stroke="white" strokeWidth="1.2" strokeLinejoin="round" />
-          </svg>
-        </motion.button>
       </motion.main>
     </div>
   );

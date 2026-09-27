@@ -38,25 +38,32 @@ export default function BodyTrafficLightPage() {
   }, []);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-10">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 sm:px-6 md:py-10">
       <motion.h1
-        className="mb-8 text-2xl font-bold"
+        className="paper-card mb-6 bg-white/80 px-6 py-3 text-center text-2xl font-bold sm:mb-8 sm:px-8 sm:py-4 sm:text-3xl"
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        身體紅綠燈 🚦
+        身體紅綠燈{" "}
+        <span className="traffic-signal-icon" aria-hidden="true">🚦</span>
       </motion.h1>
 
-      <div className="flex w-full max-w-sm flex-col gap-5">
+      <div className="flex w-full max-w-lg flex-col gap-4 sm:gap-5">
         {LIGHTS.map((light, i) => (
           <AnimatePresence key={light.id}>
             {visibleCount > i && (
               <motion.div
                 key={light.id}
-                className="flex items-center gap-4 rounded-2xl bg-white px-5 py-4 shadow-md"
+                className="paper-card flex items-center gap-4 bg-white/80 px-5 py-4"
                 {...popIn}
               >
-                <span className="text-5xl">{light.emoji}</span>
+                <span
+                  role="img"
+                  aria-label={light.label}
+                  className={`traffic-light-indicator traffic-light-indicator--${light.id}`}
+                >
+                  {light.emoji}
+                </span>
                 <p className="text-base font-medium leading-snug">{light.text}</p>
               </motion.div>
             )}
@@ -67,7 +74,7 @@ export default function BodyTrafficLightPage() {
       <AnimatePresence>
         {visibleCount === LIGHTS.length && (
           <motion.button
-            className="mt-10 cursor-pointer rounded-full bg-green-500 px-10 py-4 text-lg font-bold text-white shadow-lg"
+            className="paper-card mt-8 cursor-pointer bg-green-500 px-10 py-4 text-lg font-bold text-text-main focus-visible:ring-4 focus-visible:ring-primary focus-visible:outline-none sm:mt-10"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}

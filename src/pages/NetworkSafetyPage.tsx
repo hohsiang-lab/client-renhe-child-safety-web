@@ -37,16 +37,40 @@ export default function NetworkSafetyPage() {
 
   if (screen === "intro") {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-12 text-center">
-        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="mb-4 text-3xl font-bold">網路安全小任務</h1>
-          <p className="text-text-light mx-auto mb-8 max-w-lg text-lg leading-relaxed">
+      <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 text-center">
+        <motion.div
+          className="paper-card bg-warm-card flex w-full max-w-2xl flex-col items-center px-5 py-6"
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="mb-3 text-3xl font-bold">網路安全小任務</h1>
+          <p className="text-text-light mx-auto mb-5 max-w-lg text-lg leading-relaxed">
             遇到讓你不舒服的要求，可以拒絕並找信任的大人幫忙。發生任何事，都不是你的錯。
           </p>
+          <div
+            role="group"
+            aria-label="數位性暴力防治圖卡"
+            className="mb-6 grid w-full max-w-3xl grid-cols-1 items-center gap-4 md:grid-cols-2"
+          >
+            <figure className="m-0 flex w-full items-center justify-center md:h-[42dvh] md:max-h-96">
+              <img
+                className="h-auto w-full max-w-[320px] object-contain md:h-full md:w-auto md:max-w-full"
+                src="/images/network-safety/五不.png"
+                alt="數位性暴力防治五不圖卡"
+              />
+            </figure>
+            <figure className="m-0 flex w-full items-center justify-center md:h-[42dvh] md:max-h-96">
+              <img
+                className="h-auto w-full max-w-[320px] object-contain md:h-full md:w-auto md:max-w-full"
+                src="/images/network-safety/四要.png"
+                alt="數位性暴力防治四要圖卡"
+              />
+            </figure>
+          </div>
           <motion.button
             type="button"
             onClick={() => setScreen("question")}
-            className="bg-primary cursor-pointer rounded-full px-10 py-4 text-lg font-bold text-text-main shadow-lg"
+            className="paper-card bg-primary cursor-pointer px-10 py-4 text-lg font-bold text-text-main transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
           >
@@ -55,7 +79,7 @@ export default function NetworkSafetyPage() {
           <button
             type="button"
             onClick={() => navigate("/menu")}
-            className="text-text-light hover:text-text-main mt-6 block min-h-12 w-full cursor-pointer px-6 py-3 text-sm transition-colors"
+            className="text-text-light hover:text-text-main mt-4 block min-h-12 w-full cursor-pointer px-6 py-3 text-sm transition-colors"
           >
             回到主選單
           </button>
@@ -73,9 +97,9 @@ export default function NetworkSafetyPage() {
             遇到這些事不是你的錯。請找信任的大人陪你一起求助；不要下載、另存或轉傳私密影像。
           </p>
 
-          <section className="bg-warm-card rounded-2xl p-6 shadow-md" aria-labelledby="help-title">
+          <section className="paper-card bg-warm-card p-6" aria-labelledby="help-title">
             <h2 id="help-title" className="mb-4 text-xl font-bold">需要幫忙時</h2>
-            <div className="mb-5 rounded-xl bg-warm-bg p-4">
+            <div className="paper-card mb-5 bg-warm-bg p-4">
               <p className="mb-2 font-bold">保護與緊急協助</p>
               <p className="text-text-light mb-3 text-sm leading-relaxed">
                 113 保護專線 24 小時免付費；有立即危險時，請大人協助聯絡 110。
@@ -86,7 +110,7 @@ export default function NetworkSafetyPage() {
               </div>
             </div>
 
-            <div className="mb-5 rounded-xl bg-warm-bg p-4">
+            <div className="paper-card mb-5 bg-warm-bg p-4">
               <p className="mb-2 font-bold">私密影像被威脅或流傳</p>
               <p className="text-text-light mb-3 text-sm leading-relaxed">
                 請信任的大人陪你聯絡性影像處理中心；諮詢電話 02-6605-7373，每日 09:00–22:00。
@@ -101,7 +125,7 @@ export default function NetworkSafetyPage() {
               </a>
             </div>
 
-            <div className="rounded-xl bg-warm-bg p-4">
+            <div className="paper-card bg-warm-bg p-4">
               <p className="mb-2 font-bold">檢舉網路上傷害兒少的內容</p>
               <p className="text-text-light mb-3 text-sm leading-relaxed">
                 iWIN 申訴需要聯絡信箱、網址和說明，請信任的大人陪你填寫；不要傳送私密影像。
@@ -120,7 +144,7 @@ export default function NetworkSafetyPage() {
           <motion.button
             type="button"
             onClick={() => navigate("/menu")}
-            className="bg-primary mt-6 w-full cursor-pointer rounded-full px-8 py-4 text-lg font-bold text-text-main shadow-lg"
+            className="paper-button bg-primary mt-6 w-full cursor-pointer px-8 py-4 text-lg font-bold text-text-main"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
           >
@@ -155,7 +179,7 @@ export default function NetworkSafetyPage() {
 
         <motion.section
           key={current.id}
-          className="bg-warm-card rounded-2xl p-6 shadow-md sm:p-8"
+          className="paper-card bg-warm-card p-6 sm:p-8"
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0 }}
           aria-labelledby={`network-question-${current.id}`}
@@ -166,7 +190,7 @@ export default function NetworkSafetyPage() {
 
           {answerState !== "unanswered" && (
             <div
-              className={`mb-4 rounded-xl p-4 text-center ${answerState === "correct" ? "bg-green-safe-bg" : "bg-red-danger-bg"}`}
+              className={`paper-card mb-4 p-4 text-center ${answerState === "correct" ? "bg-green-safe-bg" : "bg-red-danger-bg"}`}
               role="status"
               aria-live="polite"
             >
@@ -192,7 +216,7 @@ export default function NetworkSafetyPage() {
                   type="button"
                   onClick={() => handleAnswer(optionIndex)}
                   disabled={answerState === "correct"}
-                  className={`w-full cursor-pointer rounded-xl px-4 py-4 text-left text-base font-bold transition-colors ${buttonClass}`}
+                  className={`paper-choice w-full cursor-pointer px-4 py-4 text-left text-base font-bold transition-colors ${buttonClass}`}
                 >
                   {option}
                 </button>
@@ -204,7 +228,7 @@ export default function NetworkSafetyPage() {
             <button
               type="button"
               onClick={handleRetry}
-              className="bg-primary mt-4 w-full cursor-pointer rounded-full py-3 font-bold text-text-main"
+              className="paper-button bg-primary mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
             >
               再試一次
             </button>
@@ -213,7 +237,7 @@ export default function NetworkSafetyPage() {
             <button
               type="button"
               onClick={handleNext}
-              className="bg-primary mt-4 w-full cursor-pointer rounded-full py-3 font-bold text-text-main"
+              className="paper-button bg-primary mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
             >
               {index + 1 === networkSafetyQuestions.length ? "完成任務" : "下一題"}
             </button>
