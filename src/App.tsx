@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, Link, useLocation } from "react-router-dom";
 import { AudioProvider } from "./contexts/AudioProvider";
 import { MuteButton } from "./components/MuteButton";
+import { AudioCaption } from "./components/AudioCaption";
 import HomePage from "./pages/HomePage";
 import MenuPage from "./pages/MenuPage";
 import SecretGamePage from "./pages/SecretGamePage";
@@ -62,6 +63,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
+        <AudioCaption />
         <MuteButton />
       </div>
     </AudioProvider>

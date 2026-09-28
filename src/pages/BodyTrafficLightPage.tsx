@@ -22,6 +22,7 @@ export default function BodyTrafficLightPage() {
       if (cancelled || index >= LIGHTS.length) return;
       setVisibleCount(index + 1);
       play(LIGHTS[index].audio, {
+        caption: LIGHTS[index].text,
         onEnd: () => {
           if (!cancelled) playNext(index + 1);
         },

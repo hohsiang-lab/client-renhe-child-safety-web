@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAudioContext } from "../hooks/useAudioContext";
 
 const modules = [
   {
@@ -34,6 +36,15 @@ const modules = [
 
 export default function MenuPage() {
   const navigate = useNavigate();
+  const { currentAudioRef, setCurrentCaption } = useAudioContext();
+
+  useEffect(() => () => {
+    const audio = currentAudioRef.current;
+    if (!audio?.src.endsWith("/audio/home-welcome.mp3")) return;
+    audio.pause();
+    currentAudioRef.current = null;
+    setCurrentCaption(null);
+  }, [currentAudioRef, setCurrentCaption]);
 
   return (
     <div className="menu-page flex min-h-dvh flex-col items-center justify-start px-3 pb-8 md:px-0">
