@@ -1,4 +1,16 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
+
+async function tabUntilFocused(page: Page, target: Locator) {
+  for (let index = 0; index < 80; index += 1) {
+    await page.keyboard.press("Tab");
+    const isFocused = await target.evaluateAll((elements) =>
+      elements.some((element) => element === document.activeElement),
+    );
+    if (isFocused) return;
+  }
+
+  throw new Error("Keyboard focus did not reach the target after 80 Tab presses.");
+}
 
 test.describe("首頁 (HO-606)", () => {
   test("顯示標題、角色區域、開始按鈕", async ({ page }) => {
@@ -25,6 +37,19 @@ test.describe("首頁 (HO-606)", () => {
     expect(box).not.toBeNull();
     expect(box!.height).toBeGreaterThanOrEqual(48);
     expect(box!.width).toBeGreaterThanOrEqual(48);
+  });
+
+  test("可用 Tab 與 Enter 從首頁進入選單並看到焦點環", async ({ page }) => {
+    await page.goto("/");
+
+    const start = page.getByRole("button", { name: /開始探險/ });
+    await expect(page.getByRole("heading", { name: "保護自己大冒險" })).toBeVisible();
+    await expect(start).toBeVisible();
+    await tabUntilFocused(page, start);
+    await expect(start).toHaveCSS("outline-width", "3px");
+    await page.keyboard.press("Enter");
+
+    await expect(page).toHaveURL("/menu");
   });
 
   test("首頁 hero 在桌機分欄、手機堆疊且保留暖色視覺", async ({ page }) => {

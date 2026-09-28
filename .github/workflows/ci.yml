@@ -47,3 +47,11 @@ jobs:
           e2e/pick-doll.spec.ts
           e2e/touch-test.spec.ts
           --project=chromium --workers=1 --reporter=line
+
+      - name: Run HO-3183 Trusted Adult mobile regression
+        # Run only this regression; unrelated legacy cross-device specs stay out.
+        run: >-
+          npx playwright test
+          e2e/cross-device.spec.ts
+          --grep "HO-3183 Trusted Adult 390px viewport has no horizontal overflow"
+          --project=chromium --workers=1 --reporter=line

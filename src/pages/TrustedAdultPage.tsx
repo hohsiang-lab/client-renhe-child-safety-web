@@ -117,9 +117,9 @@ export default function TrustedAdultPage() {
             <motion.div
               key={current.id}
               className="paper-card bg-warm-card mt-6 p-6 sm:p-8"
-              initial={{ opacity: 0, x: 40 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
               <p className="mb-6 text-center text-lg leading-relaxed">

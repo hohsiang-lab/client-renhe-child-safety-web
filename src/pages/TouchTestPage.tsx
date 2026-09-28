@@ -9,6 +9,7 @@ import {
 } from "../stores/useBodyTrafficLightStore";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { preloadAudio } from "../utils/preloadAudio";
+import { BODY_TRAFFIC_LIGHTS } from "../data/bodyTrafficLights";
 
 const COLOR_OVERLAY: Record<LightColor, string> = {
   green: "bg-green-400/60",
@@ -20,6 +21,12 @@ const COLOR_PULSE: Record<LightColor, string> = {
   green: "bg-green-400",
   yellow: "bg-yellow-400",
   red: "bg-red-400",
+};
+
+const LIGHT_SYMBOLS: Record<LightColor, string> = {
+  green: "✓",
+  yellow: "!",
+  red: "×",
 };
 
 const AUDIO_MAP: Record<DollType, Record<LightColor, string>> = {
@@ -87,8 +94,27 @@ export default function TouchTestPage() {
     >
       <div className="w-full max-w-[360px] px-4 pt-8">
         <h1 className="mb-4 text-center text-xl font-bold text-gray-800">
-          點擊各部位，聽聽怎麼說 👂
+          點擊各部位，聽聽怎麼說
         </h1>
+
+        <section
+          aria-label="紅黃綠燈色提示"
+          className="mb-4 rounded-2xl border border-warm-border bg-white p-3"
+        >
+          <ul className="grid gap-2">
+            {BODY_TRAFFIC_LIGHTS.map((light) => (
+              <li key={light.id} className="flex items-start gap-2 text-sm leading-snug">
+                <span
+                  aria-hidden="true"
+                  className={`mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 border-text-main font-black text-black ${COLOR_PULSE[light.id]}`}
+                >
+                  {LIGHT_SYMBOLS[light.id]}
+                </span>
+                <p className="min-w-0 flex-1"><strong>{light.label}</strong>：{light.text}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <div className="relative mx-auto w-full" style={{ userSelect: "none" }}>
           <img
@@ -104,6 +130,7 @@ export default function TouchTestPage() {
 
           {sortedZones.map(({ part, zone, zoneIdx }) => {
             const color = marks[part.id] as LightColor | undefined;
+            const light = BODY_TRAFFIC_LIGHTS.find((item) => item.id === color);
             const side =
               part.zones.length > 1
                 ? zoneIdx === 0
@@ -114,7 +141,7 @@ export default function TouchTestPage() {
             return (
               <button
                 key={`${part.id}-${zoneIdx}`}
-                aria-label={`${part.name}${side}`}
+                aria-label={`${part.name}${side}，${light?.label ?? "尚未標記"}`}
                 data-part-id={part.id}
                 onClick={() => handlePartClick(part.id, zone)}
                 className={[
