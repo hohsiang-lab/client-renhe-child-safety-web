@@ -35,7 +35,7 @@ export default function EndingPage() {
   const { play } = useAudioPlayer();
 
   useEffect(() => {
-    play("/audio/ending.mp3");
+    play("/audio/ending.mp3", { caption: "你好棒！今天學到了很多保護自己的方法！" });
   }, [play]);
 
   return (

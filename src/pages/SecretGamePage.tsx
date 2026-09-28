@@ -216,6 +216,7 @@ export default function SecretGamePage() {
           {selectedAnswer !== null && (
             <div role="status" className="paper-card bg-gray-50 mt-6 w-full p-4 text-center">
               <p className="mb-2 text-lg font-bold">
+                <span aria-hidden="true" className="mr-2">{isCorrect ? "✓" : "×"}</span>
                 {isCorrect ? "答對了！好棒！" : "答錯了，沒關係，一起看看說明吧！"}
               </p>
               <p className="sr-only">正確答案：{isBad ? "壞秘密" : "好秘密"}。{question.explanation}</p>

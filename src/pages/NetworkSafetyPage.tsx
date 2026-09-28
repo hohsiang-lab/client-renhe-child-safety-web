@@ -194,7 +194,10 @@ export default function NetworkSafetyPage() {
               role="status"
               aria-live="polite"
             >
-              <p className="mb-1 font-bold">{answerState === "correct" ? "答對了！" : "再想想看喔"}</p>
+              <p className="mb-1 font-bold">
+                <span aria-hidden="true" className="mr-2">{answerState === "correct" ? "✓" : "×"}</span>
+                {answerState === "correct" ? "答對了！" : "再想想看喔"}
+              </p>
               <p className="text-text-light text-sm leading-relaxed">{current.explanation}</p>
             </div>
           )}

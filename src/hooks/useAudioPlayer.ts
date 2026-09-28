@@ -3,10 +3,11 @@ import { useAudioContext } from "./useAudioContext";
 
 interface PlayOptions {
   onEnd?: () => void;
+  caption?: string;
 }
 
 export function useAudioPlayer() {
-  const { isMuted, currentAudioRef } = useAudioContext();
+  const { isMuted, currentAudioRef, setCurrentCaption } = useAudioContext();
   const localRef = useRef<HTMLAudioElement | null>(null);
   const onEndRef = useRef<(() => void) | undefined>(undefined);
   const isMutedRef = useRef(isMuted);
@@ -28,7 +29,8 @@ export function useAudioPlayer() {
     }
     setIsPlaying(false);
     setCurrentSrc(null);
-  }, [currentAudioRef]);
+    setCurrentCaption(null);
+  }, [currentAudioRef, setCurrentCaption]);
 
   const play = useCallback(
     (src: string, options?: PlayOptions) => {
@@ -39,6 +41,7 @@ export function useAudioPlayer() {
         currentAudioRef.current.currentTime = 0;
       }
       cleanup();
+      setCurrentCaption(options?.caption ?? null);
 
       const audio = new Audio(src);
       audio.muted = isMutedRef.current;
@@ -70,7 +73,7 @@ export function useAudioPlayer() {
         onEndRef.current?.();
       });
     },
-    [currentAudioRef, cleanup],
+    [currentAudioRef, cleanup, setCurrentCaption],
   );
 
   const pause = useCallback(() => {
@@ -113,8 +116,9 @@ export function useAudioPlayer() {
           currentAudioRef.current = null;
         }
       }
+      setCurrentCaption(null);
     };
-  }, [currentAudioRef]);
+  }, [currentAudioRef, setCurrentCaption]);
 
   return { play, pause, stop, resume, isPlaying, currentSrc };
 }

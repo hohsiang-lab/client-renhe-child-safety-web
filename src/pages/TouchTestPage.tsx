@@ -81,7 +81,9 @@ export default function TouchTestPage() {
     pulseCounter.current += 1;
     setPlayingPartId(partId);
     setPulseState({ partId, zone, color, key: `${partId}-${pulseCounter.current}` });
+    const light = BODY_TRAFFIC_LIGHTS.find((item) => item.id === color);
     play(AUDIO_MAP[doll][color], {
+      caption: light?.text,
       onEnd: () => setPlayingPartId((prev) => (prev === partId ? null : prev)),
     });
   }

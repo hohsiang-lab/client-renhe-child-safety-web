@@ -11,7 +11,7 @@ const homeModules = [
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { isMuted, currentAudioRef } = useAudioContext();
+  const { isMuted, currentAudioRef, setCurrentCaption } = useAudioContext();
   const prefersReducedMotion = useReducedMotion() ?? false;
 
   function handleStart() {
@@ -23,14 +23,8 @@ export default function HomePage() {
     const audio = new Audio("/audio/home-welcome.mp3");
     audio.muted = isMuted;
     currentAudioRef.current = audio;
-    const clearRef = () => {
-      if (currentAudioRef.current === audio) {
-        currentAudioRef.current = null;
-      }
-    };
-    audio.onended = clearRef;
-    audio.onerror = clearRef;
-    audio.play().catch(clearRef);
+    setCurrentCaption("一起來學習怎麼保護自己吧！");
+    audio.play().catch(() => {});
 
     navigate("/menu");
   }

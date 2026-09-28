@@ -21,7 +21,7 @@ export default function TrustedAdultPage() {
 
   useEffect(() => {
     if (phase !== "playing" || !current) return;
-    play(`/audio/trust-q${current.id}-scenario.mp3`);
+    play(`/audio/trust-q${current.id}-scenario.mp3`, { caption: current.scenario });
   }, [index, phase, current, play]);
 
   useEffect(() => {
@@ -34,7 +34,9 @@ export default function TrustedAdultPage() {
   const advance = useCallback(() => {
     if (index + 1 >= trustQuestions.length) {
       setPhase("complete");
-      play("/audio/trust-complete.mp3");
+      play("/audio/trust-complete.mp3", {
+        caption: "太棒了！你可以找一位你覺得安全、願意聽你說的大人幫忙。\n如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。",
+      });
     } else {
       setIndex((i) => i + 1);
       setPhase("playing");
@@ -48,18 +50,24 @@ export default function TrustedAdultPage() {
     setSelectedIndex(optionIndex);
     if (current.roleSelection || optionIndex === current.correctIndex) {
       setPhase("correct");
-      play(`/audio/trust-q${current.id}-correct.mp3`);
+      play(`/audio/trust-q${current.id}-correct.mp3`, {
+        caption: current.roleSelection
+          ? `你可以選一位可能願意幫助你的大人。\n${current.explanation}`
+          : "答對了！好棒！",
+      });
       timerRef.current = setTimeout(advance, current.roleSelection ? 4000 : 2200);
     } else {
       setPhase("wrong");
-      play(`/audio/trust-q${current.id}-wrong.mp3`);
+      play(`/audio/trust-q${current.id}-wrong.mp3`, {
+        caption: `再想想看喔～${current.explanation}`,
+      });
     }
   }
 
   function handleRetry() {
     setPhase("playing");
     setSelectedIndex(null);
-    play(`/audio/trust-q${current!.id}-scenario.mp3`);
+    play(`/audio/trust-q${current!.id}-scenario.mp3`, { caption: current!.scenario });
   }
 
   if (phase === "complete") {
@@ -135,6 +143,7 @@ export default function TrustedAdultPage() {
                   animate={{ opacity: 1, scale: 1 }}
                 >
                   <p className="text-text-main text-lg font-bold">
+                    <span aria-hidden="true" className="mr-2">✓</span>
                     {current.roleSelection
                       ? "你可以選一位可能願意幫助你的大人。"
                       : "答對了！好棒！"}
@@ -154,6 +163,7 @@ export default function TrustedAdultPage() {
                   animate={{ opacity: 1, y: 0 }}
                 >
                   <p className="text-text-main mb-1 text-center text-base font-bold">
+                    <span aria-hidden="true" className="mr-2">×</span>
                     再想想看喔～
                   </p>
                   <p className="text-text-light text-center text-sm">
