@@ -1,5 +1,17 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { bodyPartsV2 } from "../src/data/bodyPartsV2";
+
+async function tabUntilFocused(page: Page, target: Locator) {
+  for (let index = 0; index < 80; index += 1) {
+    await page.keyboard.press("Tab");
+    const isFocused = await target.evaluateAll((elements) =>
+      elements.some((element) => element === document.activeElement),
+    );
+    if (isFocused) return;
+  }
+
+  throw new Error("Keyboard focus did not reach the target after 80 Tab presses.");
+}
 
 // HO-776: 身體紅綠燈 v2 — 觸碰測試互動（語音回應）
 
@@ -61,6 +73,7 @@ async function expectLastAudioSrc(page: Page, expected: string) {
 
 async function setupTouchTest(page: Page, doll: "female" | "male" = "female") {
   await page.goto(`/body-traffic-light/mark?doll=${doll}`);
+  await expect(page.locator("button[data-part-id]").first()).toBeVisible();
   for (const part of bodyPartsV2) {
     // dispatchEvent bypasses browser hit-testing; required for parts whose click
     // zones overlap a higher-z-order zone (e.g. head ↔ face).
@@ -177,5 +190,43 @@ test.describe("觸碰測試頁 (HO-776)", () => {
     await resetAudioSpy(page);
     await page.locator('[data-part-id="private"]').first().click();
     await expectLastAudioSrc(page, "/audio/male-red-response.mp3");
+  });
+
+  test("紅黃綠燈以符號、文字與部位可存取名稱呈現", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await setupTouchTest(page);
+
+    const legend = page.getByRole("region", { name: "紅黃綠燈色提示" });
+    const descriptions = (await legend.locator("li").allTextContents()).map((text) =>
+      text.replace(/\s+/g, "").trim(),
+    );
+    expect(descriptions).toEqual([
+      "✓綠燈：普通朋友可以碰觸的地方",
+      "!黃燈：要先問我才能碰的地方",
+      "×紅燈：任何人都不能隨意碰的地方（除了家長和醫生）",
+    ]);
+    await expect(page.locator('button[data-part-id="hand"]').first()).toHaveAccessibleName(
+      /手.*綠燈/,
+    );
+    await expect(page.locator('button[data-part-id="private"]').first()).toHaveAccessibleName(
+      "私密處，紅燈",
+    );
+  });
+
+  test("鍵盤可聚焦部位、觸發提示並完成頁面流程", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await setupTouchTest(page);
+
+    const hand = page.locator('button[data-part-id="hand"]').first();
+    await tabUntilFocused(page, hand);
+    await expect(hand).toHaveCSS("outline-width", "3px");
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("touch-test-page")).toHaveAttribute("data-playing", "hand");
+
+    const done = page.getByTestId("done-btn");
+    await tabUntilFocused(page, done);
+    await expect(done).toHaveCSS("outline-width", "3px");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL("/ending");
   });
 });

@@ -211,3 +211,13 @@ test.describe("音效播放機制 (HO-613)", () => {
     ).toBe(true);
   });
 });
+
+test("HO-3183 Trusted Adult 390px viewport has no horizontal overflow", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/trusted-adult");
+
+  await expect(page.getByRole("heading", { name: "信任大人" })).toBeVisible();
+  await expect.poll(() =>
+    page.evaluate(() => document.documentElement.scrollWidth),
+  ).toBeLessThanOrEqual(390);
+});

@@ -1,5 +1,17 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator, type Page } from "@playwright/test";
 import { bodyPartsV2 } from "../src/data/bodyPartsV2";
+
+async function tabUntilFocused(page: Page, target: Locator) {
+  for (let index = 0; index < 80; index += 1) {
+    await page.keyboard.press("Tab");
+    const isFocused = await target.evaluateAll((elements) =>
+      elements.some((element) => element === document.activeElement),
+    );
+    if (isFocused) return;
+  }
+
+  throw new Error("Keyboard focus did not reach the target after 80 Tab presses.");
+}
 
 test.describe("身體標記頁 (HO-775)", () => {
   test("loads the customer female PNG and exposes ten logical body parts", async ({ page }) => {
@@ -178,6 +190,36 @@ test.describe("身體標記頁 (HO-775)", () => {
         expect(spec.size, `${doll} ${spec.key} size`).toBe(target!.size);
       }
     }
+  });
+
+  test("鍵盤可用 Space 標記十個部位、Enter 選燈並完成", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/body-traffic-light/mark?doll=female");
+    await expect(page.getByTestId("body-part-hit-layer")).toBeVisible();
+
+    for (const { id } of bodyPartsV2) {
+      const part = page.locator(`button[data-part-id="${id}"]`).first();
+      await tabUntilFocused(page, part);
+      await expect(part).toHaveCSS("outline-width", "3px");
+      await page.keyboard.press("Space");
+
+      const green = page.getByRole("button", { name: "綠燈", exact: true });
+      await expect(green).toBeEnabled();
+      await tabUntilFocused(page, green);
+      await expect(green).toHaveCSS("outline-width", "3px");
+      await page.keyboard.press("Enter");
+      await expect(part).toHaveAttribute("data-color", "green");
+    }
+
+    await expect(page.getByRole("progressbar", { name: "已標記部位" })).toHaveAttribute(
+      "aria-valuenow",
+      String(bodyPartsV2.length),
+    );
+    const complete = page.getByTestId("complete-btn");
+    await tabUntilFocused(page, complete);
+    await expect(complete).toHaveCSS("outline-width", "3px");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL("/body-traffic-light/touch-test");
   });
 
   test("all ten logical parts can be marked before continuing", async ({ page }) => {
