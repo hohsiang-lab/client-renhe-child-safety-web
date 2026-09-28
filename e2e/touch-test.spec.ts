@@ -85,6 +85,7 @@ async function setupTouchTest(page: Page, doll: "female" | "male" = "female") {
   await page.getByRole("button", { name: /紅燈/ }).click();
   await page.getByTestId("complete-btn").click();
   await expect(page).toHaveURL("/body-traffic-light/touch-test");
+  await expect(page.getByTestId("touch-test-page")).toBeVisible();
   await expect(page.getByTestId("doll-image")).toHaveAttribute(
     "src",
     `/images/${doll === "female" ? "紅綠燈女" : "紅綠燈難"}.png`,
