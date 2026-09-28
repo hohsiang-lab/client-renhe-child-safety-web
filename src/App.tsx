@@ -63,7 +63,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-        <AudioCaption />
+        {pathname !== "/menu" && <AudioCaption />}
         <MuteButton />
       </div>
     </AudioProvider>

@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAudioContext } from "../hooks/useAudioContext";
+import { AudioCaption } from "../components/AudioCaption";
 
 const modules = [
   {
@@ -36,7 +37,7 @@ const modules = [
 
 export default function MenuPage() {
   const navigate = useNavigate();
-  const { currentAudioRef, setCurrentCaption } = useAudioContext();
+  const { currentAudioRef, currentCaption, setCurrentCaption } = useAudioContext();
 
   useEffect(() => () => {
     const audio = currentAudioRef.current;
@@ -56,9 +57,13 @@ export default function MenuPage() {
         選擇主題
       </motion.h1>
 
-      <p className="menu-page__subtitle w-full max-w-[1160px]">
-        一起來學習怎麼保護自己吧！
-      </p>
+      {currentCaption ? (
+        <AudioCaption inline />
+      ) : (
+        <p className="menu-page__subtitle w-full max-w-[1160px]">
+          一起來學習怎麼保護自己吧！
+        </p>
+      )}
 
       <div className="menu-page__grid w-full max-w-[1160px]">
         {modules.map((mod, i) => {
