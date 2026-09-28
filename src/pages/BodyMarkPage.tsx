@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
 import { bodyPartsV2 } from "../data/bodyPartsV2";
 import {
   useBodyTrafficLightStore,
@@ -384,21 +383,15 @@ export default function BodyMarkPage() {
             })}
           </div>
 
-          <AnimatePresence>
-            {isComplete && (
-              <motion.button
-                data-testid="complete-btn"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                onClick={() => navigate("/body-traffic-light/touch-test")}
-                className="mt-3 min-h-[52px] w-full rounded-[15px] bg-green-safe-dark px-5 py-3 text-base font-bold text-white shadow-md transition-colors hover:brightness-95"
-              >
-                完成設定
-              </motion.button>
-            )}
-          </AnimatePresence>
+          {isComplete && (
+            <button
+              data-testid="complete-btn"
+              onClick={() => navigate("/body-traffic-light/touch-test")}
+              className="mt-3 min-h-[52px] w-full rounded-[15px] bg-green-safe-dark px-5 py-3 text-base font-bold text-white shadow-md transition-colors hover:brightness-95"
+            >
+              完成設定
+            </button>
+          )}
         </section>
       </main>
     </div>

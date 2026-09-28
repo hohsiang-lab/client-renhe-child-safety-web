@@ -28,6 +28,19 @@ body {
   min-height: 100dvh;
 }
 
+@layer base {
+  :where(button, a, input, select, textarea, [role="button"]) {
+    min-width: 48px;
+    min-height: 48px;
+  }
+}
+
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 3px solid #23665d;
+  outline-offset: 3px;
+  transition: none;
+}
+
 :root {
   --paper-ink: #4a3c4d;
   --paper-purple: #70517e;
