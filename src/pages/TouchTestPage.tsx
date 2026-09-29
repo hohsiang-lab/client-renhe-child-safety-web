@@ -42,6 +42,12 @@ const AUDIO_MAP: Record<DollType, Record<LightColor, string>> = {
   },
 };
 
+const TOUCH_RESPONSE_CAPTIONS: Record<LightColor, string> = {
+  red: "不可以摸我！",
+  yellow: "你要先問我喔！",
+  green: "我們是好朋友！",
+};
+
 const ALL_AUDIO_SOURCES = Object.values(AUDIO_MAP).flatMap((audioByColor) =>
   Object.values(audioByColor),
 );
@@ -81,9 +87,8 @@ export default function TouchTestPage() {
     pulseCounter.current += 1;
     setPlayingPartId(partId);
     setPulseState({ partId, zone, color, key: `${partId}-${pulseCounter.current}` });
-    const light = BODY_TRAFFIC_LIGHTS.find((item) => item.id === color);
     play(AUDIO_MAP[doll][color], {
-      caption: light?.text,
+      caption: TOUCH_RESPONSE_CAPTIONS[color],
       onEnd: () => setPlayingPartId((prev) => (prev === partId ? null : prev)),
     });
   }
