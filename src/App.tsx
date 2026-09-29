@@ -47,6 +47,7 @@ export default function App() {
     <AudioProvider>
       <div className={`mx-auto flow-root min-h-dvh ${showBrandHeader ? "max-w-[1160px]" : "max-w-[960px]"}`}>
         {showBrandHeader && <SiteHeader />}
+        {pathname === "/ending" && <AudioCaption inline />}
         <div className={showBrandHeader ? "site-content site-content--with-header" : "site-content"}>
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -63,7 +64,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-        {pathname !== "/menu" && <AudioCaption />}
+        {pathname !== "/menu" && pathname !== "/ending" && <AudioCaption />}
         <MuteButton />
       </div>
     </AudioProvider>

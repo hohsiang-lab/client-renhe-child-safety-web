@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 import { BODY_TRAFFIC_LIGHTS as LIGHTS } from "../data/bodyTrafficLights";
+import { useBodyTrafficLightStore } from "../stores/useBodyTrafficLightStore";
 
 const popIn = {
   initial: { scale: 0.5, opacity: 0 },
@@ -13,9 +14,11 @@ const popIn = {
 export default function BodyTrafficLightPage() {
   const navigate = useNavigate();
   const { play, stop } = useAudioPlayer();
+  const reset = useBodyTrafficLightStore((state) => state.reset);
   const [visibleCount, setVisibleCount] = useState(0);
 
   useEffect(() => {
+    reset();
     let cancelled = false;
 
     function playNext(index: number) {
@@ -35,11 +38,10 @@ export default function BodyTrafficLightPage() {
       cancelled = true;
       stop();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [play, reset, stop]);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 sm:px-6 md:py-10">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 max-md:pb-40 sm:px-6 md:py-10">
       <motion.h1
         className="paper-card mb-6 bg-white/80 px-6 py-3 text-center text-2xl font-bold sm:mb-8 sm:px-8 sm:py-4 sm:text-3xl"
         initial={{ opacity: 0, y: -10 }}
@@ -48,6 +50,21 @@ export default function BodyTrafficLightPage() {
         身體紅綠燈{" "}
         <span className="traffic-signal-icon" aria-hidden="true">🚦</span>
       </motion.h1>
+
+      <div
+        className="bg-warm-bg mb-4 h-2 w-full max-w-lg overflow-hidden rounded-full"
+        role="progressbar"
+        aria-label="身體紅綠燈重點介紹進度"
+        aria-valuemin={0}
+        aria-valuemax={LIGHTS.length}
+        aria-valuenow={visibleCount}
+        aria-valuetext={`${visibleCount} / ${LIGHTS.length} 個重點`}
+      >
+        <div
+          className="bg-primary h-full rounded-full transition-[width]"
+          style={{ width: `${(visibleCount / LIGHTS.length) * 100}%` }}
+        />
+      </div>
 
       <div className="flex w-full max-w-lg flex-col gap-4 sm:gap-5">
         {LIGHTS.map((light, i) => (

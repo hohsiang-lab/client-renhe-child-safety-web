@@ -9,6 +9,7 @@ import {
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 
 type Phase = "playing" | "wrong" | "correct" | "complete";
+type AnswerResult = boolean | "unscored" | null;
 
 export default function TrustedAdultPage() {
   const navigate = useNavigate();
@@ -16,8 +17,13 @@ export default function TrustedAdultPage() {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [answerResults, setAnswerResults] = useState<AnswerResult[]>(
+    () => Array(trustQuestions.length).fill(null),
+  );
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current: TrustQuestion | undefined = trustQuestions[index];
+  const answeredCount = answerResults.filter((result) => result !== null).length;
+  const correctCount = answerResults.filter((result) => result === true).length;
 
   useEffect(() => {
     if (phase !== "playing" || !current) return;
@@ -48,7 +54,19 @@ export default function TrustedAdultPage() {
     if (phase === "correct" || !current) return;
     stop();
     setSelectedIndex(optionIndex);
-    if (current.roleSelection || optionIndex === current.correctIndex) {
+    const isCorrect = current.roleSelection || optionIndex === current.correctIndex;
+    const answerResult: AnswerResult = current.roleSelection ? "unscored" : isCorrect;
+    setAnswerResults((results) => {
+      if (
+        results[index] === true ||
+        results[index] === "unscored" ||
+        (results[index] === false && answerResult === false)
+      ) return results;
+      const nextResults = [...results];
+      nextResults[index] = answerResult;
+      return nextResults;
+    });
+    if (isCorrect) {
       setPhase("correct");
       play(`/audio/trust-q${current.id}-correct.mp3`, {
         caption: current.roleSelection
@@ -70,28 +88,67 @@ export default function TrustedAdultPage() {
     play(`/audio/trust-q${current!.id}-scenario.mp3`, { caption: current!.scenario });
   }
 
+  function handleReplay() {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    stop();
+    setIndex(0);
+    setPhase("playing");
+    setSelectedIndex(null);
+    setAnswerResults(Array(trustQuestions.length).fill(null));
+  }
+
   if (phase === "complete") {
     return (
       <motion.div
-        className="flex min-h-dvh flex-col items-center justify-center px-6 py-8 text-center"
+        className="flex min-h-dvh flex-col items-center justify-start px-6 py-8 pb-20 text-center max-[420px]:pb-[calc(10rem+env(safe-area-inset-bottom))]"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="paper-card w-full max-w-3xl bg-warm-card p-6 sm:p-8">
+        <div className="paper-card w-full max-w-3xl bg-warm-card p-4 sm:p-8">
           <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
-          <p className="text-text-light mb-8 text-lg leading-relaxed">
-            你可以找一位你覺得安全、願意聽你說的大人幫忙。<br />
-            如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
-          </p>
-          <motion.button
-            onClick={() => navigate("/menu")}
-            className="paper-button bg-primary hover:bg-primary-hover cursor-pointer px-10 py-4 text-lg font-bold text-text-main"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            回到主選單
-          </motion.button>
+          <section aria-labelledby="trusted-results-title" className="paper-card mb-5 bg-white p-4 text-left">
+            <h2 id="trusted-results-title" className="mb-2 text-lg font-bold">本次練習</h2>
+            <div className="grid grid-cols-2 gap-2 text-sm sm:text-base">
+              <p>已答題 {answeredCount} 題</p>
+              <p>答對 {correctCount} 題</p>
+              {answerResults.includes("unscored") && (
+                <p className="text-text-light col-span-2 text-xs">求助對象選擇不列入答對題數</p>
+              )}
+            </div>
+          </section>
+          <section aria-labelledby="trusted-review-title" className="paper-card mb-3 bg-warm-bg p-4 text-left">
+            <h2 id="trusted-review-title" className="mb-2 text-lg font-bold">重點回顧</h2>
+            <p className="text-text-light leading-relaxed">
+              你可以找一位你覺得安全、願意聽你說的大人幫忙。如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
+            </p>
+          </section>
+          <div className="flex flex-col gap-3 min-[360px]:flex-row min-[360px]:gap-2">
+            <motion.button
+              type="button"
+              onClick={handleReplay}
+              className="paper-button bg-primary hover:bg-primary-hover flex-1 cursor-pointer px-3 py-3 text-base font-bold text-text-main sm:px-8 sm:py-4 sm:text-lg"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              再玩一次
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => {
+                stop();
+                navigate("/menu");
+              }}
+              className="paper-button bg-warm-bg hover:bg-warm-muted flex-1 cursor-pointer px-3 py-3 text-base font-bold text-text-main sm:px-8 sm:py-4 sm:text-lg"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              回到主選單
+            </motion.button>
+          </div>
         </div>
       </motion.div>
     );
@@ -111,7 +168,14 @@ export default function TrustedAdultPage() {
           </p>
         </motion.div>
 
-        <div className="bg-warm-bg mb-2 h-2 w-full overflow-hidden rounded-full">
+        <div
+          className="bg-warm-bg mb-2 h-2 w-full overflow-hidden rounded-full"
+          role="progressbar"
+          aria-label="信任大人答題進度"
+          aria-valuemin={1}
+          aria-valuemax={trustQuestions.length}
+          aria-valuenow={index + 1}
+        >
           <motion.div
             className="bg-primary h-full rounded-full"
             initial={{ width: 0 }}
