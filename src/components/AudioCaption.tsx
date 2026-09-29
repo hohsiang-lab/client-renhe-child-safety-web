@@ -12,7 +12,7 @@ export function AudioCaption({ inline = false }: AudioCaptionProps) {
       aria-label="語音字幕"
       className={inline
         ? "paper-card my-3 flex w-full max-w-[1160px] items-center gap-3 bg-warm-card px-4 py-3 text-text-main shadow-lg"
-        : "paper-card fixed bottom-4 left-3 right-44 z-40 mx-auto flex max-h-[45dvh] max-w-2xl items-center gap-3 overflow-y-auto bg-warm-card px-4 py-3 text-text-main shadow-lg max-[420px]:right-3 max-[420px]:bottom-20 sm:right-48"}
+        : "paper-card fixed bottom-4 left-3 right-44 z-40 mx-auto flex max-h-[45dvh] max-w-2xl items-center gap-3 overflow-y-auto bg-warm-card px-4 py-3 text-text-main shadow-lg max-[640px]:right-3 max-[640px]:bottom-20 sm:right-48"}
     >
       <p
         data-testid="audio-caption"
