@@ -12,12 +12,32 @@ export default function NetworkSafetyPage() {
   const [index, setIndex] = useState(0);
   const [answerState, setAnswerState] = useState<AnswerState>("unanswered");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [answerResults, setAnswerResults] = useState<Array<boolean | null>>(
+    () => Array(networkSafetyQuestions.length).fill(null),
+  );
   const current = networkSafetyQuestions[index]!;
+  const answeredCount = answerResults.filter((result) => result !== null).length;
+  const correctCount = answerResults.filter((result) => result === true).length;
+
+  function startModule() {
+    setIndex(0);
+    setAnswerState("unanswered");
+    setSelectedIndex(null);
+    setAnswerResults(Array(networkSafetyQuestions.length).fill(null));
+    setScreen("question");
+  }
 
   function handleAnswer(optionIndex: number) {
     if (answerState === "correct") return;
     setSelectedIndex(optionIndex);
-    setAnswerState(optionIndex === current.correctIndex ? "correct" : "wrong");
+    const isCorrect = optionIndex === current.correctIndex;
+    setAnswerResults((results) => {
+      if (results[index] === true || (results[index] === false && !isCorrect)) return results;
+      const nextResults = [...results];
+      nextResults[index] = isCorrect;
+      return nextResults;
+    });
+    setAnswerState(isCorrect ? "correct" : "wrong");
   }
 
   function handleRetry() {
@@ -69,7 +89,7 @@ export default function NetworkSafetyPage() {
           </div>
           <motion.button
             type="button"
-            onClick={() => setScreen("question")}
+            onClick={startModule}
             className="paper-card bg-primary cursor-pointer px-10 py-4 text-lg font-bold text-text-main transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
@@ -96,6 +116,21 @@ export default function NetworkSafetyPage() {
           <p className="text-text-light mb-6 text-center text-base leading-relaxed">
             遇到這些事不是你的錯。請找信任的大人陪你一起求助；不要下載、另存或轉傳私密影像。
           </p>
+
+          <section aria-labelledby="network-results-title" className="paper-card mb-5 bg-warm-card p-4">
+            <h2 id="network-results-title" className="mb-2 text-lg font-bold">本次任務</h2>
+            <p>已答題 {answeredCount} 題</p>
+            <p>答對 {correctCount} 題</p>
+          </section>
+
+          <section aria-labelledby="network-review-title" className="paper-card mb-5 bg-warm-bg p-4 text-left">
+            <h2 id="network-review-title" className="mb-2 text-lg font-bold">重點回顧</h2>
+            <ul className="list-inside list-disc space-y-2 text-sm leading-relaxed">
+              <li>不傳私密照片或個人資料，也不提供帳號、密碼或驗證碼。</li>
+              <li>收到私密影像不要下載、保存或轉傳。</li>
+              <li>遇到威脅時，不付錢、不再傳；保留訊息線索，找信任的大人幫忙。</li>
+            </ul>
+          </section>
 
           <section className="paper-card bg-warm-card p-6" aria-labelledby="help-title">
             <h2 id="help-title" className="mb-4 text-xl font-bold">需要幫忙時</h2>
@@ -141,15 +176,26 @@ export default function NetworkSafetyPage() {
             </div>
           </section>
 
-          <motion.button
-            type="button"
-            onClick={() => navigate("/menu")}
-            className="paper-button bg-primary mt-6 w-full cursor-pointer px-8 py-4 text-lg font-bold text-text-main"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            回到主選單
-          </motion.button>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <motion.button
+              type="button"
+              onClick={startModule}
+              className="paper-button bg-primary hover:bg-primary-hover flex-1 cursor-pointer px-8 py-4 text-lg font-bold text-text-main"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              再玩一次
+            </motion.button>
+            <motion.button
+              type="button"
+              onClick={() => navigate("/menu")}
+              className="paper-button bg-warm-bg hover:bg-warm-muted flex-1 cursor-pointer px-8 py-4 text-lg font-bold text-text-main"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              回到主選單
+            </motion.button>
+          </div>
         </div>
       </div>
     );

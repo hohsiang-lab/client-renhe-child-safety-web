@@ -6,7 +6,7 @@ import type { SecretQuestion } from "../data/secrets";
 import { trustedAdultCards } from "../data/trustedAdult";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
 
-type Phase = "intro" | "question" | "trusted-adults";
+type Phase = "intro" | "question" | "trusted-adults" | "complete";
 
 export default function SecretGamePage() {
   const navigate = useNavigate();
@@ -14,6 +14,9 @@ export default function SecretGamePage() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<SecretQuestion["answer"] | null>(null);
+  const [answerResults, setAnswerResults] = useState<Array<boolean | null>>(
+    () => Array(secretQuestions.length).fill(null),
+  );
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,20 +24,32 @@ export default function SecretGamePage() {
   }, [stop]);
 
   const question = secretQuestions[questionIndex];
+  const answeredCount = answerResults.filter((result) => result !== null).length;
+  const correctCount = answerResults.filter((result) => result === true).length;
 
   function startGame() {
     setQuestionIndex(0);
     setSelectedAnswer(null);
+    setAnswerResults(Array(secretQuestions.length).fill(null));
     setPhase("question");
   }
 
   function answer(answer: SecretQuestion["answer"]) {
     if (selectedAnswer !== null) return;
     setSelectedAnswer(answer);
+    setAnswerResults((results) => {
+      const nextResults = [...results];
+      nextResults[questionIndex] = answer === question.answer;
+      return nextResults;
+    });
   }
 
   function nextQuestion() {
-    if (selectedAnswer === null || questionIndex >= secretQuestions.length - 1) return;
+    if (selectedAnswer === null) return;
+    if (questionIndex === secretQuestions.length - 1) {
+      setPhase("complete");
+      return;
+    }
     setQuestionIndex((index) => index + 1);
     setSelectedAnswer(null);
   }
@@ -134,6 +149,48 @@ export default function SecretGamePage() {
     );
   }
 
+  if (phase === "complete") {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-8">
+        <div className="paper-card w-full max-w-2xl bg-warm-card p-6 sm:p-8">
+          <h1 className="mb-3 text-center text-2xl font-bold sm:text-3xl">太棒了！秘密遊戲完成</h1>
+          <p className="text-text-light mb-6 text-center leading-relaxed">
+            每一次練習都有收穫。遇到讓你害怕或不舒服的秘密，可以說不要、離開，並告訴信任的大人。
+          </p>
+
+          <section aria-labelledby="secret-results-title" className="paper-card mb-5 bg-white p-4">
+            <h2 id="secret-results-title" className="mb-2 text-lg font-bold">本次練習</h2>
+            <p>已答題 {answeredCount} 題</p>
+            <p>答對 {correctCount} 題</p>
+          </section>
+
+          <section aria-labelledby="secret-review-title" className="paper-card bg-warm-bg p-4">
+            <h2 id="secret-review-title" className="mb-2 text-lg font-bold">重點回顧</h2>
+            <ul className="list-inside list-disc space-y-2 leading-relaxed">
+              <li>好秘密讓人開心、安心，不會造成傷害或讓人不舒服。</li>
+              <li>遇到讓你害怕或不舒服的秘密，可以說不要、離開，並告訴信任的大人。</li>
+            </ul>
+          </section>
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={startGame}
+              className="paper-button bg-primary hover:bg-primary-hover flex-1 cursor-pointer px-6 py-3 font-bold text-text-main"
+            >
+              再玩一次
+            </button>
+            <button
+              onClick={returnToMenu}
+              className="paper-button bg-warm-bg hover:bg-warm-muted flex-1 cursor-pointer px-6 py-3 font-bold text-text-main"
+            >
+              回到主選單
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!question) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
@@ -156,6 +213,19 @@ export default function SecretGamePage() {
   return (
     <div className="flex min-h-dvh flex-col items-center px-6 py-8">
       <h1 className="mb-6 w-full max-w-6xl text-[clamp(31px,4vw,42px)] leading-[1.2] font-bold">秘密遊戲</h1>
+      <div
+        className="bg-warm-bg mb-5 h-2 w-full max-w-6xl overflow-hidden rounded-full"
+        role="progressbar"
+        aria-label="秘密遊戲進度"
+        aria-valuemin={1}
+        aria-valuemax={secretQuestions.length}
+        aria-valuenow={questionIndex + 1}
+      >
+        <div
+          className="bg-primary h-full rounded-full transition-[width]"
+          style={{ width: `${((questionIndex + 1) / secretQuestions.length) * 100}%` }}
+        />
+      </div>
       <div className="grid w-full max-w-6xl grid-cols-1 items-stretch gap-4 lg:grid-cols-2">
         <section
           aria-label="秘密情境"
@@ -239,13 +309,12 @@ export default function SecretGamePage() {
               </button>
             </>
           )}
-          {questionIndex < secretQuestions.length - 1 && (
+          {selectedAnswer !== null && (
             <button
               onClick={nextQuestion}
-              disabled={selectedAnswer === null}
-              className="paper-button bg-primary hover:bg-primary-hover mt-6 cursor-pointer px-10 py-3 font-bold text-text-main disabled:cursor-not-allowed disabled:bg-warm-muted disabled:hover:bg-warm-muted"
+              className="paper-button bg-primary hover:bg-primary-hover mt-6 cursor-pointer px-10 py-3 font-bold text-text-main"
             >
-              下一題
+              {questionIndex === secretQuestions.length - 1 ? "完成遊戲" : "下一題"}
             </button>
           )}
           <button

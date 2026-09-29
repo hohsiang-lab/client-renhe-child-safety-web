@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { BODY_TRAFFIC_LIGHTS } from "../data/bodyTrafficLights";
+import { bodyPartsV2 } from "../data/bodyPartsV2";
+import { useBodyTrafficLightStore } from "../stores/useBodyTrafficLightStore";
 
 const HELP_RESOURCES = [
   {
@@ -32,11 +35,24 @@ const HELP_RESOURCES = [
 
 export default function EndingPage() {
   const navigate = useNavigate();
-  const { play } = useAudioPlayer();
+  const { play, stop } = useAudioPlayer();
+  const marks = useBodyTrafficLightStore((state) => state.marks);
+  const markedCount = Object.keys(marks).length;
 
   useEffect(() => {
     play("/audio/ending.mp3", { caption: "你好棒！今天學到了很多保護自己的方法！" });
-  }, [play]);
+    return stop;
+  }, [play, stop]);
+
+  function replayBodyMark() {
+    stop();
+    navigate("/body-traffic-light");
+  }
+
+  function returnToMenu() {
+    stop();
+    navigate("/menu");
+  }
 
   return (
     <div className="relative min-h-dvh">
@@ -63,6 +79,23 @@ export default function EndingPage() {
           >
             今天學到了很多保護自己的方法！
           </motion.p>
+
+          <section aria-labelledby="body-mark-results-title" className="paper-card mb-5 bg-white p-4 text-left">
+            <h2 id="body-mark-results-title" className="mb-2 text-lg font-bold">標記進度</h2>
+            <p>已完成標記 {markedCount} / {bodyPartsV2.length} 個部位</p>
+          </section>
+
+          <section aria-labelledby="body-mark-review-title" className="paper-card mb-6 bg-warm-bg p-4 text-left">
+            <h2 id="body-mark-review-title" className="mb-3 text-lg font-bold">重點回顧</h2>
+            <ul className="space-y-2 leading-relaxed">
+              {BODY_TRAFFIC_LIGHTS.map((light) => (
+                <li key={light.id} className="flex items-start gap-2">
+                  <span aria-hidden="true" className="shrink-0">{light.emoji}</span>
+                  <p><strong>{light.label}：</strong>{light.text}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
 
           <motion.div
             className="w-full"
@@ -101,20 +134,20 @@ export default function EndingPage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <motion.button
-            onClick={() => navigate("/menu")}
+            onClick={replayBodyMark}
             className="paper-button bg-primary hover:bg-primary-hover cursor-pointer px-10 py-4 text-xl font-bold text-text-main"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
           >
-            回去再玩一次
+            再玩一次
           </motion.button>
           <motion.button
-            onClick={() => navigate("/")}
+            onClick={returnToMenu}
             className="paper-button cursor-pointer bg-warm-card px-10 py-4 text-xl font-bold"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
           >
-            回到首頁
+            回到主選單
           </motion.button>
         </motion.div>
       </motion.div>
