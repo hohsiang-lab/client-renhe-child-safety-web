@@ -103,7 +103,7 @@ export default function TrustedAdultPage() {
   if (phase === "complete") {
     return (
       <motion.div
-        className="flex min-h-dvh flex-col items-center justify-start px-6 py-8 pb-20 text-center max-[420px]:pb-[calc(10rem+env(safe-area-inset-bottom))]"
+        className="flex min-h-dvh flex-col items-center justify-start px-6 py-8 pb-28 text-center max-[420px]:pb-[calc(17rem+env(safe-area-inset-bottom))]"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
