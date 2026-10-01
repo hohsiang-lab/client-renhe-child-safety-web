@@ -1,0 +1,89 @@
+name: Publish staging image
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-image-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AWS_REGION: ap-northeast-1
+      REGISTRY: 841162685101.dkr.ecr.ap-northeast-1.amazonaws.com
+      IMAGE_NAME: client-renhe-child-safety-web-staging
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Confirm source revision is still the latest main
+        id: source_revision
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REVISION: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          main_revision="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          if [ "$main_revision" = "$SOURCE_REVISION" ]; then
+            echo "current_main=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "current_main=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping superseded revision $SOURCE_REVISION; main is $main_revision."
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+
+      - name: Configure AWS credentials
+        if: steps.source_revision.outputs.current_main == 'true'
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a # v4
+        with:
+          role-to-assume: arn:aws:iam::841162685101:role/production-github-actions-ecr-push
+          role-session-name: staging-image-${{ github.run_id }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-duration-seconds: 900
+
+      - name: Log in to staging ECR
+        if: steps.source_revision.outputs.current_main == 'true'
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
+
+      - name: Build and publish source revision tag plus latest
+        id: image
+        if: steps.source_revision.outputs.current_main == 'true'
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.workflow_run.head_sha }}
+
+      - name: Record published image identity
+        if: steps.source_revision.outputs.current_main == 'true'
+        env:
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          IMAGE_DIGEST: ${{ steps.image.outputs.digest }}
+          SOURCE_REVISION: ${{ github.event.workflow_run.head_sha }}
+          CI_RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          echo "CI run: $CI_RUN_ID" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Source revision: `%s`\n' "$SOURCE_REVISION" >> "$GITHUB_STEP_SUMMARY"
+          printf 'Image: `%s@%s`\n' "$IMAGE" "$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"
