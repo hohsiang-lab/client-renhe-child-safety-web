@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -20,7 +20,6 @@ export default function TrustedAdultPage() {
   const [answerResults, setAnswerResults] = useState<AnswerResult[]>(
     () => Array(trustQuestions.length).fill(null),
   );
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const current: TrustQuestion | undefined = trustQuestions[index];
   const answeredCount = answerResults.filter((result) => result !== null).length;
   const correctCount = answerResults.filter((result) => result === true).length;
@@ -33,7 +32,6 @@ export default function TrustedAdultPage() {
   useEffect(() => {
     return () => {
       stop();
-      if (timerRef.current) clearTimeout(timerRef.current);
     };
   }, [stop]);
 
@@ -69,11 +67,11 @@ export default function TrustedAdultPage() {
     if (isCorrect) {
       setPhase("correct");
       play(`/audio/trust-q${current.id}-correct.mp3`, {
+        onEnd: advance,
         caption: current.roleSelection
           ? `你可以選一位可能願意幫助你的大人。\n${current.explanation}`
           : "答對了！好棒！",
       });
-      timerRef.current = setTimeout(advance, current.roleSelection ? 4000 : 2200);
     } else {
       setPhase("wrong");
       play(`/audio/trust-q${current.id}-wrong.mp3`, {
@@ -89,10 +87,6 @@ export default function TrustedAdultPage() {
   }
 
   function handleReplay() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
     stop();
     setIndex(0);
     setPhase("playing");
