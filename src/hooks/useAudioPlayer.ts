@@ -48,30 +48,22 @@ export function useAudioPlayer() {
       localRef.current = audio;
       currentAudioRef.current = audio;
 
-      audio.onended = () => {
-        if (localRef.current !== audio) return;
+      let completed = false;
+      const complete = () => {
+        if (localRef.current !== audio || completed) return;
+        completed = true;
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
       };
-
-      audio.onerror = () => {
-        if (localRef.current !== audio) return;
-        setIsPlaying(false);
-        setCurrentSrc(null);
-        onEndRef.current?.();
-      };
+      audio.onended = complete;
+      audio.onerror = complete;
 
       audio.play().then(() => {
-        if (localRef.current !== audio) return;
+        if (localRef.current !== audio || completed) return;
         setIsPlaying(true);
         setCurrentSrc(src);
-      }).catch(() => {
-        if (localRef.current !== audio) return;
-        setIsPlaying(false);
-        setCurrentSrc(null);
-        onEndRef.current?.();
-      });
+      }).catch(complete);
     },
     [currentAudioRef, cleanup, setCurrentCaption],
   );
