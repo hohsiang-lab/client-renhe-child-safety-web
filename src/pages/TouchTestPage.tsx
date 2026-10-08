@@ -195,7 +195,7 @@ export default function TouchTestPage() {
       <button
         data-testid="done-btn"
         onClick={() => navigate("/ending")}
-        className="fixed bottom-6 right-6 rounded-full bg-green-500 px-6 py-3 text-lg font-bold text-white shadow-lg hover:bg-green-600 active:scale-95"
+        className="touch-test-done-cta fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] right-6 rounded-full bg-green-500 px-6 py-3 text-lg font-bold text-white shadow-lg hover:bg-green-600 active:scale-95"
       >
         我學會了！✅
       </button>

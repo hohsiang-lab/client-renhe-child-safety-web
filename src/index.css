@@ -28,6 +28,15 @@ body {
   min-height: 100dvh;
 }
 
+@media (max-width: 360px), (max-height: 360px) and (max-width: 430px) {
+  .touch-test-done-cta {
+    left: max(env(safe-area-inset-left), 8px);
+    right: max(env(safe-area-inset-right), 8px);
+    bottom: calc(0.25rem + env(safe-area-inset-bottom));
+    padding: 0.25rem 0.75rem;
+  }
+}
+
 @layer base {
   :where(button, a, input, select, textarea, [role="button"]) {
     min-width: 48px;
