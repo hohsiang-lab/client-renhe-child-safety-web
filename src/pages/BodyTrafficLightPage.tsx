@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useAudioContext } from "../hooks/useAudioContext";
+import { AudioCaption } from "../components/AudioCaption";
 import { BODY_TRAFFIC_LIGHTS as LIGHTS } from "../data/bodyTrafficLights";
 import { useBodyTrafficLightStore } from "../stores/useBodyTrafficLightStore";
 
@@ -13,9 +15,14 @@ const popIn = {
 
 export default function BodyTrafficLightPage() {
   const navigate = useNavigate();
-  const { play, stop } = useAudioPlayer();
+  const { play, stop, isPlaying, currentSrc } = useAudioPlayer();
+  const { currentCaption, isMuted, replayCurrentAudio } = useAudioContext();
   const reset = useBodyTrafficLightStore((state) => state.reset);
   const [visibleCount, setVisibleCount] = useState(0);
+  const activeLight = LIGHTS[visibleCount - 1];
+  const matchingLight = activeLight?.text === currentCaption ? activeLight : undefined;
+  const currentlyPlayingLight =
+    matchingLight && isPlaying && currentSrc === matchingLight.audio ? matchingLight : undefined;
 
   useEffect(() => {
     reset();
@@ -41,7 +48,7 @@ export default function BodyTrafficLightPage() {
   }, [play, reset, stop]);
 
   return (
-    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 max-md:pb-40 sm:px-6 md:py-10">
+    <div className="flex min-h-dvh flex-col items-center justify-center px-4 py-8 sm:px-6 md:py-10">
       <motion.h1
         className="paper-card mb-6 bg-white/80 px-6 py-3 text-center text-2xl font-bold sm:mb-8 sm:px-8 sm:py-4 sm:text-3xl"
         initial={{ opacity: 0, y: -10 }}
@@ -72,7 +79,12 @@ export default function BodyTrafficLightPage() {
             {visibleCount > i && (
               <motion.div
                 key={light.id}
-                className="paper-card flex items-center gap-4 bg-white/80 px-5 py-4"
+                className={`paper-card grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-2 bg-white/80 px-4 py-4 sm:gap-x-4 sm:px-5 ${
+                  currentlyPlayingLight?.id === light.id
+                    ? "ring-4 ring-primary"
+                    : ""
+                }`}
+                aria-current={currentlyPlayingLight?.id === light.id ? "true" : undefined}
                 {...popIn}
               >
                 <span
@@ -82,12 +94,31 @@ export default function BodyTrafficLightPage() {
                 >
                   {light.emoji}
                 </span>
-                <p className="text-base font-medium leading-snug">{light.text}</p>
+                <div className="min-w-0">
+                  <p className="text-base font-medium leading-snug">{light.text}</p>
+                  {currentlyPlayingLight?.id === light.id && (
+                    <p role="status" aria-live="polite" className="mt-2 font-bold">
+                      {isMuted ? "已靜音播放中" : "正在朗讀"}
+                    </p>
+                  )}
+                </div>
+                {matchingLight?.id === light.id && (
+                  <button
+                    type="button"
+                    onClick={replayCurrentAudio}
+                    aria-label={`重播${light.label}說明`}
+                    className="col-start-2 min-h-12 justify-self-start rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  >
+                    重播
+                  </button>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
         ))}
       </div>
+
+      {currentCaption && !matchingLight && <AudioCaption inline />}
 
       <AnimatePresence>
         {visibleCount === LIGHTS.length && (

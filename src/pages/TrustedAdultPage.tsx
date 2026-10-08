@@ -7,13 +7,27 @@ import {
   type TrustQuestion,
 } from "../data/trustedAdult";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useAudioContext } from "../hooks/useAudioContext";
+import { AudioCaption } from "../components/AudioCaption";
 
 type Phase = "playing" | "wrong" | "correct" | "complete";
 type AnswerResult = boolean | "unscored" | null;
 
+const trustCompletionSrc = "/audio/trust-complete.mp3";
+const trustCompletionCaption =
+  "太棒了！你可以找一位你覺得安全、願意聽你說的大人幫忙。\n如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。";
+
+function getAnswerFeedbackCaption(question: TrustQuestion, isCorrect: boolean) {
+  if (question.roleSelection) {
+    return `你可以選一位可能願意幫助你的大人。\n${question.explanation}`;
+  }
+  return isCorrect ? "答對了！好棒！" : `再想想看喔～${question.explanation}`;
+}
+
 export default function TrustedAdultPage() {
   const navigate = useNavigate();
-  const { play, stop } = useAudioPlayer();
+  const { play, stop, isPlaying, currentSrc, currentAudioSrc } = useAudioPlayer();
+  const { currentCaption, isMuted, replayCurrentAudio } = useAudioContext();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -21,6 +35,41 @@ export default function TrustedAdultPage() {
     () => Array(trustQuestions.length).fill(null),
   );
   const current: TrustQuestion | undefined = trustQuestions[index];
+  const scenarioSrc = current ? `/audio/trust-q${current.id}-scenario.mp3` : null;
+  const matchingScenario =
+    phase === "playing" && current?.scenario === currentCaption &&
+    currentAudioSrc === scenarioSrc
+      ? current
+      : undefined;
+  const currentlyPlayingScenario = Boolean(
+    matchingScenario && isPlaying && currentSrc === scenarioSrc,
+  );
+  const feedbackCaption =
+    current && (phase === "wrong" || phase === "correct")
+      ? getAnswerFeedbackCaption(current, phase === "correct")
+      : null;
+  const feedbackSrc =
+    current && phase === "wrong"
+      ? `/audio/trust-q${current.id}-wrong.mp3`
+      : current && phase === "correct"
+        ? `/audio/trust-q${current.id}-correct.mp3`
+        : null;
+  const matchingFeedback = Boolean(
+    feedbackCaption && currentCaption === feedbackCaption &&
+    currentAudioSrc === feedbackSrc,
+  );
+  const currentlyPlayingFeedback = Boolean(
+    matchingFeedback && isPlaying && currentSrc === feedbackSrc,
+  );
+  const matchingCompletion =
+    phase === "complete" && currentCaption === trustCompletionCaption &&
+    currentAudioSrc === trustCompletionSrc;
+  const currentlyPlayingCompletion = Boolean(
+    matchingCompletion && isPlaying && currentSrc === trustCompletionSrc,
+  );
+  const showFallbackCaption = Boolean(
+    currentCaption && !matchingScenario && !matchingFeedback && !matchingCompletion,
+  );
   const answeredCount = answerResults.filter((result) => result !== null).length;
   const correctCount = answerResults.filter((result) => result === true).length;
 
@@ -38,8 +87,8 @@ export default function TrustedAdultPage() {
   const advance = useCallback(() => {
     if (index + 1 >= trustQuestions.length) {
       setPhase("complete");
-      play("/audio/trust-complete.mp3", {
-        caption: "太棒了！你可以找一位你覺得安全、願意聽你說的大人幫忙。\n如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。",
+      play(trustCompletionSrc, {
+        caption: trustCompletionCaption,
       });
     } else {
       setIndex((i) => i + 1);
@@ -68,14 +117,12 @@ export default function TrustedAdultPage() {
       setPhase("correct");
       play(`/audio/trust-q${current.id}-correct.mp3`, {
         onEnd: advance,
-        caption: current.roleSelection
-          ? `你可以選一位可能願意幫助你的大人。\n${current.explanation}`
-          : "答對了！好棒！",
+        caption: getAnswerFeedbackCaption(current, true),
       });
     } else {
       setPhase("wrong");
       play(`/audio/trust-q${current.id}-wrong.mp3`, {
-        caption: `再想想看喔～${current.explanation}`,
+        caption: getAnswerFeedbackCaption(current, false),
       });
     }
   }
@@ -114,11 +161,32 @@ export default function TrustedAdultPage() {
               )}
             </div>
           </section>
-          <section aria-labelledby="trusted-review-title" className="paper-card mb-3 bg-warm-bg p-4 text-left">
+          <section
+            aria-labelledby="trusted-review-title"
+            className={`paper-card mb-3 bg-warm-bg p-4 text-left ${
+              currentlyPlayingCompletion ? "ring-4 ring-primary" : ""
+            }`}
+            aria-current={currentlyPlayingCompletion ? "true" : undefined}
+          >
             <h2 id="trusted-review-title" className="mb-2 text-lg font-bold">重點回顧</h2>
-            <p className="text-text-light leading-relaxed">
-              你可以找一位你覺得安全、願意聽你說的大人幫忙。如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。
+            <p className="text-text-light leading-relaxed whitespace-pre-line">
+              {trustCompletionCaption}
             </p>
+            {currentlyPlayingCompletion && (
+              <p role="status" aria-live="polite" className="mt-3 text-center font-bold">
+                {isMuted ? "已靜音播放中" : "正在朗讀"}
+              </p>
+            )}
+            {matchingCompletion && (
+              <button
+                type="button"
+                onClick={replayCurrentAudio}
+                aria-label="重播回顧語音"
+                className="mt-3 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                重播
+              </button>
+            )}
           </section>
           <div className="flex flex-col gap-3 min-[360px]:flex-row min-[360px]:gap-2">
             <motion.button
@@ -144,6 +212,7 @@ export default function TrustedAdultPage() {
             </motion.button>
           </div>
         </div>
+        {showFallbackCaption && <AudioCaption inline />}
       </motion.div>
     );
   }
@@ -182,7 +251,10 @@ export default function TrustedAdultPage() {
           {current && (
             <motion.div
               key={current.id}
-              className="paper-card bg-warm-card mt-6 p-6 sm:p-8"
+              className={`paper-card bg-warm-card mt-6 p-6 sm:p-8 ${
+                currentlyPlayingScenario ? "ring-4 ring-primary" : ""
+              }`}
+              aria-current={currentlyPlayingScenario ? "true" : undefined}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -191,42 +263,95 @@ export default function TrustedAdultPage() {
               <p className="mb-6 text-center text-lg leading-relaxed">
                 {current.scenario}
               </p>
+              {currentlyPlayingScenario && (
+                <p role="status" aria-live="polite" className="mb-4 text-center font-bold">
+                  {isMuted ? "已靜音播放中" : "正在朗讀"}
+                </p>
+              )}
+              {matchingScenario && (
+                <button
+                  type="button"
+                  onClick={replayCurrentAudio}
+                  aria-label="重播情境語音"
+                  className="mb-6 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  重播
+                </button>
+              )}
 
               {phase === "correct" && (
                 <motion.div
-                  role="status"
-                  aria-live="polite"
-                  className="paper-card mb-4 bg-green-safe-bg p-4 text-center"
+                  className={`paper-card mb-4 bg-green-safe-bg p-4 text-center ${
+                    currentlyPlayingFeedback ? "ring-4 ring-primary" : ""
+                  }`}
+                  aria-current={currentlyPlayingFeedback ? "true" : undefined}
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <p className="text-text-main text-lg font-bold">
-                    <span aria-hidden="true" className="mr-2">✓</span>
-                    {current.roleSelection
-                      ? "你可以選一位可能願意幫助你的大人。"
-                      : "答對了！好棒！"}
-                  </p>
-                  {current.roleSelection && (
-                    <p className="text-text-light mt-2 text-sm leading-relaxed">
-                      {current.explanation}
+                  <div role="status" aria-live="polite">
+                    <p className="text-text-main text-lg font-bold">
+                      <span aria-hidden="true" className="mr-2">✓</span>
+                      {current.roleSelection
+                        ? "你可以選一位可能願意幫助你的大人。"
+                        : "答對了！好棒！"}
                     </p>
+                    {current.roleSelection && (
+                      <p className="text-text-light mt-2 text-sm leading-relaxed">
+                        {current.explanation}
+                      </p>
+                    )}
+                    {currentlyPlayingFeedback && (
+                      <p className="mt-3 font-bold">
+                        {isMuted ? "已靜音播放中" : "正在朗讀"}
+                      </p>
+                    )}
+                  </div>
+                  {matchingFeedback && (
+                    <button
+                      type="button"
+                      onClick={replayCurrentAudio}
+                      aria-label="重播回饋語音"
+                      className="mt-3 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      重播
+                    </button>
                   )}
                 </motion.div>
               )}
 
               {phase === "wrong" && (
                 <motion.div
-                  className="paper-card bg-red-danger-bg mb-4 p-4"
+                  className={`paper-card bg-red-danger-bg mb-4 p-4 ${
+                    currentlyPlayingFeedback ? "ring-4 ring-primary" : ""
+                  }`}
+                  aria-current={currentlyPlayingFeedback ? "true" : undefined}
                   initial={{ opacity: 0, y: 6 }}
                   animate={{ opacity: 1, y: 0 }}
                 >
-                  <p className="text-text-main mb-1 text-center text-base font-bold">
-                    <span aria-hidden="true" className="mr-2">×</span>
-                    再想想看喔～
-                  </p>
-                  <p className="text-text-light text-center text-sm">
-                    {current.explanation}
-                  </p>
+                  <div role="status" aria-live="polite">
+                    <p className="text-text-main mb-1 text-center text-base font-bold">
+                      <span aria-hidden="true" className="mr-2">×</span>
+                      再想想看喔～
+                    </p>
+                    <p className="text-text-light text-center text-sm">
+                      {current.explanation}
+                    </p>
+                    {currentlyPlayingFeedback && (
+                      <p className="mt-3 text-center font-bold">
+                        {isMuted ? "已靜音播放中" : "正在朗讀"}
+                      </p>
+                    )}
+                  </div>
+                  {matchingFeedback && (
+                    <button
+                      type="button"
+                      onClick={replayCurrentAudio}
+                      aria-label="重播回饋語音"
+                      className="mt-3 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      重播
+                    </button>
+                  )}
                 </motion.div>
               )}
 
@@ -315,6 +440,7 @@ export default function TrustedAdultPage() {
           )}
         </AnimatePresence>
       </div>
+      {showFallbackCaption && <AudioCaption inline />}
     </div>
   );
 }

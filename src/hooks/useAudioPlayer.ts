@@ -13,11 +13,13 @@ export function useAudioPlayer() {
   const isMutedRef = useRef(isMuted);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSrc, setCurrentSrc] = useState<string | null>(null);
+  const [currentAudioSrc, setCurrentAudioSrc] = useState<string | null>(null);
 
   const cleanup = useCallback(() => {
     const audio = localRef.current;
     if (audio) {
       audio.onended = null;
+      audio.onplaying = null;
       audio.onerror = null;
       audio.pause();
       audio.removeAttribute("src");
@@ -29,6 +31,7 @@ export function useAudioPlayer() {
     }
     setIsPlaying(false);
     setCurrentSrc(null);
+    setCurrentAudioSrc(null);
     setCurrentCaption(null);
   }, [currentAudioRef, setCurrentCaption]);
 
@@ -47,6 +50,7 @@ export function useAudioPlayer() {
       audio.muted = isMutedRef.current;
       localRef.current = audio;
       currentAudioRef.current = audio;
+      setCurrentAudioSrc(audio.getAttribute("src") ?? src);
 
       let completed = false;
       const complete = () => {
@@ -55,6 +59,11 @@ export function useAudioPlayer() {
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
+      };
+      audio.onplaying = () => {
+        completed = false;
+        setIsPlaying(true);
+        setCurrentSrc(src);
       };
       audio.onended = complete;
       audio.onerror = complete;
@@ -100,6 +109,7 @@ export function useAudioPlayer() {
       const audio = localRef.current;
       if (audio) {
         audio.onended = null;
+        audio.onplaying = null;
         audio.onerror = null;
         audio.pause();
         audio.removeAttribute("src");
@@ -112,5 +122,5 @@ export function useAudioPlayer() {
     };
   }, [currentAudioRef, setCurrentCaption]);
 
-  return { play, pause, stop, resume, isPlaying, currentSrc };
+  return { play, pause, stop, resume, isPlaying, currentSrc, currentAudioSrc };
 }
