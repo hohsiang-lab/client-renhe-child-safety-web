@@ -7,13 +7,16 @@ import {
   type TrustQuestion,
 } from "../data/trustedAdult";
 import { useAudioPlayer } from "../hooks/useAudioPlayer";
+import { useAudioContext } from "../hooks/useAudioContext";
+import { AudioCaption } from "../components/AudioCaption";
 
 type Phase = "playing" | "wrong" | "correct" | "complete";
 type AnswerResult = boolean | "unscored" | null;
 
 export default function TrustedAdultPage() {
   const navigate = useNavigate();
-  const { play, stop } = useAudioPlayer();
+  const { play, stop, isPlaying, currentSrc } = useAudioPlayer();
+  const { currentCaption, isMuted, replayCurrentAudio } = useAudioContext();
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -21,6 +24,11 @@ export default function TrustedAdultPage() {
     () => Array(trustQuestions.length).fill(null),
   );
   const current: TrustQuestion | undefined = trustQuestions[index];
+  const scenarioSrc = current ? `/audio/trust-q${current.id}-scenario.mp3` : null;
+  const matchingScenario = current?.scenario === currentCaption ? current : undefined;
+  const currentlyPlayingScenario = Boolean(
+    matchingScenario && isPlaying && currentSrc === scenarioSrc,
+  );
   const answeredCount = answerResults.filter((result) => result !== null).length;
   const correctCount = answerResults.filter((result) => result === true).length;
 
@@ -144,6 +152,7 @@ export default function TrustedAdultPage() {
             </motion.button>
           </div>
         </div>
+        <AudioCaption inline />
       </motion.div>
     );
   }
@@ -182,7 +191,10 @@ export default function TrustedAdultPage() {
           {current && (
             <motion.div
               key={current.id}
-              className="paper-card bg-warm-card mt-6 p-6 sm:p-8"
+              className={`paper-card bg-warm-card mt-6 p-6 sm:p-8 ${
+                currentlyPlayingScenario ? "ring-4 ring-primary" : ""
+              }`}
+              aria-current={currentlyPlayingScenario ? "true" : undefined}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -191,6 +203,21 @@ export default function TrustedAdultPage() {
               <p className="mb-6 text-center text-lg leading-relaxed">
                 {current.scenario}
               </p>
+              {currentlyPlayingScenario && (
+                <p role="status" aria-live="polite" className="mb-4 text-center font-bold">
+                  {isMuted ? "已靜音播放中" : "正在朗讀"}
+                </p>
+              )}
+              {matchingScenario && (
+                <button
+                  type="button"
+                  onClick={replayCurrentAudio}
+                  aria-label="重播情境語音"
+                  className="mb-6 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  重播
+                </button>
+              )}
 
               {phase === "correct" && (
                 <motion.div
@@ -315,6 +342,7 @@ export default function TrustedAdultPage() {
           )}
         </AnimatePresence>
       </div>
+      {currentCaption && !matchingScenario && <AudioCaption inline />}
     </div>
   );
 }

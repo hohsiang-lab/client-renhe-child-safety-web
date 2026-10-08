@@ -64,7 +64,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
-        {pathname !== "/menu" && pathname !== "/ending" && pathname !== "/body-traffic-light" && (
+        {pathname !== "/menu" && pathname !== "/ending" && pathname !== "/body-traffic-light" && pathname !== "/trusted-adult" && (
           <div className={pathname === "/body-traffic-light/touch-test" ? "pb-[calc(5rem+env(safe-area-inset-bottom))]" : ""}>
             <AudioCaption inline />
           </div>
