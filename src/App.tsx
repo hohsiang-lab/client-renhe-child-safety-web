@@ -65,7 +65,9 @@ export default function App() {
           </Routes>
         </div>
         {pathname !== "/menu" && pathname !== "/ending" && pathname !== "/body-traffic-light" && (
-          <AudioCaption inline />
+          <div className={pathname === "/body-traffic-light/touch-test" ? "pb-20" : ""}>
+            <AudioCaption inline />
+          </div>
         )}
         <MuteButton />
       </div>

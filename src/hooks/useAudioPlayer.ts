@@ -18,6 +18,7 @@ export function useAudioPlayer() {
     const audio = localRef.current;
     if (audio) {
       audio.onended = null;
+      audio.onplaying = null;
       audio.onerror = null;
       audio.pause();
       audio.removeAttribute("src");
@@ -55,6 +56,11 @@ export function useAudioPlayer() {
         setIsPlaying(false);
         setCurrentSrc(null);
         onEndRef.current?.();
+      };
+      audio.onplaying = () => {
+        completed = false;
+        setIsPlaying(true);
+        setCurrentSrc(src);
       };
       audio.onended = complete;
       audio.onerror = complete;
@@ -100,6 +106,7 @@ export function useAudioPlayer() {
       const audio = localRef.current;
       if (audio) {
         audio.onended = null;
+        audio.onplaying = null;
         audio.onerror = null;
         audio.pause();
         audio.removeAttribute("src");
