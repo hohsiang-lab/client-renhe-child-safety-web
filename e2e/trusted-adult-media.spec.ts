@@ -47,7 +47,7 @@ test("direct URL keeps manual scenario replay available", async ({ page }) => {
     .toMatchObject({ match: true, paused: false, time: true, ready: true, error: null });
 });
 
-test("native media: all 20 mappings, captions, mute/replay and five-question completion", async ({ page }) => {
+test("native media: all 20 mappings without caption/replay panel, global mute and five-question completion", async ({ page }) => {
   test.setTimeout(180000);
   await observeNativeAudio(page);
   const pageErrors: string[] = [];
@@ -66,7 +66,9 @@ test("native media: all 20 mappings, captions, mute/replay and five-question com
     for (let i = 0; i < count; i++) {
       const item = manifest[offset + i];
       await page.getByRole("button", { name: item.transcript, exact: true }).click();
-      await expect(page.getByTestId("audio-caption")).toHaveText(item.transcript);
+      await expect(page.getByRole("complementary", { name: "語音字幕" })).toHaveCount(0);
+      await expect(page.getByTestId("audio-caption")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "重播語音", exact: true })).toHaveCount(0);
       if (i === 0) {
         for (const viewport of [{ width: 1280, height: 900 }, { width: 768, height: 1024 }, { width: 390, height: 844 }]) {
           await page.setViewportSize(viewport);
@@ -87,8 +89,6 @@ test("native media: all 20 mappings, captions, mute/replay and five-question com
       if (q === 1 && i === 0) {
         await page.getByRole("button", { name: "靜音", exact: true }).click();
         await expect.poll(() => page.evaluate(() => (window as unknown as { __nativeAudio: HTMLAudioElement[] }).__nativeAudio.filter(a => a.src.includes("/ho3527-temp-free/")).at(-1)!.muted)).toBe(true);
-        await page.getByRole("button", { name: "重播語音", exact: true }).click();
-        await expect.poll(() => page.evaluate(() => { const a = (window as unknown as { __nativeAudio: HTMLAudioElement[] }).__nativeAudio.filter(a => a.src.includes("/ho3527-temp-free/")).at(-1)!; return a.muted && !a.paused && a.currentTime > 0; })).toBe(true);
         await page.getByRole("button", { name: "取消靜音", exact: true }).click();
       }
     }

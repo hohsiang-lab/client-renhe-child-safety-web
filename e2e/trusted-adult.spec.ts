@@ -98,20 +98,26 @@ test("題卡播放控制提供播放／播放中 icon", async ({ page }) => {
   await expect(playback).toHaveAttribute("data-playing", "false");
 });
 
-test("選項字幕與重播控制顯示在題卡內", async ({ page }) => {
-  const questionText = "有人在學校對你做了不舒服的事，你應該告訴誰？";
-  const questionCard = page.getByText(questionText, { exact: true }).locator("xpath=..");
+test("選項朗讀不再呈現重複字幕與重播面板", async ({ page }) => {
+  const answer = "自己忍耐";
+  const option = page.getByRole("button", { name: answer, exact: true });
 
-  await page.getByRole("button", { name: "自己忍耐", exact: true }).click();
+  await option.click();
 
-  const caption = questionCard.getByRole("complementary", { name: "語音字幕" });
-  await expect(caption).toBeVisible();
-  await expect(caption.getByTestId("audio-caption")).toHaveText("自己忍耐");
-  await expect(caption.getByRole("button", { name: "重播語音" })).toBeVisible();
-  await expect(page.getByRole("complementary", { name: "語音字幕" })).toHaveCount(1);
+  await expect(option).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText(answer, { exact: true })).toHaveCount(1);
+  await expect(page.getByRole("complementary", { name: "語音字幕" })).toHaveCount(0);
+  await expect(page.getByTestId("audio-caption")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "重播語音", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "重播情境語音" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "確認" })).toBeEnabled();
+  expect(await lastRecordedAudioPlay(page)).toEqual({
+    src: "/audio/ho3527-temp-free/trust-q1-option-2.mp3",
+    muted: false,
+  });
 });
 
-test("20 個選項朗讀各自的靜態 MP3，並沿用字幕、靜音與重播", async ({ page }) => {
+test("20 個選項朗讀各自的靜態 MP3，且不顯示字幕重播面板", async ({ page }) => {
   const groups = [
     {
       id: 1,
@@ -186,14 +192,11 @@ test("20 個選項朗讀各自的靜態 MP3，並沿用字幕、靜音與重播"
         src: choice.src,
         muted: isFirstMutedChoice,
       });
-      await expect(page.getByTestId("audio-caption")).toHaveText(choice.label);
+      await expect(page.getByRole("complementary", { name: "語音字幕" })).toHaveCount(0);
+      await expect(page.getByTestId("audio-caption")).toHaveCount(0);
+      await expect(page.getByRole("button", { name: "重播語音", exact: true })).toHaveCount(0);
 
       if (isFirstMutedChoice) {
-        await page.getByRole("button", { name: "重播語音" }).click();
-        expect(await lastRecordedAudioPlay(page)).toEqual({
-          src: choice.src,
-          muted: true,
-        });
         await page.getByRole("button", { name: "取消靜音" }).click();
         await expect(page.getByRole("button", { name: "靜音" })).toBeVisible();
       }
