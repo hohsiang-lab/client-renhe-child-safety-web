@@ -17,6 +17,39 @@ const trustCompletionSrc = "/audio/trust-complete.mp3";
 const trustCompletionCaption =
   "太棒了！你可以找一位你覺得安全、願意聽你說的大人幫忙。\n如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。";
 
+const trustOptionAudioByQuestion: Record<number, readonly string[]> = {
+  1: [
+    "/audio/ho3527-temp-free/trust-q1-option-1.mp3",
+    "/audio/ho3527-temp-free/trust-q1-option-2.mp3",
+    "/audio/ho3527-temp-free/trust-q1-option-3.mp3",
+  ],
+  2: [
+    "/audio/ho3527-temp-free/trust-q2-option-1.mp3",
+    "/audio/ho3527-temp-free/trust-q2-option-2.mp3",
+    "/audio/ho3527-temp-free/trust-q2-option-3.mp3",
+  ],
+  3: [
+    "/audio/ho3527-temp-free/trust-q3-option-1.mp3",
+    "/audio/ho3527-temp-free/trust-q3-option-2.mp3",
+    "/audio/ho3527-temp-free/trust-q3-option-3.mp3",
+  ],
+  4: [
+    "/audio/ho3527-temp-free/trust-q4-option-1.mp3",
+    "/audio/ho3527-temp-free/trust-q4-option-2.mp3",
+    "/audio/ho3527-temp-free/trust-q4-option-3.mp3",
+  ],
+  5: [
+    "/audio/ho3527-temp-free/trust-q5-role-mom.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-dad.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-grandma.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-teacher.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-police.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-relatives.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-neighbors.mp3",
+    "/audio/ho3527-temp-free/trust-q5-role-moms-boyfriend.mp3",
+  ],
+};
+
 function getAnswerFeedbackCaption(question: TrustQuestion, isCorrect: boolean) {
   if (question.roleSelection) {
     return `你可以選一位可能願意幫助你的大人。\n${question.explanation}`;
@@ -98,7 +131,7 @@ export default function TrustedAdultPage() {
   }, [index, play]);
 
   function handleAnswer(optionIndex: number) {
-    if (phase === "correct" || !current) return;
+    if (phase !== "playing" || !current) return;
     stop();
     setSelectedIndex(optionIndex);
     const isCorrect = current.roleSelection || optionIndex === current.correctIndex;
@@ -125,6 +158,21 @@ export default function TrustedAdultPage() {
         caption: getAnswerFeedbackCaption(current, false),
       });
     }
+  }
+
+  function handleConfirm() {
+    if (selectedIndex !== null) handleAnswer(selectedIndex);
+  }
+
+  function handleSelectOption(optionIndex: number) {
+    if (phase !== "playing" || !current) return;
+    const optionLabel = current.roleSelection
+      ? trustedAdultCards[optionIndex]?.name
+      : current.options[optionIndex];
+    const audioSrc = trustOptionAudioByQuestion[current.id]?.[optionIndex];
+    if (!optionLabel || !audioSrc) return;
+    setSelectedIndex(optionIndex);
+    play(audioSrc, { caption: optionLabel });
   }
 
   function handleRetry() {
@@ -188,6 +236,7 @@ export default function TrustedAdultPage() {
               </button>
             )}
           </section>
+          {showFallbackCaption && <AudioCaption inline />}
           <div className="flex flex-col gap-3 min-[360px]:flex-row min-[360px]:gap-2">
             <motion.button
               type="button"
@@ -212,7 +261,6 @@ export default function TrustedAdultPage() {
             </motion.button>
           </div>
         </div>
-        {showFallbackCaption && <AudioCaption inline />}
       </motion.div>
     );
   }
@@ -268,16 +316,25 @@ export default function TrustedAdultPage() {
                   {isMuted ? "已靜音播放中" : "正在朗讀"}
                 </p>
               )}
-              {matchingScenario && (
+              {phase === "playing" && (
                 <button
                   type="button"
-                  onClick={replayCurrentAudio}
+                  onClick={() => play(`/audio/trust-q${current.id}-scenario.mp3`, { caption: current.scenario })}
                   aria-label="重播情境語音"
-                  className="mb-6 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                  data-playing={currentlyPlayingScenario}
+                  aria-pressed={currentlyPlayingScenario}
+                  className="mx-auto mb-6 flex h-12 w-12 items-center justify-center rounded-full border-2 border-text-main bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
-                  重播
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true" fill="currentColor">
+                    {currentlyPlayingScenario ? (
+                      <path d="M3 9h3v6H3zm5-4h3v14H8zm6 2h3v10h-3zm6 3h3v4h-3z" />
+                    ) : (
+                      <path d="M8 5v14l11-7z" />
+                    )}
+                  </svg>
                 </button>
               )}
+              {showFallbackCaption && <AudioCaption inline />}
 
               {phase === "correct" && (
                 <motion.div
@@ -367,17 +424,24 @@ export default function TrustedAdultPage() {
                       <motion.button
                         key={card.src}
                         type="button"
-                        onClick={() => handleAnswer(i)}
+                        onClick={() => handleSelectOption(i)}
                         aria-label={card.name}
                         aria-pressed={isSelected}
+                        style={
+                          isSelected && phase === "playing"
+                            ? { borderColor: "var(--color-primary)" }
+                            : undefined
+                        }
                         className={`paper-choice flex min-h-36 cursor-pointer flex-col items-center justify-center gap-2 p-3 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary ${
                           isSelected
-                            ? "border-green-safe bg-green-safe-bg text-text-main"
+                            ? phase === "playing"
+                              ? "bg-primary/20 text-text-main"
+                              : "border-green-safe bg-green-safe-bg text-text-main"
                             : "border-transparent bg-warm-bg hover:border-primary"
                         }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.97 }}
-                        disabled={phase === "correct"}
+                        disabled={phase !== "playing"}
                       >
                         <img
                           src={card.src}
@@ -391,15 +455,17 @@ export default function TrustedAdultPage() {
                   })}
                 </div>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div role="group" aria-label="選擇答案" className="flex flex-col gap-3">
                   {current.options.map((option, i) => {
                     const isSelected = selectedIndex === i;
                     const isCorrect = i === current.correctIndex;
                     const showResult = phase === "wrong" || phase === "correct";
                     let buttonClass =
-                      "paper-choice w-full cursor-pointer px-4 py-4 text-left text-base font-bold transition-colors";
+                      "paper-choice flex min-h-12 w-full items-center justify-between gap-4 cursor-pointer px-4 py-4 text-left text-base font-bold transition-colors";
                     if (!showResult) {
-                      buttonClass += " bg-warm-bg hover:bg-primary hover:text-white";
+                      buttonClass += isSelected
+                        ? " bg-primary/20 text-text-main"
+                        : " bg-warm-bg hover:bg-primary/20";
                     } else if (phase === "correct" && isCorrect) {
                       buttonClass += " bg-green-safe-bg text-text-main";
                     } else if (phase === "wrong" && isSelected) {
@@ -410,17 +476,47 @@ export default function TrustedAdultPage() {
                     return (
                       <motion.button
                         key={i}
-                        onClick={() => handleAnswer(i)}
+                        type="button"
+                        onClick={() => handleSelectOption(i)}
+                        aria-pressed={isSelected}
+                        style={
+                          isSelected && !showResult
+                            ? { borderColor: "var(--color-primary)" }
+                            : undefined
+                        }
                         className={buttonClass}
                         whileHover={phase !== "correct" ? { scale: 1.02 } : {}}
                         whileTap={phase !== "correct" ? { scale: 0.97 } : {}}
-                        disabled={phase === "correct"}
+                        disabled={phase !== "playing"}
                       >
-                        {option}
+                        <span>{option}</span>
+                        <span
+                          aria-hidden="true"
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 ${
+                            isSelected
+                              ? "border-primary bg-primary text-white"
+                              : "border-text-main bg-white"
+                          }`}
+                        >
+                          {isSelected ? "✓" : null}
+                        </span>
                       </motion.button>
                     );
                   })}
                 </div>
+              )}
+
+              {phase === "playing" && (
+                <motion.button
+                  type="button"
+                  onClick={handleConfirm}
+                  disabled={selectedIndex === null}
+                  className="paper-button bg-primary hover:bg-primary-hover disabled:hover:bg-warm-muted mt-4 w-full cursor-pointer py-3 font-bold text-text-main disabled:cursor-not-allowed disabled:bg-warm-muted disabled:text-text-light"
+                  whileHover={selectedIndex !== null ? { scale: 1.02 } : {}}
+                  whileTap={selectedIndex !== null ? { scale: 0.97 } : {}}
+                >
+                  確認
+                </motion.button>
               )}
 
               {phase === "wrong" && (
@@ -440,7 +536,6 @@ export default function TrustedAdultPage() {
           )}
         </AnimatePresence>
       </div>
-      {showFallbackCaption && <AudioCaption inline />}
     </div>
   );
 }
