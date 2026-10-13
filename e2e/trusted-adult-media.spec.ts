@@ -1,10 +1,9 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 
 const manifest = JSON.parse(readFileSync(new URL("../public/audio/ho3527-temp-free/manifest.json", import.meta.url), "utf8")) as Array<{ identifier: string; transcript: string }>;
 
-test("native media: all 20 mappings, captions, mute/replay and five-question completion", async ({ page }) => {
-  test.setTimeout(180000);
+async function observeNativeAudio(page: Page) {
   await page.addInitScript(() => {
     const NativeAudio = window.Audio;
     const instances: HTMLAudioElement[] = [];
@@ -19,9 +18,45 @@ test("native media: all 20 mappings, captions, mute/replay and five-question com
     } as unknown as typeof Audio;
   });
   page.on("console", message => console.log(message.text()));
+}
+
+async function nativePlaybackState(page: Page, suffix: string) {
+  return page.evaluate((fileSuffix) => {
+    const audio = (window as unknown as { __nativeAudio: HTMLAudioElement[] }).__nativeAudio
+      .filter(item => item.currentSrc.endsWith(fileSuffix))
+      .at(-1);
+    return {
+      match: Boolean(audio),
+      paused: audio?.paused ?? true,
+      time: (audio?.currentTime ?? 0) > 0,
+      ready: (audio?.readyState ?? 0) >= 2,
+      error: audio?.error?.message ?? null,
+    };
+  }, suffix);
+}
+
+test("direct URL keeps manual scenario replay available", async ({ page }) => {
+  await observeNativeAudio(page);
+  await page.goto("/trusted-adult");
+
+  const replay = page.getByRole("button", { name: "重播情境語音" });
+  await expect(replay).toBeVisible();
+  await replay.click();
+  await expect(replay).toHaveAttribute("data-playing", "true");
+  await expect.poll(() => nativePlaybackState(page, "/audio/trust-q1-scenario.mp3"))
+    .toMatchObject({ match: true, paused: false, time: true, ready: true, error: null });
+});
+
+test("native media: all 20 mappings, captions, mute/replay and five-question completion", async ({ page }) => {
+  test.setTimeout(180000);
+  await observeNativeAudio(page);
   const pageErrors: string[] = [];
   page.on("pageerror", error => pageErrors.push(error.message));
-  await page.goto("/trusted-adult");
+  await page.goto("/menu");
+  await page.getByRole("button", { name: /信任大人/ }).click();
+  await expect(page).toHaveURL(/\/trusted-adult$/);
+  await expect.poll(() => nativePlaybackState(page, "/audio/trust-q1-scenario.mp3"))
+    .toMatchObject({ match: true, paused: false, time: true, ready: true, error: null });
   const correct = [0, 1, 1, 0, 3];
   let offset = 0;
   for (let q = 1; q <= 5; q++) {
