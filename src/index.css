@@ -102,10 +102,6 @@ img.paper-card {
   border-color: var(--color-red-danger-dark);
 }
 
-.paper-choice[aria-pressed="true"] {
-  border-color: var(--color-green-safe-dark);
-}
-
 .site-header {
   display: flex;
   align-items: center;

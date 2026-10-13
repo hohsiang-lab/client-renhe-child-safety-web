@@ -55,3 +55,10 @@ jobs:
           e2e/cross-device.spec.ts
           --grep "HO-3183 Trusted Adult 390px viewport has no horizontal overflow"
           --project=chromium --workers=1 --reporter=line
+
+      - name: Run Trusted Adult UI and media regressions
+        run: >-
+          npx playwright test
+          e2e/trusted-adult.spec.ts
+          e2e/trusted-adult-media.spec.ts
+          --project=chromium --workers=1 --reporter=line

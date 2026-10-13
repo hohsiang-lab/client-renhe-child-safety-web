@@ -209,6 +209,31 @@ test("20 個選項朗讀各自的靜態 MP3，並沿用字幕、靜音與重播"
   }
 });
 
+test("選項樣式依照確認狀態使用橘、紅與綠色邊框", async ({ page }) => {
+  await page.evaluate(() => {
+    Audio.prototype.play = () => Promise.resolve();
+  });
+
+  const wrongAnswer = page.getByRole("button", { name: "自己忍耐", exact: true });
+  const confirm = page.getByRole("button", { name: "確認" });
+
+  await wrongAnswer.click();
+  await expect(wrongAnswer).toHaveCSS("border-top-color", "rgb(255, 159, 67)");
+  await confirm.click();
+  await expect(wrongAnswer).toHaveCSS("background-color", "rgb(252, 228, 228)");
+  await expect(wrongAnswer).toHaveCSS("border-top-color", "rgb(229, 57, 53)");
+
+  await page.getByRole("button", { name: "再試一次" }).click();
+  const correctAnswer = page.getByRole("button", {
+    name: "告訴一位你覺得安全、願意聽你說的大人",
+    exact: true,
+  });
+  await correctAnswer.click();
+  await expect(correctAnswer).toHaveCSS("border-top-color", "rgb(255, 159, 67)");
+  await confirm.click();
+  await expect(correctAnswer).toHaveCSS("border-top-color", "rgb(67, 160, 71)");
+});
+
 test("選取答案後才啟用確認，確認之前不判題", async ({ page }) => {
   const confirm = page.getByRole("button", { name: "確認" });
   await expect(confirm).toBeDisabled();
