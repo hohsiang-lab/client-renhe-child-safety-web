@@ -52,6 +52,68 @@ async function installImmediateAudio(page: Page) {
   });
 }
 
+async function installControlledAudio(page: Page) {
+  await page.addInitScript(() => {
+    type ControlledAudioInstance = { src: string; finish: () => void };
+    const instances: ControlledAudioInstance[] = [];
+
+    class ControlledAudio {
+      src: string;
+      currentTime = 0;
+      muted = false;
+      paused = true;
+      onended: (() => void) | null = null;
+      onplaying: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor(src = "") {
+        this.src = src;
+        instances.push(this as unknown as ControlledAudioInstance);
+      }
+
+      getAttribute(name: string) {
+        return name === "src" ? this.src : null;
+      }
+
+      removeAttribute(name: string) {
+        if (name === "src") this.src = "";
+      }
+
+      load() {}
+
+      pause() {
+        this.paused = true;
+      }
+
+      play() {
+        this.paused = false;
+        this.currentTime = 1;
+        this.onplaying?.();
+        return Promise.resolve();
+      }
+
+      finish() {
+        this.paused = true;
+        this.currentTime = 2;
+        this.onended?.();
+      }
+    }
+
+    Object.defineProperty(window, "Audio", {
+      configurable: true,
+      value: ControlledAudio,
+    });
+    Object.defineProperty(window, "__finishCurrentAudio", {
+      configurable: true,
+      value: () => instances.filter((audio) => audio.src).at(-1)?.finish(),
+    });
+    Object.defineProperty(window, "__currentAudioSrc", {
+      configurable: true,
+      get: () => instances.filter((audio) => audio.src).at(-1)?.src ?? null,
+    });
+  });
+}
+
 async function lastRecordedAudioPlay(page: Page) {
   return page.evaluate(() => {
     const events = (window as unknown as {
@@ -246,7 +308,7 @@ test("選取答案後才啟用確認，確認之前不判題", async ({ page }) 
   await expect(wrongAnswer).toHaveAttribute("aria-pressed", "true");
   await expect(wrongAnswer).toContainText("✓");
   await expect(confirm).toBeEnabled();
-  await expect(page.getByText("再想想看喔～", { exact: true })).toHaveCount(0);
+  await expect(page.getByText(/再想想看喔～/)).toHaveCount(0);
 
   await confirm.click();
   await expect(page.getByText("再想想看喔～")).toBeVisible();
@@ -297,6 +359,98 @@ test("選項可用鍵盤確認並保有焦點提示與 48px 觸控目標", async
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(48);
     expect(box!.height).toBeGreaterThanOrEqual(48);
+  }
+});
+
+test("Q1–Q5 朗讀狀態不佔版面、錯答以圖示重播且正答沒有重播控制", async ({ page }) => {
+  await installControlledAudio(page);
+  const viewports = [
+    { width: 1280, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ];
+  const correctAnswers = [
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "趕快到附近商店，向店員或你覺得安全的人求助",
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "113",
+    "老師",
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto("/trusted-adult");
+    const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+    const confirm = page.getByRole("button", { name: "確認", exact: true });
+
+    for (let question = 1; question <= correctAnswers.length; question++) {
+      await expect(progress).toHaveAttribute("aria-valuenow", String(question));
+      const scenarioPlayback = page.getByRole("button", { name: "重播情境語音" });
+      await expect(scenarioPlayback).toHaveAttribute("data-playing", "true");
+      const scenarioBox = await scenarioPlayback.boundingBox();
+      expect(scenarioBox).not.toBeNull();
+      expect(scenarioBox!.width).toBeGreaterThanOrEqual(48);
+      expect(scenarioBox!.height).toBeGreaterThanOrEqual(48);
+
+      const scenarioStatus = page.getByText("正在朗讀", { exact: true });
+      await expect(scenarioStatus).toHaveCount(1);
+      await expect(scenarioStatus).toHaveClass(/sr-only/);
+      const statusStyle = await scenarioStatus.evaluate((element) => {
+        const style = window.getComputedStyle(element);
+        return { position: style.position, width: style.width, height: style.height };
+      });
+      expect(statusStyle).toEqual({ position: "absolute", width: "1px", height: "1px" });
+
+      if (question === 1) {
+        await page.getByRole("button", { name: "自己忍耐", exact: true }).click();
+        await expect(page.getByText("正在朗讀", { exact: true })).toHaveCount(0);
+        await confirm.click();
+
+        const feedbackStatus = page.getByText("正在朗讀", { exact: true });
+        await expect(feedbackStatus).toHaveCount(1);
+        await expect(feedbackStatus).toHaveClass(/sr-only/);
+        await expect(page.getByText(/再想想看喔～/)).toBeVisible();
+
+        const feedbackReplay = page.getByRole("button", { name: "重播回饋語音", exact: true });
+        await expect(feedbackReplay).toBeVisible();
+        await expect(feedbackReplay.locator("svg")).toHaveCount(1);
+        const replayBox = await feedbackReplay.boundingBox();
+        expect(replayBox).not.toBeNull();
+        const replaySize = await feedbackReplay.evaluate((element) => {
+          const style = window.getComputedStyle(element);
+          return { width: style.width, height: style.height };
+        });
+        expect(replaySize).toEqual({ width: "48px", height: "48px" });
+        expect(replayBox!.width).toBeCloseTo(48, 2);
+        expect(replayBox!.height).toBeCloseTo(48, 2);
+        await feedbackReplay.click();
+        await expect.poll(() => page.evaluate(() =>
+          (window as unknown as { __currentAudioSrc: string | null }).__currentAudioSrc,
+        )).toBe("/audio/trust-q1-wrong.mp3");
+
+        await page.getByRole("button", { name: "再試一次", exact: true }).click();
+      }
+
+      const answer = page.getByRole("button", { name: correctAnswers[question - 1], exact: true });
+      await answer.click();
+      await expect(answer).toHaveAttribute("aria-pressed", "true");
+      await expect(confirm).toBeEnabled();
+      await expect(page.getByText("正在朗讀", { exact: true })).toHaveCount(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      await confirm.click();
+
+      await expect(page.getByText(
+        question === 5 ? /你可以選一位可能願意幫助你的大人。/ : /答對了！好棒！/,
+      )).toBeVisible();
+      await expect(page.getByRole("button", { name: "重播回饋語音", exact: true })).toHaveCount(0);
+      await expect(page.getByText("正在朗讀", { exact: true })).toHaveCount(0);
+
+      if (question < correctAnswers.length) {
+        await page.evaluate(() =>
+          (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+        );
+      }
+    }
   }
 });
 
