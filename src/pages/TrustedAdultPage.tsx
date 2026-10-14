@@ -279,7 +279,7 @@ export default function TrustedAdultPage() {
               {trustCompletionCaption}
             </p>
             {currentlyPlayingCompletion && (
-              <p role="status" aria-live="polite" className="mt-3 text-center font-bold">
+              <p role="status" aria-live="polite" className="sr-only">
                 {isMuted ? "已靜音播放中" : "正在朗讀"}
               </p>
             )}
@@ -288,9 +288,17 @@ export default function TrustedAdultPage() {
                 type="button"
                 onClick={replayCurrentAudio}
                 aria-label="重播回顧語音"
-                className="mt-3 min-h-12 rounded-xl border-2 border-text-main bg-white px-4 font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                data-playing={currentlyPlayingCompletion}
+                aria-pressed={currentlyPlayingCompletion}
+                className="mx-auto mt-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-text-main bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                重播
+                <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true" fill="currentColor">
+                  {currentlyPlayingCompletion ? (
+                    <path d="M3 9h3v6H3zm5-4h3v14H8zm6 2h3v10h-3zm6 3h3v4h-3z" />
+                  ) : (
+                    <path d="M8 5v14l11-7z" />
+                  )}
+                </svg>
               </button>
             )}
           </section>
