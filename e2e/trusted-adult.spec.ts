@@ -54,7 +54,7 @@ async function installImmediateAudio(page: Page) {
 
 async function installControlledAudio(page: Page) {
   await page.addInitScript(() => {
-    type ControlledAudioInstance = { src: string; finish: () => void };
+    type ControlledAudioInstance = { src: string; finish: () => void; muted: boolean };
     const instances: ControlledAudioInstance[] = [];
     const playedSources: string[] = [];
 
@@ -112,6 +112,10 @@ async function installControlledAudio(page: Page) {
     Object.defineProperty(window, "__currentAudioSrc", {
       configurable: true,
       get: () => instances.filter((audio) => audio.src).at(-1)?.src ?? null,
+    });
+    Object.defineProperty(window, "__currentAudioMuted", {
+      configurable: true,
+      get: () => instances.filter((audio) => audio.src).at(-1)?.muted ?? null,
     });
     Object.defineProperty(window, "__audioPlayEvents", {
       configurable: true,
@@ -340,6 +344,113 @@ test("完成五題後可回到主選單", async ({ page }) => {
   await completeAllQuestions(page);
   await page.getByRole("button", { name: "回到主選單" }).click();
   await expect(page).toHaveURL(/\/menu$/);
+});
+
+test("完成頁回顧語音控制三尺寸均保留靜音、原生重播與摘要", async ({ page }) => {
+  await installControlledAudio(page);
+  const viewports = [
+    { width: 1280, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ];
+  const answers = [
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "趕快到附近商店，向店員或你覺得安全的人求助",
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "113",
+    "老師",
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await page.goto("/trusted-adult");
+    const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+    const confirm = page.getByRole("button", { name: "確認", exact: true });
+
+    for (let question = 0; question < answers.length; question++) {
+      await expect(progress).toHaveAttribute("aria-valuenow", String(question + 1));
+      await page.getByRole("button", { name: answers[question], exact: true }).click();
+      await confirm.click();
+      await page.evaluate(() =>
+        (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+      );
+      if (question < answers.length - 1) {
+        await expect(progress).toHaveAttribute("aria-valuenow", String(question + 2));
+      }
+    }
+
+    const review = page.getByRole("region", { name: "重點回顧" });
+    const replay = page.getByRole("button", { name: "重播回顧語音", exact: true });
+    const status = page.locator("p[role='status']");
+    await expect(page.getByText("已答題 5 題")).toBeVisible();
+    await expect(page.getByText("答對 4 題")).toBeVisible();
+    await expect(page.getByText("求助對象選擇不列入答對題數")).toBeVisible();
+    await expect(review).toHaveAttribute("aria-current", "true");
+    await expect(status).toHaveClass(/sr-only/);
+    await expect(status).toHaveText("正在朗讀");
+    const statusStyle = await status.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { position: style.position, width: style.width, height: style.height };
+    });
+    expect(statusStyle).toEqual({ position: "absolute", width: "1px", height: "1px" });
+    await expect(replay).toHaveAttribute("data-playing", "true");
+    await expect(replay).toHaveAttribute("aria-pressed", "true");
+    await expect(replay.locator("svg path")).toHaveCount(1);
+    await expect(replay).toHaveText("");
+    await expect.poll(async () => Math.abs(((await replay.boundingBox())?.width ?? 0) - 48) < 0.01).toBe(true);
+    const replayBox = await replay.boundingBox();
+    expect(replayBox?.width).toBeCloseTo(48, 1);
+    expect(replayBox?.height).toBeCloseTo(48, 1);
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __currentAudioSrc: string | null }).__currentAudioSrc,
+    )).toBe("/audio/trust-complete.mp3");
+
+    await page.getByRole("button", { name: "靜音", exact: true }).click();
+    await expect(status).toHaveText("已靜音播放中");
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __currentAudioMuted: boolean | null }).__currentAudioMuted,
+    )).toBe(true);
+
+    await page.evaluate(() =>
+      (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+    );
+    await expect(replay).toHaveAttribute("data-playing", "false");
+    await expect(replay).toHaveAttribute("aria-pressed", "false");
+    await expect(status).toHaveCount(0);
+    await expect(review).not.toHaveAttribute("aria-current", "true");
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __currentAudioSrc: string | null }).__currentAudioSrc,
+    )).toBe("/audio/trust-complete.mp3");
+
+    await replay.click();
+    await expect(replay).toHaveAttribute("data-playing", "true");
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __audioPlayEvents: string[] }).__audioPlayEvents
+        .filter((src) => src === "/audio/trust-complete.mp3").length,
+    )).toBe(2);
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __currentAudioMuted: boolean | null }).__currentAudioMuted,
+    )).toBe(true);
+
+    await page.evaluate(() =>
+      (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+    );
+    await replay.focus();
+    await page.keyboard.press("Enter");
+    await expect(replay).toBeFocused();
+    await expect(replay).toHaveAttribute("data-playing", "true");
+    await expect.poll(() => page.evaluate(() =>
+      (window as unknown as { __audioPlayEvents: string[] }).__audioPlayEvents
+        .filter((src) => src === "/audio/trust-complete.mp3").length,
+    )).toBe(3);
+    const replayFocusStyle = await replay.evaluate((element) => {
+      const style = window.getComputedStyle(element);
+      return { outlineStyle: style.outlineStyle, outlineWidth: style.outlineWidth };
+    });
+    expect(replayFocusStyle).toEqual({ outlineStyle: "solid", outlineWidth: "3px" });
+    await expect(page.getByText("已答題 5 題")).toBeVisible();
+    await expect(page.getByText("答對 4 題")).toBeVisible();
+  }
 });
 
 test("選項可用鍵盤確認並保有焦點提示與 48px 觸控目標", async ({ page }) => {
