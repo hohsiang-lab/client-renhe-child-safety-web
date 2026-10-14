@@ -56,6 +56,7 @@ async function installControlledAudio(page: Page) {
   await page.addInitScript(() => {
     type ControlledAudioInstance = { src: string; finish: () => void };
     const instances: ControlledAudioInstance[] = [];
+    const playedSources: string[] = [];
 
     class ControlledAudio {
       src: string;
@@ -88,6 +89,7 @@ async function installControlledAudio(page: Page) {
       play() {
         this.paused = false;
         this.currentTime = 1;
+        playedSources.push(this.src);
         this.onplaying?.();
         return Promise.resolve();
       }
@@ -110,6 +112,10 @@ async function installControlledAudio(page: Page) {
     Object.defineProperty(window, "__currentAudioSrc", {
       configurable: true,
       get: () => instances.filter((audio) => audio.src).at(-1)?.src ?? null,
+    });
+    Object.defineProperty(window, "__audioPlayEvents", {
+      configurable: true,
+      value: playedSources,
     });
   });
 }
@@ -516,4 +522,184 @@ test("Q1 參考版面在桌機、平板及手機尺寸不溢出或重疊", async
     await page.getByRole("button", { name: firstAnswer }).click();
     await expect(confirm).toBeEnabled();
   }
+});
+
+test("錯答 modal 可 Escape 關閉與重開；重試才清除所選答案", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+
+  const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+  const wrongAnswer = page.getByRole("button", { name: "自己忍耐", exact: true });
+  const confirm = page.getByRole("button", { name: "確認", exact: true });
+  await wrongAnswer.click();
+  await confirm.click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("aria-labelledby", "trusted-adult-feedback-title");
+  await expect(dialog).toHaveAttribute("aria-describedby", "trusted-adult-feedback-explanation");
+  await expect(dialog).toContainText(
+    "如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。",
+  );
+  await expect(dialog).toBeFocused();
+  expect(await dialog.evaluate((element) => element.matches(":modal"))).toBe(true);
+  await expect(page.getByRole("button", { name: "重播回饋語音", exact: true })).toHaveCSS(
+    "width",
+    "48px",
+  );
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(wrongAnswer).toBeDisabled();
+
+  const replay = page.getByRole("button", { name: "重播回饋語音", exact: true });
+  const retry = page.getByRole("button", { name: "再試一次", exact: true });
+  await page.keyboard.press("Tab");
+  await expect(replay).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(retry).toBeFocused();
+  await page.keyboard.press("Tab");
+  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(wrongAnswer).toHaveAttribute("aria-pressed", "true");
+  const reopen = page.getByRole("button", { name: "查看答題結果", exact: true });
+  await expect(reopen).toBeFocused();
+
+  await reopen.click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("再想想看喔～");
+  await retry.click();
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(confirm).toBeDisabled();
+  await expect(wrongAnswer).toBeEnabled();
+  await expect(wrongAnswer).toHaveAttribute("aria-pressed", "false");
+  await expect(wrongAnswer).toBeFocused();
+});
+
+test("正答 modal dismiss 不跳題、保留答案；重新開啟後沿原生音訊續題", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+
+  const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+  const correctAnswer = page.getByRole("button", {
+    name: "告訴一位你覺得安全、願意聽你說的大人",
+    exact: true,
+  });
+  await correctAnswer.click();
+  await page.getByRole("button", { name: "確認", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("aria-labelledby", "trusted-adult-feedback-title");
+  await expect(dialog).toContainText("答對了！好棒！");
+  await expect(dialog.getByRole("status")).toHaveCount(0);
+  await expect(dialog.getByRole("button", { name: "重播回饋語音" })).toHaveCount(0);
+  await expect(page.getByText("答對了！好棒！", { exact: true })).toHaveCount(1);
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(correctAnswer).toBeDisabled();
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(correctAnswer).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.getByText("答對了！好棒！", { exact: true })).toBeHidden();
+  await expect(page.getByText("答對了！好棒！", { exact: true })).toHaveCount(1);
+  const reopen = page.getByRole("button", { name: "查看答題結果", exact: true });
+  await expect(reopen).toBeFocused();
+
+  await reopen.click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("答對了！好棒！");
+  await page.evaluate(() =>
+    (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+  );
+  await expect(progress).toHaveAttribute("aria-valuenow", "2");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByText("放學路上有陌生人一直跟著你，你該怎麼辦？")).toBeVisible();
+});
+
+test("Q5 長說明在短手機視窗內捲動 modal，背景維持鎖定", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+
+  const correctAnswers = [
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "趕快到附近商店，向店員或你覺得安全的人求助",
+    "告訴一位你覺得安全、願意聽你說的大人",
+    "113",
+  ];
+  const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+  const confirm = page.getByRole("button", { name: "確認", exact: true });
+
+  for (const [index, answer] of correctAnswers.entries()) {
+    await page.getByRole("button", { name: answer, exact: true }).click();
+    await confirm.click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.evaluate(() =>
+      (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+    );
+    await expect(progress).toHaveAttribute("aria-valuenow", String(index + 2));
+  }
+
+  await page.setViewportSize({ width: 390, height: 240 });
+  await page.getByRole("button", { name: "老師", exact: true }).click();
+  await confirm.click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText(
+    "這些身分只是可能的求助對象，沒有哪種身分一定安全。若第一位沒有幫忙，可以再告訴下一位你覺得安全、願意聽你說的大人。",
+  );
+  const box = await dialog.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.x).toBeGreaterThanOrEqual(0);
+  expect(box!.y).toBeGreaterThanOrEqual(0);
+  expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+  expect(box!.y + box!.height).toBeLessThanOrEqual(240);
+
+  const modalScroll = await dialog.evaluate((element) => ({
+    overflowY: getComputedStyle(element).overflowY,
+    scrollHeight: element.scrollHeight,
+    clientHeight: element.clientHeight,
+  }));
+  expect(modalScroll.overflowY).toBe("auto");
+  expect(modalScroll.scrollHeight).toBeGreaterThan(modalScroll.clientHeight);
+  await dialog.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => dialog.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+
+  const backgroundOverflow = await page.evaluate(() => [
+    getComputedStyle(document.documentElement).overflowY,
+    getComputedStyle(document.body).overflowY,
+  ]);
+  expect(backgroundOverflow).toEqual(["hidden", "hidden"]);
+});
+
+test("連續 Enter 確認只播放一次正答音訊並維持單一 modal", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+  await page.getByRole("button", {
+    name: "告訴一位你覺得安全、願意聽你說的大人",
+    exact: true,
+  }).click();
+
+  const confirm = page.getByRole("button", { name: "確認", exact: true });
+  await confirm.focus();
+  await page.keyboard.press("Enter");
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Enter");
+
+  const feedbackPlayCount = await page.evaluate(() =>
+    (window as unknown as { __audioPlayEvents: string[] }).__audioPlayEvents.filter(
+      (source) => source === "/audio/trust-q1-correct.mp3",
+    ).length,
+  );
+  expect(feedbackPlayCount).toBe(1);
+  await expect(page.getByRole("dialog")).toHaveCount(1);
+  await expect(page.getByRole("progressbar", { name: "信任大人答題進度" })).toHaveAttribute(
+    "aria-valuenow",
+    "1",
+  );
 });
