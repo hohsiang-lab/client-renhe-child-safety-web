@@ -232,6 +232,12 @@ export default function TrustedAdultPage() {
     play(`/audio/trust-q${current!.id}-scenario.mp3`, { caption: current!.scenario });
   }
 
+  function dismissFeedback() {
+    focusAfterCloseRef.current = "reopen";
+    feedbackDialogRef.current?.close();
+    setFeedbackOpen(false);
+  }
+
   function handleReplay() {
     stop();
     answerSubmittedRef.current = false;
@@ -525,7 +531,10 @@ export default function TrustedAdultPage() {
             ? "trusted-adult-feedback-explanation"
             : undefined
         }
-        onCancel={() => { focusAfterCloseRef.current = "reopen"; }}
+        onCancel={(event) => {
+          event.preventDefault();
+          dismissFeedback();
+        }}
         onClose={() => setFeedbackOpen(false)}
         onKeyDown={(event) => {
           if (event.key !== "Tab") return;
@@ -551,6 +560,23 @@ export default function TrustedAdultPage() {
           }
         }}
       >
+        <button
+          type="button"
+          onClick={dismissFeedback}
+          aria-label="關閉答題結果"
+          className="trusted-adult-feedback__close"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.2}
+            strokeLinecap="round"
+          >
+            <path d="m6 6 12 12M18 6 6 18" />
+          </svg>
+        </button>
         {current && (phase === "wrong" || phase === "correct") && (
           <>
             <section

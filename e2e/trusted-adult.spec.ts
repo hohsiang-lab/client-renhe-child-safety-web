@@ -524,6 +524,141 @@ test("Q1 參考版面在桌機、平板及手機尺寸不溢出或重疊", async
   }
 });
 
+test("錯答 close icon has the approved target and spacing, then preserves answer state on dismiss", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+
+  const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+  const wrongAnswer = page.getByRole("button", { name: "自己忍耐", exact: true });
+  await wrongAnswer.click();
+  await page.getByRole("button", { name: "確認", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  const close = page.getByRole("button", { name: "關閉答題結果", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(close).toBeVisible();
+  await expect(close).toHaveCSS("width", "48px");
+  await expect(close).toHaveCSS("height", "48px");
+  await expect(close.locator("svg")).toHaveCSS("width", "22px");
+  await expect(close).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(close).toHaveCSS("color", "rgb(74, 60, 77)");
+
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
+  await expect(close).toHaveCSS("outline-width", "3px");
+
+  const spacing = await page.evaluate(() => {
+    const closeButton = document.querySelector<HTMLButtonElement>(
+      '#trusted-adult-feedback-dialog button[aria-label="關閉答題結果"]',
+    )!;
+    const card = document.querySelector<HTMLElement>(
+      "#trusted-adult-feedback-dialog section.paper-card",
+    )!;
+    return card.getBoundingClientRect().top - closeButton.getBoundingClientRect().bottom;
+  });
+  expect(spacing).toBeGreaterThanOrEqual(10);
+
+  await close.click();
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(wrongAnswer).toHaveAttribute("aria-pressed", "true");
+  const reopen = page.getByRole("button", { name: "查看答題結果", exact: true });
+  await expect(reopen).toBeFocused();
+  await reopen.click();
+  await expect(dialog).toContainText("再想想看喔～");
+  await expect(dialog).toContainText("如果第一位大人沒有相信你或沒有幫助你");
+});
+
+test("result close target and long feedback fit desktop, tablet, and mobile viewports", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+  await page.getByRole("button", { name: "自己忍耐", exact: true }).click();
+  await page.getByRole("button", { name: "確認", exact: true }).click();
+
+  const close = page.getByRole("button", { name: "關閉答題結果", exact: true });
+  const explanation = page.getByText(
+    "如果第一位大人沒有相信你或沒有幫助你，可以繼續告訴下一位你覺得安全、願意聽你說的大人。",
+    { exact: true },
+  );
+  for (const viewport of [
+    { width: 1280, height: 900 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    await expect(close).toBeVisible();
+    await expect(explanation).toBeVisible();
+
+    const layout = await page.evaluate(() => {
+      const dialogElement = document.querySelector<HTMLDialogElement>(
+        "#trusted-adult-feedback-dialog",
+      )!;
+      const closeElement = dialogElement.querySelector<HTMLButtonElement>(
+        'button[aria-label="關閉答題結果"]',
+      )!;
+      const cardElement = dialogElement.querySelector<HTMLElement>("section.paper-card")!;
+      const dialogRect = dialogElement.getBoundingClientRect();
+      const closeRect = closeElement.getBoundingClientRect();
+      const cardRect = cardElement.getBoundingClientRect();
+      return {
+        closeWidth: closeRect.width,
+        closeHeight: closeRect.height,
+        gap: cardRect.top - closeRect.bottom,
+        dialogWithinViewport:
+          dialogRect.left >= 0 && dialogRect.top >= 0 &&
+          dialogRect.right <= window.innerWidth && dialogRect.bottom <= window.innerHeight,
+        contentFits: dialogElement.scrollHeight <= dialogElement.clientHeight,
+      };
+    });
+    expect(layout.closeWidth).toBe(48);
+    expect(layout.closeHeight).toBe(48);
+    expect(layout.gap).toBeGreaterThanOrEqual(10);
+    expect(layout.dialogWithinViewport).toBe(true);
+    expect(layout.contentFits).toBe(true);
+  }
+});
+
+test("正答 close icon supports Enter and Space without skipping or duplicating natural audio progression", async ({ page }) => {
+  await installControlledAudio(page);
+  await page.goto("/trusted-adult");
+
+  const progress = page.getByRole("progressbar", { name: "信任大人答題進度" });
+  const correctAnswer = page.getByRole("button", {
+    name: "告訴一位你覺得安全、願意聽你說的大人",
+    exact: true,
+  });
+  await correctAnswer.click();
+  await page.getByRole("button", { name: "確認", exact: true }).click();
+
+  const dialog = page.getByRole("dialog");
+  const close = page.getByRole("button", { name: "關閉答題結果", exact: true });
+  await expect(dialog).toBeVisible();
+  await close.focus();
+  await page.keyboard.press("Enter");
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(correctAnswer).toHaveAttribute("aria-pressed", "true");
+
+  const reopen = page.getByRole("button", { name: "查看答題結果", exact: true });
+  await expect(reopen).toBeFocused();
+  await reopen.click();
+  await expect(dialog).toBeVisible();
+  await close.focus();
+  await page.keyboard.press("Space");
+  await expect(dialog).not.toBeVisible();
+  await expect(progress).toHaveAttribute("aria-valuenow", "1");
+  await expect(correctAnswer).toHaveAttribute("aria-pressed", "true");
+
+  await reopen.click();
+  await expect(dialog).toBeVisible();
+  await page.evaluate(() =>
+    (window as unknown as { __finishCurrentAudio: () => void }).__finishCurrentAudio(),
+  );
+  await expect(progress).toHaveAttribute("aria-valuenow", "2");
+  await expect(dialog).not.toBeVisible();
+  await expect(page.getByText("放學路上有陌生人一直跟著你，你該怎麼辦？")).toBeVisible();
+});
+
 test("錯答 modal 可 Escape 關閉與重開；重試才清除所選答案", async ({ page }) => {
   await installControlledAudio(page);
   await page.goto("/trusted-adult");
@@ -550,14 +685,19 @@ test("錯答 modal 可 Escape 關閉與重開；重試才清除所選答案", as
   await expect(progress).toHaveAttribute("aria-valuenow", "1");
   await expect(wrongAnswer).toBeDisabled();
 
+  const close = page.getByRole("button", { name: "關閉答題結果", exact: true });
   const replay = page.getByRole("button", { name: "重播回饋語音", exact: true });
   const retry = page.getByRole("button", { name: "再試一次", exact: true });
+  await page.keyboard.press("Tab");
+  await expect(close).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(replay).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(retry).toBeFocused();
   await page.keyboard.press("Tab");
-  expect(await dialog.evaluate((element) => element.contains(document.activeElement))).toBe(true);
+  await expect(close).toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(retry).toBeFocused();
 
   await page.keyboard.press("Escape");
   await expect(dialog).not.toBeVisible();
