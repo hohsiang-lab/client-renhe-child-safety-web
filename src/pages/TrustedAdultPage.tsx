@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -12,6 +12,7 @@ import { AudioCaption } from "../components/AudioCaption";
 
 type Phase = "playing" | "wrong" | "correct" | "complete";
 type AnswerResult = boolean | "unscored" | null;
+type FeedbackFocusTarget = "reopen" | "answer" | "question" | "complete" | null;
 
 const trustCompletionSrc = "/audio/trust-complete.mp3";
 const trustCompletionCaption =
@@ -64,9 +65,18 @@ export default function TrustedAdultPage() {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [answerResults, setAnswerResults] = useState<AnswerResult[]>(
     () => Array(trustQuestions.length).fill(null),
   );
+  const feedbackDialogRef = useRef<HTMLDialogElement>(null);
+  const feedbackTriggerRef = useRef<HTMLButtonElement>(null);
+  const answerButtonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const retryFocusIndexRef = useRef<number | null>(null);
+  const questionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const completionHeadingRef = useRef<HTMLHeadingElement>(null);
+  const focusAfterCloseRef = useRef<FeedbackFocusTarget>(null);
+  const answerSubmittedRef = useRef(false);
   const current: TrustQuestion | undefined = trustQuestions[index];
   const scenarioSrc = current ? `/audio/trust-q${current.id}-scenario.mp3` : null;
   const matchingScenario =
@@ -117,8 +127,42 @@ export default function TrustedAdultPage() {
     };
   }, [stop]);
 
+  useEffect(() => {
+    const dialog = feedbackDialogRef.current;
+    if (!dialog) return;
+    if (feedbackOpen && !dialog.open) {
+      dialog.showModal();
+      dialog.focus();
+    } else if (!feedbackOpen && dialog.open) {
+      dialog.close();
+    }
+  }, [feedbackOpen]);
+
+  useEffect(() => {
+    if (feedbackOpen) return;
+    const target = focusAfterCloseRef.current;
+    if (!target) return;
+    const frame = window.requestAnimationFrame(() => {
+      if (focusAfterCloseRef.current !== target) return;
+      if (target === "reopen") feedbackTriggerRef.current?.focus();
+      if (target === "answer") {
+        answerButtonRefs.current[retryFocusIndexRef.current ?? 0]?.focus();
+        retryFocusIndexRef.current = null;
+      }
+      if (target === "question") questionHeadingRef.current?.focus();
+      if (target === "complete") completionHeadingRef.current?.focus();
+      focusAfterCloseRef.current = null;
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [feedbackOpen, index, phase]);
+
   const advance = useCallback(() => {
-    if (index + 1 >= trustQuestions.length) {
+    const completesQuiz = index + 1 >= trustQuestions.length;
+    focusAfterCloseRef.current = completesQuiz ? "complete" : "question";
+    feedbackDialogRef.current?.close();
+    setFeedbackOpen(false);
+    answerSubmittedRef.current = false;
+    if (completesQuiz) {
       setPhase("complete");
       play(trustCompletionSrc, {
         caption: trustCompletionCaption,
@@ -131,7 +175,8 @@ export default function TrustedAdultPage() {
   }, [index, play]);
 
   function handleAnswer(optionIndex: number) {
-    if (phase !== "playing" || !current) return;
+    if (phase !== "playing" || !current || answerSubmittedRef.current) return;
+    answerSubmittedRef.current = true;
     stop();
     setSelectedIndex(optionIndex);
     const isCorrect = current.roleSelection || optionIndex === current.correctIndex;
@@ -148,12 +193,14 @@ export default function TrustedAdultPage() {
     });
     if (isCorrect) {
       setPhase("correct");
+      setFeedbackOpen(true);
       play(`/audio/trust-q${current.id}-correct.mp3`, {
         onEnd: advance,
         caption: getAnswerFeedbackCaption(current, true),
       });
     } else {
       setPhase("wrong");
+      setFeedbackOpen(true);
       play(`/audio/trust-q${current.id}-wrong.mp3`, {
         caption: getAnswerFeedbackCaption(current, false),
       });
@@ -176,6 +223,10 @@ export default function TrustedAdultPage() {
   }
 
   function handleRetry() {
+    focusAfterCloseRef.current = "answer";
+    retryFocusIndexRef.current = selectedIndex;
+    answerSubmittedRef.current = false;
+    setFeedbackOpen(false);
     setPhase("playing");
     setSelectedIndex(null);
     play(`/audio/trust-q${current!.id}-scenario.mp3`, { caption: current!.scenario });
@@ -183,6 +234,7 @@ export default function TrustedAdultPage() {
 
   function handleReplay() {
     stop();
+    answerSubmittedRef.current = false;
     setIndex(0);
     setPhase("playing");
     setSelectedIndex(null);
@@ -198,7 +250,7 @@ export default function TrustedAdultPage() {
         transition={{ duration: 0.5 }}
       >
         <div className="paper-card w-full max-w-3xl bg-warm-card p-4 sm:p-8">
-          <h1 className="mb-3 text-3xl font-bold">太棒了！</h1>
+          <h1 ref={completionHeadingRef} tabIndex={-1} className="mb-3 text-3xl font-bold">太棒了！</h1>
           <section aria-labelledby="trusted-results-title" className="paper-card mb-5 bg-white p-4 text-left">
             <h2 id="trusted-results-title" className="mb-2 text-lg font-bold">本次練習</h2>
             <div className="grid grid-cols-2 gap-2 text-sm sm:text-base">
@@ -273,7 +325,7 @@ export default function TrustedAdultPage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="mb-2 text-2xl font-bold">信任大人</h1>
+          <h1 ref={questionHeadingRef} tabIndex={-1} className="mb-2 text-2xl font-bold">信任大人</h1>
           <p className="text-text-light text-sm">
             第 {index + 1} / {trustQuestions.length} 題
           </p>
@@ -335,73 +387,6 @@ export default function TrustedAdultPage() {
                 </button>
               )}
 
-              {phase === "correct" && (
-                <motion.div
-                  className={`paper-card mb-4 bg-green-safe-bg p-4 text-center ${
-                    currentlyPlayingFeedback ? "ring-4 ring-primary" : ""
-                  }`}
-                  aria-current={currentlyPlayingFeedback ? "true" : undefined}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <div role="status" aria-live="polite">
-                    <p className="text-text-main text-lg font-bold">
-                      <span aria-hidden="true" className="mr-2">✓</span>
-                      {current.roleSelection
-                        ? "你可以選一位可能願意幫助你的大人。"
-                        : "答對了！好棒！"}
-                    </p>
-                    {current.roleSelection && (
-                      <p className="text-text-light mt-2 text-sm leading-relaxed">
-                        {current.explanation}
-                      </p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-
-              {phase === "wrong" && (
-                <motion.div
-                  className={`paper-card bg-red-danger-bg mb-4 p-4 ${
-                    currentlyPlayingFeedback ? "ring-4 ring-primary" : ""
-                  }`}
-                  aria-current={currentlyPlayingFeedback ? "true" : undefined}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div role="status" aria-live="polite">
-                    <p className="text-text-main mb-1 text-center text-base font-bold">
-                      <span aria-hidden="true" className="mr-2">×</span>
-                      再想想看喔～
-                    </p>
-                    <p className="text-text-light text-center text-sm">
-                      {current.explanation}
-                    </p>
-                    {currentlyPlayingFeedback && (
-                      <p className="sr-only">
-                        {isMuted ? "已靜音播放中" : "正在朗讀"}
-                      </p>
-                    )}
-                  </div>
-                  {matchingFeedback && (
-                    <button
-                      type="button"
-                      onClick={replayCurrentAudio}
-                      aria-label="重播回饋語音"
-                      data-playing={currentlyPlayingFeedback}
-                      className="mx-auto mt-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-text-main bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-                    >
-                      <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true" fill="currentColor">
-                        {currentlyPlayingFeedback ? (
-                          <path d="M3 9h3v6H3zm5-4h3v14H8zm6 2h3v10h-3zm6 3h3v4h-3z" />
-                        ) : (
-                          <path d="M8 5v14l11-7z" />
-                        )}
-                      </svg>
-                    </button>
-                  )}
-                </motion.div>
-              )}
 
               {current.roleSelection ? (
                 <div
@@ -414,6 +399,7 @@ export default function TrustedAdultPage() {
                     return (
                       <motion.button
                         key={card.src}
+                        ref={(element) => { answerButtonRefs.current[i] = element; }}
                         type="button"
                         onClick={() => handleSelectOption(i)}
                         aria-label={card.name}
@@ -467,6 +453,7 @@ export default function TrustedAdultPage() {
                     return (
                       <motion.button
                         key={i}
+                        ref={(element) => { answerButtonRefs.current[i] = element; }}
                         type="button"
                         onClick={() => handleSelectOption(i)}
                         aria-pressed={isSelected}
@@ -510,23 +497,132 @@ export default function TrustedAdultPage() {
                 </motion.button>
               )}
 
-              {phase === "wrong" && (
-                <motion.button
-                  onClick={handleRetry}
-                  className="paper-button bg-primary hover:bg-primary-hover mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.97 }}
+              {(phase === "wrong" || phase === "correct") && !feedbackOpen && (
+                <button
+                  ref={feedbackTriggerRef}
+                  type="button"
+                  onClick={() => setFeedbackOpen(true)}
+                  aria-haspopup="dialog"
+                  aria-controls="trusted-adult-feedback-dialog"
+                  className="paper-button bg-warm-bg hover:bg-warm-muted mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
                 >
-                  再試一次
-                </motion.button>
+                  查看答題結果
+                </button>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      <dialog
+        ref={feedbackDialogRef}
+        id="trusted-adult-feedback-dialog"
+        className="trusted-adult-feedback"
+        tabIndex={-1}
+        aria-labelledby="trusted-adult-feedback-title"
+        aria-describedby={
+          current && (phase === "wrong" || (phase === "correct" && current.roleSelection))
+            ? "trusted-adult-feedback-explanation"
+            : undefined
+        }
+        onCancel={() => { focusAfterCloseRef.current = "reopen"; }}
+        onClose={() => setFeedbackOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab") return;
+          const focusables = Array.from(
+            event.currentTarget.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            ),
+          );
+          if (!focusables.length) {
+            event.preventDefault();
+            event.currentTarget.focus();
+            return;
+          }
+          if (document.activeElement === event.currentTarget) {
+            event.preventDefault();
+            (event.shiftKey ? focusables.at(-1) : focusables[0])?.focus();
+          } else if (event.shiftKey && document.activeElement === focusables[0]) {
+            event.preventDefault();
+            focusables.at(-1)?.focus();
+          } else if (!event.shiftKey && document.activeElement === focusables.at(-1)) {
+            event.preventDefault();
+            focusables[0]?.focus();
+          }
+        }}
+      >
+        {current && (phase === "wrong" || phase === "correct") && (
+          <>
+            <section
+              className={`paper-card p-5 text-center ${
+                phase === "wrong" ? "bg-red-danger-bg" : "bg-green-safe-bg"
+              }`}
+            >
+              <div className="flex items-center justify-center gap-3">
+                <span aria-hidden="true" className="text-[28px] font-black leading-none">
+                  {phase === "correct" ? "✓" : "×"}
+                </span>
+                <h2
+                  id="trusted-adult-feedback-title"
+                  role={phase === "wrong" ? "status" : undefined}
+                  aria-live={phase === "wrong" ? "polite" : undefined}
+                  className="text-text-main text-xl font-bold"
+                >
+                  {phase === "correct"
+                    ? current.roleSelection
+                      ? "你可以選一位可能願意幫助你的大人。"
+                      : "答對了！好棒！"
+                    : "再想想看喔～"}
+                </h2>
+              </div>
+
+              {(phase === "wrong" || current.roleSelection) && (
+                <p
+                  id="trusted-adult-feedback-explanation"
+                  className="text-text-light mt-3 text-sm leading-relaxed"
+                >
+                  {current.explanation}
+                </p>
+              )}
+
+              {phase === "wrong" && currentlyPlayingFeedback && (
+                <p role="status" aria-live="polite" className="sr-only">
+                  {isMuted ? "已靜音播放中" : "正在朗讀"}
+                </p>
+              )}
+
+              {phase === "wrong" && matchingFeedback && (
+                <button
+                  type="button"
+                  onClick={replayCurrentAudio}
+                  aria-label="重播回饋語音"
+                  data-playing={currentlyPlayingFeedback}
+                  aria-pressed={currentlyPlayingFeedback}
+                  className="mx-auto mt-3 flex h-12 w-12 items-center justify-center rounded-full border-2 border-text-main bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                >
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" aria-hidden="true" fill="currentColor">
+                    {currentlyPlayingFeedback ? (
+                      <path d="M3 9h3v6H3zm5-4h3v14H8zm6 2h3v10h-3zm6 3h3v4h-3z" />
+                    ) : (
+                      <path d="M8 5v14l11-7z" />
+                    )}
+                  </svg>
+                </button>
+              )}
+            </section>
+
+            {phase === "wrong" && (
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="paper-button bg-primary hover:bg-primary-hover mt-4 w-full cursor-pointer py-3 font-bold text-text-main"
+              >
+                再試一次
+              </button>
+            )}
+          </>
+        )}
+      </dialog>
     </div>
   );
 }

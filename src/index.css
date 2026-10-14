@@ -526,3 +526,36 @@ img.paper-card {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+.trusted-adult-feedback {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(calc(100vw - 36px), 448px);
+  max-width: 448px;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 17px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 2px solid var(--paper-ink);
+  border-radius: 24px 28px 22px 26px;
+  background: #fffdf7;
+  color: var(--color-text-main);
+  box-shadow: 5px 7px 0 rgb(74 60 77 / 0.22);
+}
+
+.trusted-adult-feedback::backdrop {
+  background: rgb(36 29 40 / 0.42);
+  backdrop-filter: blur(2px);
+}
+
+.trusted-adult-feedback:focus-visible {
+  outline: 3px solid #23665d;
+  outline-offset: 3px;
+}
+
+html:has(.trusted-adult-feedback[open]),
+body:has(.trusted-adult-feedback[open]) {
+  overflow: hidden;
+}
