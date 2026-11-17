@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: staging-monster-amd64-ci
     timeout-minutes: 20
     steps:
       - name: Check out source
